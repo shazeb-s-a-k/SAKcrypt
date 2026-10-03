@@ -122,7 +122,7 @@ const SonicTransfer = () => {
         const decoded = gg.decode(ggwaveInstance, bytes);
         if (decoded && decoded.length > 0) {
           const resultText = new TextDecoder().decode(decoded);
-          setReceivedText(prev => prev ? prev + '\n' + resultText : resultText);
+          setReceivedText(prev => prev ? prev + resultText : resultText);
           showToast('Data received!', 'success');
         }
       };
