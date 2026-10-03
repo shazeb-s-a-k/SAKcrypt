@@ -1,8 +1,8 @@
 // Zero-width (Stealth)
-export const ZW_DOT = '\u200B';
-export const ZW_DASH = '\u200C';
-export const ZW_LETTER_SEP = '\u200D';
-export const ZW_WORD_SEP = '\u2060';
+export const ZW_DOT = '\u2061';
+export const ZW_DASH = '\u2062';
+export const ZW_LETTER_SEP = '\u2063';
+export const ZW_WORD_SEP = '\u2064';
 
 // Obscure visual characters
 export const OBS_DOT = '●';
@@ -55,7 +55,7 @@ export function encodeMorse(text, mode = 'stealth') {
 
 export function isPhantomText(text) {
   if (!text) return false;
-  const hasStealth = /[\u200B\u200C\u200D\u2060]/.test(text);
+  const hasStealth = /[\u2061\u2062\u2063\u2064]/.test(text);
   const hasObscure = text.includes(OBS_DOT) || text.includes(OBS_DASH);
   return hasStealth || hasObscure;
 }
@@ -69,7 +69,7 @@ export function decodeMorse(encodedText) {
   let validOnly = encodedText;
   if (!isObscure) {
     // If it's stealth, extract ONLY stealth characters (allows hiding text inside normal text)
-    validOnly = encodedText.replace(/[^\u200B\u200C\u200D\u2060]/g, '');
+    validOnly = encodedText.replace(/[^\u2061\u2062\u2063\u2064]/g, '');
   }
   
   if (!validOnly) return '';

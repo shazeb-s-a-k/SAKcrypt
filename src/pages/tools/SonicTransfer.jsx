@@ -49,25 +49,41 @@ const SonicTransfer = () => {
     try {
       setIsTransmitting(true);
       
-      const waveform = gg.encode(ggwaveInstance, text, gg.ProtocolId.GGWAVE_PROTOCOL_AUDIBLE_FAST, 10);
-      const floatArr = new Float32Array(waveform.buffer, waveform.byteOffset, waveform.byteLength / 4);
+      const chunks = [];
+      // ggwave has a payload limit (usually ~140 bytes), so chunk the text to transmit large amounts
+      for (let i = 0; i < text.length; i += 100) {
+        chunks.push(text.slice(i, i + 100));
+      }
       
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const ctx = new AudioContext({ sampleRate: 48000 });
       audioCtxRef.current = ctx;
 
-      const buffer = ctx.createBuffer(1, floatArr.length, ctx.sampleRate);
-      buffer.getChannelData(0).set(floatArr);
-
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start();
-
-      source.onended = () => {
-        setIsTransmitting(false);
-        ctx.close();
-      };
+      let currentTime = ctx.currentTime;
+      
+      chunks.forEach((chunk, index) => {
+        const waveform = gg.encode(ggwaveInstance, chunk, gg.ProtocolId.GGWAVE_PROTOCOL_AUDIBLE_FAST, 10);
+        const floatArr = new Float32Array(waveform.buffer, waveform.byteOffset, waveform.byteLength / 4);
+        
+        const buffer = ctx.createBuffer(1, floatArr.length, ctx.sampleRate);
+        buffer.getChannelData(0).set(floatArr);
+  
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        
+        // Start the chunk at the scheduled time. Add a small 0.5s gap between chunks.
+        source.start(currentTime);
+        currentTime += buffer.duration + 0.5;
+  
+        // Only trigger completion when the LAST chunk finishes
+        if (index === chunks.length - 1) {
+          source.onended = () => {
+            setIsTransmitting(false);
+            ctx.close();
+          };
+        }
+      });
     } catch (err) {
       console.error(err);
       setIsTransmitting(false);
