@@ -44,7 +44,7 @@ const SonicTransfer = () => {
       showToast('Enter some text to transmit', 'error');
       return;
     }
-    if (!ggwaveInstance || !gg) return;
+    if (ggwaveInstance === null || !gg) return;
 
     try {
       setIsTransmitting(true);
@@ -76,7 +76,7 @@ const SonicTransfer = () => {
   };
 
   const startListening = async () => {
-    if (!ggwaveInstance || !gg) return;
+    if (ggwaveInstance === null || !gg) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -191,7 +191,7 @@ const SonicTransfer = () => {
             <button 
               className="btn-primary" 
               onClick={transmit} 
-              disabled={isTransmitting || !text || !ggwaveInstance}
+              disabled={isTransmitting || !text || ggwaveInstance === null}
               style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}
             >
               {isTransmitting ? (
@@ -231,7 +231,7 @@ const SonicTransfer = () => {
               <button 
                 className="btn-primary" 
                 onClick={isListening ? stopListening : startListening} 
-                disabled={!ggwaveInstance || isTransmitting}
+                disabled={ggwaveInstance === null || isTransmitting}
                 style={{ flex: 1, justifyContent: 'center', background: isListening ? 'rgba(239, 68, 68, 0.2)' : 'var(--primary)', border: isListening ? '1px solid #ef4444' : 'none', color: isListening ? '#ef4444' : '#000' }}
               >
                 {isListening ? (
