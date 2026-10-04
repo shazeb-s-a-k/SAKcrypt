@@ -5,10 +5,10 @@ import PhantomText from './pages/tools/PhantomText';
 import CyberVault from './pages/tools/CyberVault';
 import RegexTester from './pages/tools/RegexTester';
 import UUIDGenerator from './pages/tools/UUIDGenerator';
-import QRCodeGenerator from './pages/tools/QRCodeGenerator';
 import SonicTransfer from './pages/tools/SonicTransfer';
+import APIKeyTester from './pages/tools/APIKeyTester';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -53,6 +53,9 @@ const TopBar = () => {
         <Link to="/uuid" className={`nav-link ${isActive('/uuid')}`} title="UUID Gen">
           <Hash className="icon-sm" /> UUID
         </Link>
+        <Link to="/apikey" className={`nav-link ${isActive('/apikey')}`} title="API Key Tester">
+          <KeyRound className="icon-sm" /> API Keys
+        </Link>
       </div>
     </motion.nav>
   );
@@ -89,6 +92,7 @@ const AnimatedRoutes = () => {
         <Route path="/vault" element={<PageWrapper><CyberVault /></PageWrapper>} />
         <Route path="/regex" element={<PageWrapper><RegexTester /></PageWrapper>} />
         <Route path="/uuid" element={<PageWrapper><UUIDGenerator /></PageWrapper>} />
+        <Route path="/apikey" element={<PageWrapper><APIKeyTester /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -47,6 +47,13 @@ const features = [
     icon: <Hash size={32} style={{ color: '#0ea5e9' }} />,
     path: '/uuid',
     color: '#0ea5e9'
+  },
+  {
+    title: 'API Key Tester',
+    desc: 'Securely validate API keys for AI models and custom endpoints before deployment.',
+    icon: <KeyRound size={32} style={{ color: '#fb923c' }} />,
+    path: '/apikey',
+    color: '#fb923c'
   }
 ];
 
