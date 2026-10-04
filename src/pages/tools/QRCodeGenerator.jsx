@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import ToolHeader from '../../components/ToolHeader';
 import { QRCodeSVG } from 'qrcode.react';
 import { useToast } from '../../components/ToastProvider';
+import { useSupport } from '../../components/SupportProvider';
 
 const QRCodeGenerator = () => {
   const [text, setText] = useState('');
@@ -11,6 +12,7 @@ const QRCodeGenerator = () => {
   const [bgColor, setBgColor] = useState('#000000');
   const svgRef = useRef(null);
   const showToast = useToast();
+  const showSupport = useSupport();
 
   const handleDownload = () => {
     if (!svgRef.current) return;
@@ -35,6 +37,7 @@ const QRCodeGenerator = () => {
       a.href = canvas.toDataURL("image/png");
       a.click();
       showToast('QR Code downloaded', 'success');
+      setTimeout(showSupport, 1000);
     };
     img.src = url;
   };

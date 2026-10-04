@@ -11,6 +11,7 @@ import LandingPage from './pages/LandingPage';
 import { Shield, Key, Regex, Hash, QrCode, Heart, Radio } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
+import { SupportProvider, useSupport } from './components/SupportProvider';
 import './index.css';
 
 // A sleek Top Navigation Bar matching the new UI
@@ -93,38 +94,61 @@ const AnimatedRoutes = () => {
   );
 };
 
-const Footer = () => (
-  <motion.footer 
-    className="global-footer"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ delay: 0.8, duration: 1 }}
-  >
-    <div className="footer-content">
-      <span>Made with</span>
-      <motion.div
-        animate={{ scale: [1, 1.2, 1] }}
-        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+const Footer = () => {
+  const showSupport = useSupport();
+  return (
+    <motion.footer 
+      className="global-footer"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.8, duration: 1 }}
+    >
+      <div className="footer-content">
+        <span>Made with</span>
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+          onClick={showSupport}
+          style={{ cursor: 'pointer' }}
+          title="Support the Project"
+        >
+          <Heart size={14} className="heart-icon" />
+        </motion.div>
+        <span>By <strong className="author-name">Shazeb</strong></span>
+      </div>
+      <button 
+        onClick={showSupport}
+        style={{ 
+          marginTop: '1rem', 
+          background: 'transparent', 
+          border: '1px solid var(--border)', 
+          color: 'var(--primary)', 
+          padding: '0.4rem 1rem', 
+          borderRadius: '8px', 
+          cursor: 'pointer',
+          fontSize: '0.85rem'
+        }}
       >
-        <Heart size={14} className="heart-icon" />
-      </motion.div>
-      <span>By <strong className="author-name">Shazeb</strong></span>
-    </div>
-  </motion.footer>
-);
+        ❤️ Support the Project
+      </button>
+    </motion.footer>
+  );
+};
 
 function App() {
   return (
     <ToastProvider>
-      <BrowserRouter>
-        <div className="app-layout">
-          <TopBar />
-          <div className="page-content">
-            <AnimatedRoutes />
+      <SupportProvider>
+        <BrowserRouter>
+          <div className="app-layout">
+            <TopBar />
+            <div className="page-content">
+              <AnimatedRoutes />
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
-      </BrowserRouter>
+        </BrowserRouter>
+      </SupportProvider>
     </ToastProvider>
   );
 }

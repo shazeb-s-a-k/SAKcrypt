@@ -3,12 +3,14 @@ import { Fingerprint, Copy, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
+import { useSupport } from '../../components/SupportProvider';
 import { v4 as uuidv4 } from 'uuid';
 
 const UUIDGenerator = () => {
   const [count, setCount] = useState(5);
   const [uuids, setUuids] = useState(() => Array.from({ length: 5 }, () => uuidv4()));
   const showToast = useToast();
+  const showSupport = useSupport();
 
   const handleGenerate = () => {
     const num = Math.min(Math.max(parseInt(count) || 1, 1), 100);
@@ -19,11 +21,13 @@ const UUIDGenerator = () => {
   const handleCopyAll = () => {
     navigator.clipboard.writeText(uuids.join('\n'));
     showToast('Copied all UUIDs to clipboard!', 'success');
+    setTimeout(showSupport, 1000);
   };
 
   const handleCopySingle = (uuid) => {
     navigator.clipboard.writeText(uuid);
     showToast('Copied UUID to clipboard!', 'success');
+    setTimeout(showSupport, 1000);
   };
 
   return (

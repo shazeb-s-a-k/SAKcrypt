@@ -1,8 +1,9 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
+import { useSupport } from '../components/SupportProvider';
 
 const features = [
   {
@@ -63,6 +64,8 @@ const itemVariants = {
 };
 
 const LandingPage = () => {
+  const showSupport = useSupport();
+
   return (
     <div style={{ width: '100%' }}>
       <motion.div 
@@ -75,10 +78,18 @@ const LandingPage = () => {
         <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1rem', background: 'linear-gradient(to right, #fff, #a0a0a0)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           Welcome to SAKrypt Suite
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto', marginBottom: '2rem' }}>
           A professional, hyper-secure collection of cryptography and developer utilities. 
           Operate in absolute stealth.
         </p>
+        
+        <button 
+          onClick={showSupport}
+          className="btn-primary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface)', border: '1px solid var(--border)' }}
+        >
+          <Heart size={16} style={{ color: '#ef4444' }} /> Support the Developer
+        </button>
       </motion.div>
 
       <motion.div 

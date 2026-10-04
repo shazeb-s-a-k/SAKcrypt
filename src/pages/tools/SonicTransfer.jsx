@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Radio, Mic, Volume2, Square, RefreshCw } from 'lucide-react';
+import { Radio, Mic, Volume2, Square, RefreshCw, Copy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
+import { useSupport } from '../../components/SupportProvider';
 import factory from 'ggwave';
 
 const SonicTransfer = () => {
@@ -14,6 +15,7 @@ const SonicTransfer = () => {
   const [ggwaveInstance, setGgwaveInstance] = useState(null);
   const [gg, setGg] = useState(null);
   const showToast = useToast();
+  const showSupport = useSupport();
 
   const audioCtxRef = useRef(null);
   const mediaStreamRef = useRef(null);
@@ -38,6 +40,13 @@ const SonicTransfer = () => {
       stopListening();
     };
   }, []);
+
+  const handleCopy = () => {
+    if (!receivedText) return;
+    navigator.clipboard.writeText(receivedText);
+    showToast('Copied to clipboard!', 'success');
+    setTimeout(showSupport, 1000);
+  };
 
   const transmit = () => {
     if (!text) {
@@ -257,6 +266,16 @@ const SonicTransfer = () => {
                 )}
               </button>
               
+              <button 
+                className="btn-primary" 
+                onClick={handleCopy} 
+                disabled={!receivedText}
+                style={{ background: 'transparent', border: '1px solid var(--border)', color: receivedText ? 'var(--primary)' : 'var(--text-muted)' }}
+                title="Copy Received Text"
+              >
+                <Copy className="icon-sm" /> Copy
+              </button>
+
               <button 
                 className="btn-primary" 
                 onClick={() => setReceivedText('')} 

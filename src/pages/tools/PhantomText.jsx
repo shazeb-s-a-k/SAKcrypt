@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Copy, Volume2, VolumeX, ShieldCheck, Trash2, Upload, Download, Image as ImageIcon } from 'lucide-react';
 import { encodeMorse, decodeMorse, isPhantomText } from '../../utils/morse';
 import { playMorseAudio, stopAudio } from '../../utils/audio';
+import { useSupport } from '../../components/SupportProvider';
 import '../../index.css';
 
 const MAX_FILE_SIZE = 100 * 1024; // 100KB
@@ -15,7 +16,7 @@ function PhantomText() {
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState({ chars: 0, bytes: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [showSupportPopup, setShowSupportPopup] = useState(false);
+  const showSupport = useSupport();
 
   useEffect(() => {
     if (!inputText) {
@@ -52,11 +53,9 @@ function PhantomText() {
       if (!isPhantomText(inputText)) {
         const histOriginal = textToCopy.startsWith('data:') ? '[Media File]' : inputText;
         addToHistory(histOriginal, textToCopy, mode);
-        // Show support popup after user encodes and copies
-        setTimeout(() => setShowSupportPopup(true), 1000);
+        setTimeout(showSupport, 1000);
       } else {
-        // If they just decoded something, show it instantly
-        setTimeout(() => setShowSupportPopup(true), 1500);
+        setTimeout(showSupport, 1500);
       }
     } catch (err) {
       showToast('Failed to copy');
@@ -264,35 +263,6 @@ function PhantomText() {
         {toastMessage}
       </div>
 
-      {showSupportPopup && (
-        <div className="modal-overlay" onClick={() => setShowSupportPopup(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setShowSupportPopup(false)}>×</button>
-            <h2 className="modal-title">Support the Project ❤️</h2>
-            <p className="modal-desc">
-              If you found SAKrypt Suite helpful, consider showing some love! Your support helps keep this tool ad-free and continuously improving.
-            </p>
-            <div className="qr-container">
-              <img src="/qr.png" alt="Support QR Code" className="support-qr" />
-            </div>
-            <div className="upi-container">
-              <span className="upi-label">UPI ID:</span>
-              <strong className="upi-id">shazeb26@fam</strong>
-              <button 
-                className="icon-btn copy-upi" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText("shazeb26@fam");
-                  showToast("UPI ID Copied!");
-                }}
-                title="Copy UPI ID"
-              >
-                <Copy className="icon-sm" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

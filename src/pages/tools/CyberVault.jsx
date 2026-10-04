@@ -3,6 +3,7 @@ import { Copy, RefreshCw, Shield, AlertTriangle, CheckCircle } from 'lucide-reac
 import { motion } from 'framer-motion';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
+import { useSupport } from '../../components/SupportProvider';
 
 const CyberVault = () => {
   const [password, setPassword] = useState('');
@@ -15,6 +16,7 @@ const CyberVault = () => {
   });
   const [strength, setStrength] = useState(0);
   const showToast = useToast();
+  const showSupport = useSupport();
 
   const generatePassword = () => {
     let charset = '';
@@ -52,6 +54,7 @@ const CyberVault = () => {
     if (!password) return;
     navigator.clipboard.writeText(password);
     showToast('Password copied to clipboard', 'success');
+    setTimeout(showSupport, 1000);
   };
 
   const toggleOption = (key) => {
