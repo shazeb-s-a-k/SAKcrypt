@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Radio, Mic, Volume2, Square, RefreshCw, Copy } from 'lucide-react';
+import { Radio, Mic, Volume2, Square, RefreshCw, Copy, Upload, Download, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
 import { useSupport } from '../../components/SupportProvider';
 import factory from 'ggwave';
+
+const MAX_FILE_SIZE = 100 * 1024; // 100KB
 
 const SonicTransfer = () => {
   const [text, setText] = useState('');
@@ -12,6 +14,7 @@ const SonicTransfer = () => {
   const [mode, setMode] = useState('transmit');
   const [isTransmitting, setIsTransmitting] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [ggwaveInstance, setGgwaveInstance] = useState(null);
   const [gg, setGg] = useState(null);
   const showToast = useToast();
@@ -46,6 +49,45 @@ const SonicTransfer = () => {
     navigator.clipboard.writeText(receivedText);
     showToast('Copied to clipboard!', 'success');
     setTimeout(showSupport, 1000);
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    if (mode === 'transmit') setIsDragging(true);
+  };
+
+  const onDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (mode !== 'transmit') return;
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFileDrop(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileDrop = (file) => {
+    if (file.size > MAX_FILE_SIZE) {
+      showToast(`File too large! Max size is ${Math.round(MAX_FILE_SIZE/1024)}KB.`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setText(e.target.result);
+      showToast('Media loaded for transmission!');
+    };
+    reader.onerror = () => showToast('Failed to read file');
+    reader.readAsDataURL(file);
+  };
+
+  const isMedia = (dataString) => {
+    if (!dataString) return false;
+    return dataString.startsWith('data:image/') || dataString.startsWith('data:video/');
   };
 
   const transmit = () => {
@@ -167,10 +209,21 @@ const SonicTransfer = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="container animate-float"
-      style={{ animationDuration: '8s' }}
+      className={`container animate-float ${isDragging ? 'dragging' : ''}`}
+      style={{ animationDuration: '8s', position: 'relative' }}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
     >
-      <ToolHeader title="Sonic Transfer" subtitle="Transmit text to nearby devices using sound waves" />
+      {isDragging && (
+        <div className="drag-overlay">
+          <Upload className="icon-large" />
+          <h2>Drop Media Here</h2>
+          <p>Images & Videos (Max 100KB)</p>
+        </div>
+      )}
+
+      <ToolHeader title="Sonic Transfer" subtitle="Transmit text and media to nearby devices using sound waves" />
 
       {/* Mode Selector */}
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '2rem' }}>
@@ -204,14 +257,44 @@ const SonicTransfer = () => {
               <h3 style={{ margin: 0, color: '#fff' }}>Transmit Payload</h3>
             </div>
             
-            <textarea 
-              className="textarea-glass"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Enter text to broadcast over audio..."
-              style={{ minHeight: '180px' }}
-              disabled={isTransmitting}
-            />
+            <div className="textarea-wrapper">
+              <div className="textarea-header">
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>PAYLOAD (TEXT OR MEDIA)</label>
+                <div className="textarea-actions">
+                   <button className="icon-btn" onClick={() => {
+                     const input = document.createElement('input');
+                     input.type = 'file';
+                     input.accept = 'image/*,video/*';
+                     input.onchange = (e) => handleFileDrop(e.target.files[0]);
+                     input.click();
+                   }} title="Upload Media">
+                    <ImageIcon className="icon-sm" />
+                  </button>
+                  <button className="icon-btn" onClick={() => setText('')} title="Clear">
+                    <Trash2 className="icon-sm" />
+                  </button>
+                </div>
+              </div>
+              
+              {isMedia(text) ? (
+                <div className="media-preview-container" style={{ minHeight: '180px', marginTop: '0.5rem' }}>
+                  {text.startsWith('data:video/') ? (
+                    <video src={text} controls className="media-preview" />
+                  ) : (
+                    <img src={text} alt="Media to Transmit" className="media-preview" />
+                  )}
+                </div>
+              ) : (
+                <textarea 
+                  className="textarea-glass"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Type text, paste data, or drag & drop media..."
+                  style={{ minHeight: '180px', marginTop: '0.5rem' }}
+                  disabled={isTransmitting}
+                />
+              )}
+            </div>
             
             <button 
               className="btn-primary" 
@@ -244,13 +327,28 @@ const SonicTransfer = () => {
               )}
             </div>
             
-            <textarea 
-              className="textarea-glass"
-              value={receivedText}
-              readOnly
-              placeholder="Listening for nearby sonic transmissions..."
-              style={{ minHeight: '180px', background: isListening ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255,255,255,0.05)' }}
-            />
+            {isMedia(receivedText) ? (
+              <div className="media-preview-container" style={{ minHeight: '180px' }}>
+                {receivedText.startsWith('data:video/') ? (
+                  <video src={receivedText} controls className="media-preview" />
+                ) : (
+                  <img src={receivedText} alt="Received Media" className="media-preview" />
+                )}
+                <div className="media-actions">
+                  <a href={receivedText} download="sonic_media" className="download-btn" onClick={() => setTimeout(showSupport, 1000)}>
+                    <Download className="icon-sm" /> Download File
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <textarea 
+                className="textarea-glass"
+                value={receivedText}
+                readOnly
+                placeholder="Listening for nearby sonic transmissions..."
+                style={{ minHeight: '180px', background: isListening ? 'rgba(239, 68, 68, 0.05)' : 'rgba(255,255,255,0.05)' }}
+              />
+            )}
             
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
               <button 
@@ -266,15 +364,17 @@ const SonicTransfer = () => {
                 )}
               </button>
               
-              <button 
-                className="btn-primary" 
-                onClick={handleCopy} 
-                disabled={!receivedText}
-                style={{ background: 'transparent', border: '1px solid var(--border)', color: receivedText ? 'var(--primary)' : 'var(--text-muted)' }}
-                title="Copy Received Text"
-              >
-                <Copy className="icon-sm" /> Copy
-              </button>
+              {!isMedia(receivedText) && (
+                <button 
+                  className="btn-primary" 
+                  onClick={handleCopy} 
+                  disabled={!receivedText}
+                  style={{ background: 'transparent', border: '1px solid var(--border)', color: receivedText ? 'var(--primary)' : 'var(--text-muted)' }}
+                  title="Copy Received Text"
+                >
+                  <Copy className="icon-sm" /> Copy
+                </button>
+              )}
 
               <button 
                 className="btn-primary" 
