@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { QrCode, Download } from 'lucide-react';
+import { QrCode, Download, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ToolHeader from '../../components/ToolHeader';
 import { QRCodeSVG } from 'qrcode.react';
@@ -13,6 +13,22 @@ const QRCodeGenerator = () => {
   const svgRef = useRef(null);
   const showToast = useToast();
   const showSupport = useSupport();
+
+  const MAX_QR_MEDIA_SIZE = 2048; // 2KB
+
+  const handleFileDrop = (file) => {
+    if (file.size > MAX_QR_MEDIA_SIZE) {
+      showToast('File too large! QR Codes can only hold ~2KB of data.', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setText(e.target.result);
+      showToast('Media loaded into QR Code!', 'success');
+    };
+    reader.onerror = () => showToast('Failed to read file', 'error');
+    reader.readAsDataURL(file);
+  };
 
   const handleDownload = () => {
     if (!svgRef.current) return;
@@ -58,7 +74,23 @@ const QRCodeGenerator = () => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>CONTENT (URL or Text)</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <label style={{ color: 'var(--text-muted)', margin: 0 }}>CONTENT (URL, Text, or Tiny Media)</label>
+                <button 
+                  className="icon-btn" 
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e) => handleFileDrop(e.target.files[0]);
+                    input.click();
+                  }} 
+                  title="Upload Tiny Media (Max 2KB)"
+                  style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px' }}
+                >
+                  <ImageIcon className="icon-sm" />
+                </button>
+              </div>
               <textarea 
                 className="textarea-glass"
                 value={text}

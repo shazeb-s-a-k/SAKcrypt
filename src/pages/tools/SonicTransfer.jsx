@@ -150,6 +150,15 @@ const SonicTransfer = () => {
     }
   };
 
+  const cancelTransmit = () => {
+    if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+      audioCtxRef.current.close();
+    }
+    setIsTransmitting(false);
+    setTransmitProgress(0);
+    showToast('Transmission cancelled', 'success');
+  };
+
   const startListening = async () => {
     if (ggwaveInstance === null || !gg) return;
     try {
@@ -304,18 +313,33 @@ const SonicTransfer = () => {
               )}
             </div>
             
-            <button 
-              className="btn-primary" 
-              onClick={transmit} 
-              disabled={isTransmitting || !text || ggwaveInstance === null}
-              style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}
-            >
-              {isTransmitting ? (
-                <><RefreshCw className="icon-sm spin" /> Transmitting...</>
-              ) : (
-                <><Radio className="icon-sm" /> Broadcast via Sound</>
-              )}
-            </button>
+            {isTransmitting ? (
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn-primary" 
+                  disabled
+                  style={{ flex: 1, justifyContent: 'center', background: 'var(--primary)', color: '#000' }}
+                >
+                  <RefreshCw className="icon-sm spin" /> Transmitting...
+                </button>
+                <button 
+                  className="btn-primary" 
+                  onClick={cancelTransmit}
+                  style={{ flex: 1, justifyContent: 'center', background: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+                >
+                  <Square className="icon-sm" /> Cancel
+                </button>
+              </div>
+            ) : (
+              <button 
+                className="btn-primary" 
+                onClick={transmit} 
+                disabled={!text || ggwaveInstance === null}
+                style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}
+              >
+                <Radio className="icon-sm" /> Broadcast via Sound
+              </button>
+            )}
 
             {isTransmitting && (
               <div style={{ marginTop: '0.5rem' }}>
