@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -68,6 +68,13 @@ const features = [
     icon: <Code size={32} style={{ color: '#c084fc' }} />,
     path: '/jwt',
     color: '#c084fc'
+  },
+  {
+    title: 'Base64 Converter',
+    desc: 'Instantly encode and decode strings to and from Base64 format.',
+    icon: <FileCode size={32} style={{ color: '#60a5fa' }} />,
+    path: '/base64',
+    color: '#60a5fa'
   }
 ];
 

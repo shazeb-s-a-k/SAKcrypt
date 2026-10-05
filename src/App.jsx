@@ -10,8 +10,9 @@ import SonicTransfer from './pages/tools/SonicTransfer';
 import APIKeyTester from './pages/tools/APIKeyTester';
 import HashEngine from './pages/tools/HashEngine';
 import JWTInspector from './pages/tools/JWTInspector';
+import Base64Converter from './pages/tools/Base64Converter';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -65,6 +66,9 @@ const TopBar = () => {
         <Link to="/jwt" className={`nav-link ${isActive('/jwt')}`} title="JWT Inspector">
           <Code className="icon-sm" /> JWT
         </Link>
+        <Link to="/base64" className={`nav-link ${isActive('/base64')}`} title="Base64 Converter">
+          <FileCode className="icon-sm" /> Base64
+        </Link>
       </div>
     </motion.nav>
   );
@@ -104,6 +108,7 @@ const AnimatedRoutes = () => {
         <Route path="/apikey" element={<PageWrapper><APIKeyTester /></PageWrapper>} />
         <Route path="/hash" element={<PageWrapper><HashEngine /></PageWrapper>} />
         <Route path="/jwt" element={<PageWrapper><JWTInspector /></PageWrapper>} />
+        <Route path="/base64" element={<PageWrapper><Base64Converter /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
