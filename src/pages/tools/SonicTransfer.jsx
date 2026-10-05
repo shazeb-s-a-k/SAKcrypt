@@ -13,6 +13,7 @@ const SonicTransfer = () => {
   const [receivedText, setReceivedText] = useState('');
   const [mode, setMode] = useState('transmit');
   const [isTransmitting, setIsTransmitting] = useState(false);
+  const [transmitProgress, setTransmitProgress] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [ggwaveInstance, setGgwaveInstance] = useState(null);
@@ -99,6 +100,7 @@ const SonicTransfer = () => {
 
     try {
       setIsTransmitting(true);
+      setTransmitProgress(0);
       
       const chunks = [];
       // ggwave has a payload limit (usually ~140 bytes), so chunk the text to transmit large amounts
@@ -127,13 +129,19 @@ const SonicTransfer = () => {
         source.start(currentTime);
         currentTime += buffer.duration + 0.5;
   
-        // Only trigger completion when the LAST chunk finishes
-        if (index === chunks.length - 1) {
-          source.onended = () => {
-            setIsTransmitting(false);
-            ctx.close();
-          };
-        }
+        // Track progress when chunk finishes playing
+        source.onended = () => {
+          const progress = Math.round(((index + 1) / chunks.length) * 100);
+          setTransmitProgress(progress);
+          
+          if (index === chunks.length - 1) {
+            setTimeout(() => {
+              setIsTransmitting(false);
+              setTransmitProgress(0);
+              ctx.close();
+            }, 500); // give a tiny buffer at the end
+          }
+        };
       });
     } catch (err) {
       console.error(err);
@@ -308,6 +316,23 @@ const SonicTransfer = () => {
                 <><Radio className="icon-sm" /> Broadcast via Sound</>
               )}
             </button>
+
+            {isTransmitting && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <span>Broadcast Progress</span>
+                  <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{transmitProgress}%</span>
+                </div>
+                <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${transmitProgress}%` }}
+                    transition={{ duration: 0.3 }}
+                    style={{ height: '100%', background: 'var(--primary)', borderRadius: '3px' }}
+                  />
+                </div>
+              </div>
+            )}
           </motion.div>
         ) : (
           /* Receiver Panel */
