@@ -8,8 +8,10 @@ import UUIDGenerator from './pages/tools/UUIDGenerator';
 import QRCodeGenerator from './pages/tools/QRCodeGenerator';
 import SonicTransfer from './pages/tools/SonicTransfer';
 import APIKeyTester from './pages/tools/APIKeyTester';
+import HashEngine from './pages/tools/HashEngine';
+import JWTInspector from './pages/tools/JWTInspector';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -57,6 +59,12 @@ const TopBar = () => {
         <Link to="/apikey" className={`nav-link ${isActive('/apikey')}`} title="API Key Tester">
           <KeyRound className="icon-sm" /> API Keys
         </Link>
+        <Link to="/hash" className={`nav-link ${isActive('/hash')}`} title="Hash Engine">
+          <Fingerprint className="icon-sm" /> Hash
+        </Link>
+        <Link to="/jwt" className={`nav-link ${isActive('/jwt')}`} title="JWT Inspector">
+          <Code className="icon-sm" /> JWT
+        </Link>
       </div>
     </motion.nav>
   );
@@ -94,6 +102,8 @@ const AnimatedRoutes = () => {
         <Route path="/regex" element={<PageWrapper><RegexTester /></PageWrapper>} />
         <Route path="/uuid" element={<PageWrapper><UUIDGenerator /></PageWrapper>} />
         <Route path="/apikey" element={<PageWrapper><APIKeyTester /></PageWrapper>} />
+        <Route path="/hash" element={<PageWrapper><HashEngine /></PageWrapper>} />
+        <Route path="/jwt" element={<PageWrapper><JWTInspector /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

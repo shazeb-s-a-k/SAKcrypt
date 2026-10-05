@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -54,6 +54,20 @@ const features = [
     icon: <KeyRound size={32} style={{ color: '#fb923c' }} />,
     path: '/apikey',
     color: '#fb923c'
+  },
+  {
+    title: 'Hash Engine',
+    desc: 'Generate highly secure cryptographic hashes (SHA-256, SHA-512) instantly.',
+    icon: <Fingerprint size={32} style={{ color: '#10b981' }} />,
+    path: '/hash',
+    color: '#10b981'
+  },
+  {
+    title: 'JWT Inspector',
+    desc: 'Decode, verify, and inspect JSON Web Tokens securely right in your browser.',
+    icon: <Code size={32} style={{ color: '#c084fc' }} />,
+    path: '/jwt',
+    color: '#c084fc'
   }
 ];
 
