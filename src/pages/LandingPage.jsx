@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -75,6 +75,27 @@ const features = [
     icon: <FileCode size={32} style={{ color: '#60a5fa' }} />,
     path: '/base64',
     color: '#60a5fa'
+  },
+  {
+    title: 'JSON Formatter',
+    desc: 'Format, minify, and validate JSON payloads instantly.',
+    icon: <Braces size={32} style={{ color: '#fcd34d' }} />,
+    path: '/json',
+    color: '#fcd34d'
+  },
+  {
+    title: 'URL Encoder',
+    desc: 'Safely encode and decode URL components and query parameters.',
+    icon: <Link2 size={32} style={{ color: '#38bdf8' }} />,
+    path: '/url',
+    color: '#38bdf8'
+  },
+  {
+    title: 'Text Tools',
+    desc: 'Quickly manipulate, transform, and analyze text strings.',
+    icon: <Type size={32} style={{ color: '#a78bfa' }} />,
+    path: '/text',
+    color: '#a78bfa'
   }
 ];
 

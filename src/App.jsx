@@ -11,8 +11,11 @@ import APIKeyTester from './pages/tools/APIKeyTester';
 import HashEngine from './pages/tools/HashEngine';
 import JWTInspector from './pages/tools/JWTInspector';
 import Base64Converter from './pages/tools/Base64Converter';
+import JSONFormatter from './pages/tools/JSONFormatter';
+import URLEncoder from './pages/tools/URLEncoder';
+import TextTools from './pages/tools/TextTools';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -69,6 +72,15 @@ const TopBar = () => {
         <Link to="/base64" className={`nav-link ${isActive('/base64')}`} title="Base64 Converter">
           <FileCode className="icon-sm" /> Base64
         </Link>
+        <Link to="/json" className={`nav-link ${isActive('/json')}`} title="JSON Formatter">
+          <Braces className="icon-sm" /> JSON
+        </Link>
+        <Link to="/url" className={`nav-link ${isActive('/url')}`} title="URL Encoder">
+          <Link2 className="icon-sm" /> URL
+        </Link>
+        <Link to="/text" className={`nav-link ${isActive('/text')}`} title="Text Tools">
+          <Type className="icon-sm" /> Text
+        </Link>
       </div>
     </motion.nav>
   );
@@ -109,6 +121,9 @@ const AnimatedRoutes = () => {
         <Route path="/hash" element={<PageWrapper><HashEngine /></PageWrapper>} />
         <Route path="/jwt" element={<PageWrapper><JWTInspector /></PageWrapper>} />
         <Route path="/base64" element={<PageWrapper><Base64Converter /></PageWrapper>} />
+        <Route path="/json" element={<PageWrapper><JSONFormatter /></PageWrapper>} />
+        <Route path="/url" element={<PageWrapper><URLEncoder /></PageWrapper>} />
+        <Route path="/text" element={<PageWrapper><TextTools /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
