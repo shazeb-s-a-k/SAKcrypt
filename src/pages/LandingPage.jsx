@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -96,6 +96,53 @@ const features = [
     icon: <Type size={32} style={{ color: '#a78bfa' }} />,
     path: '/text',
     color: '#a78bfa'
+  },
+  {
+    title: 'Base Converter',
+    desc: 'Instantly convert numbers between Binary, Octal, Decimal, and Hex.',
+    icon: <Binary size={32} style={{ color: '#4ade80' }} />,
+    path: '/base',
+    color: '#4ade80'
+  },
+  {
+    title: 'Password Strength',
+    desc: 'Test how long it would take hackers to crack your password.',
+    icon: <ShieldAlert size={32} style={{ color: '#ef4444' }} />,
+    path: '/pwdstrength',
+    color: '#ef4444'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'PDF Encryptor',
+    desc: 'Securely add password protection and encryption to PDF files locally.',
+    icon: <FileLock size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'AI Prompt Optimizer',
+    desc: 'Automatically refine and optimize your prompts for LLMs.',
+    icon: <Cpu size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'EXIF Scrubber',
+    desc: 'Strip GPS and metadata from images to protect your privacy.',
+    icon: <ImageMinus size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'Network Scanner',
+    desc: 'Ping endpoints, scan open ports, and trace IP geolocations.',
+    icon: <Network size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
   }
 ];
 
@@ -155,7 +202,7 @@ const LandingPage = () => {
       >
         {features.map((feat, idx) => (
           <motion.div key={idx} variants={itemVariants}>
-            <Link to={feat.path} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
+            <Link to={feat.path} onClick={(e) => feat.comingSoon && e.preventDefault()} style={{ textDecoration: 'none', display: 'block', height: '100%', cursor: feat.comingSoon ? 'not-allowed' : 'pointer' }}>
               <div 
                 className="glass-card" 
                 style={{ 
@@ -164,24 +211,38 @@ const LandingPage = () => {
                   flexDirection: 'column',
                   gap: '1rem',
                   transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-                  cursor: 'pointer'
+                  position: 'relative',
+                  overflow: 'hidden',
+                  opacity: feat.comingSoon ? 0.7 : 1,
+                  filter: feat.comingSoon ? 'grayscale(0.5)' : 'none'
                 }}
                 onMouseOver={e => {
+                  if (feat.comingSoon) return;
                   e.currentTarget.style.transform = 'translateY(-5px)';
                   e.currentTarget.style.boxShadow = `0 10px 30px ${feat.color}20`;
                   e.currentTarget.style.borderColor = `${feat.color}50`;
                 }}
                 onMouseOut={e => {
+                  if (feat.comingSoon) return;
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = 'none';
                   e.currentTarget.style.borderColor = 'var(--border)';
                 }}
               >
+                {feat.comingSoon && (
+                  <div style={{ position: 'absolute', top: '15px', right: '-30px', background: 'rgba(255,255,255,0.1)', color: '#a1a1aa', fontSize: '0.7rem', fontWeight: 'bold', padding: '4px 35px', transform: 'rotate(45deg)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    SOON
+                  </div>
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ padding: '12px', background: `${feat.color}15`, borderRadius: '12px', display: 'inline-flex' }}>
                     {feat.icon}
                   </div>
-                  <ArrowRight size={20} style={{ color: 'var(--text-muted)' }} />
+                  {feat.comingSoon ? (
+                    <Loader2 size={20} style={{ color: 'var(--text-muted)' }} />
+                  ) : (
+                    <ArrowRight size={20} style={{ color: 'var(--text-muted)' }} />
+                  )}
                 </div>
                 <h3 style={{ color: '#fff', fontSize: '1.2rem', margin: '0.5rem 0 0 0' }}>{feat.title}</h3>
                 <p style={{ color: 'var(--secondary)', margin: 0, fontSize: '0.9rem', lineHeight: 1.5 }}>

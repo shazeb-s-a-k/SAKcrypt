@@ -14,8 +14,10 @@ import Base64Converter from './pages/tools/Base64Converter';
 import JSONFormatter from './pages/tools/JSONFormatter';
 import URLEncoder from './pages/tools/URLEncoder';
 import TextTools from './pages/tools/TextTools';
+import NumberBaseConverter from './pages/tools/NumberBaseConverter';
+import PasswordStrength from './pages/tools/PasswordStrength';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -81,6 +83,12 @@ const TopBar = () => {
         <Link to="/text" className={`nav-link ${isActive('/text')}`} title="Text Tools">
           <Type className="icon-sm" /> Text
         </Link>
+        <Link to="/base" className={`nav-link ${isActive('/base')}`} title="Base Converter">
+          <Binary className="icon-sm" /> Base Conv
+        </Link>
+        <Link to="/pwdstrength" className={`nav-link ${isActive('/pwdstrength')}`} title="Password Strength">
+          <ShieldAlert className="icon-sm" /> Pwd Test
+        </Link>
       </div>
     </motion.nav>
   );
@@ -124,6 +132,8 @@ const AnimatedRoutes = () => {
         <Route path="/json" element={<PageWrapper><JSONFormatter /></PageWrapper>} />
         <Route path="/url" element={<PageWrapper><URLEncoder /></PageWrapper>} />
         <Route path="/text" element={<PageWrapper><TextTools /></PageWrapper>} />
+        <Route path="/base" element={<PageWrapper><NumberBaseConverter /></PageWrapper>} />
+        <Route path="/pwdstrength" element={<PageWrapper><PasswordStrength /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
