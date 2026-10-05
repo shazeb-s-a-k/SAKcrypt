@@ -5,6 +5,7 @@ import PhantomText from './pages/tools/PhantomText';
 import CyberVault from './pages/tools/CyberVault';
 import RegexTester from './pages/tools/RegexTester';
 import UUIDGenerator from './pages/tools/UUIDGenerator';
+import QRCodeGenerator from './pages/tools/QRCodeGenerator';
 import SonicTransfer from './pages/tools/SonicTransfer';
 import APIKeyTester from './pages/tools/APIKeyTester';
 import LandingPage from './pages/LandingPage';
