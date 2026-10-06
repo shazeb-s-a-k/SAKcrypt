@@ -18,8 +18,11 @@ import NumberBaseConverter from './pages/tools/NumberBaseConverter';
 import PasswordStrength from './pages/tools/PasswordStrength';
 import EXIFScrubber from './pages/tools/EXIFScrubber';
 import NetworkScanner from './pages/tools/NetworkScanner';
+import FileEncryptor from './pages/tools/FileEncryptor';
+import BcryptGenerator from './pages/tools/BcryptGenerator';
+import LoremIpsum from './pages/tools/LoremIpsum';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -97,6 +100,15 @@ const TopBar = () => {
         <Link to="/network" className={`nav-link ${isActive('/network')}`} title="Network Scanner">
           <Network className="icon-sm" /> IP Trace
         </Link>
+        <Link to="/encryptor" className={`nav-link ${isActive('/encryptor')}`} title="File Encryptor Vault">
+          <FileLock className="icon-sm" /> File Encrypt
+        </Link>
+        <Link to="/bcrypt" className={`nav-link ${isActive('/bcrypt')}`} title="Bcrypt Hash Generator">
+          <Fingerprint className="icon-sm" /> Bcrypt
+        </Link>
+        <Link to="/lorem" className={`nav-link ${isActive('/lorem')}`} title="Lorem Ipsum">
+          <FileText className="icon-sm" /> Lorem
+        </Link>
       </div>
     </motion.nav>
   );
@@ -144,6 +156,9 @@ const AnimatedRoutes = () => {
         <Route path="/pwdstrength" element={<PageWrapper><PasswordStrength /></PageWrapper>} />
         <Route path="/exif" element={<PageWrapper><EXIFScrubber /></PageWrapper>} />
         <Route path="/network" element={<PageWrapper><NetworkScanner /></PageWrapper>} />
+        <Route path="/encryptor" element={<PageWrapper><FileEncryptor /></PageWrapper>} />
+        <Route path="/bcrypt" element={<PageWrapper><BcryptGenerator /></PageWrapper>} />
+        <Route path="/lorem" element={<PageWrapper><LoremIpsum /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

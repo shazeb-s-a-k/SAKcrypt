@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2 } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -111,23 +111,6 @@ const features = [
     path: '/pwdstrength',
     color: '#ef4444'
   },
-  // --- COMING SOON TOOLS ---
-  {
-    title: 'PDF Encryptor',
-    desc: 'Securely add password protection and encryption to PDF files locally.',
-    icon: <FileLock size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
-  },
-  {
-    title: 'AI Prompt Optimizer',
-    desc: 'Automatically refine and optimize your prompts for LLMs.',
-    icon: <Cpu size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
-  },
   {
     title: 'EXIF Scrubber',
     desc: 'Strip GPS and metadata from images to protect your privacy.',
@@ -141,6 +124,52 @@ const features = [
     icon: <Network size={32} style={{ color: '#94a3b8' }} />,
     path: '/network',
     color: '#94a3b8'
+  },
+  {
+    title: 'File Encryptor',
+    desc: 'Encrypt and decrypt any file locally using military-grade AES-256.',
+    icon: <FileLock size={32} style={{ color: '#f87171' }} />,
+    path: '/encryptor',
+    color: '#f87171'
+  },
+  {
+    title: 'Bcrypt Generator',
+    desc: 'Generate and verify secure bcrypt hashes locally.',
+    icon: <Fingerprint size={32} style={{ color: '#6366f1' }} />,
+    path: '/bcrypt',
+    color: '#6366f1'
+  },
+  {
+    title: 'Lorem Ipsum Generator',
+    desc: 'Generate realistic placeholder text instantly.',
+    icon: <FileText size={32} style={{ color: '#fbbf24' }} />,
+    path: '/lorem',
+    color: '#fbbf24'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'Markdown Previewer',
+    desc: 'Live editor to write, preview, and export Markdown documents.',
+    icon: <Type size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'Cron Job Parser',
+    desc: 'Convert complex cron expressions into human-readable text.',
+    icon: <Clock size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'CSS Minifier',
+    desc: 'Compress and optimize CSS stylesheets for production.',
+    icon: <Minimize2 size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
   }
 ];
 
