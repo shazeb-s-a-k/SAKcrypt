@@ -21,8 +21,11 @@ import NetworkScanner from './pages/tools/NetworkScanner';
 import FileEncryptor from './pages/tools/FileEncryptor';
 import BcryptGenerator from './pages/tools/BcryptGenerator';
 import LoremIpsum from './pages/tools/LoremIpsum';
+import MarkdownPreviewer from './pages/tools/MarkdownPreviewer';
+import CronJobParser from './pages/tools/CronJobParser';
+import CSSMinifier from './pages/tools/CSSMinifier';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2 } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -109,6 +112,15 @@ const TopBar = () => {
         <Link to="/lorem" className={`nav-link ${isActive('/lorem')}`} title="Lorem Ipsum">
           <FileText className="icon-sm" /> Lorem
         </Link>
+        <Link to="/markdown" className={`nav-link ${isActive('/markdown')}`} title="Markdown Previewer">
+          <Type className="icon-sm" /> Markdown
+        </Link>
+        <Link to="/cron" className={`nav-link ${isActive('/cron')}`} title="Cron Parser">
+          <Clock className="icon-sm" /> Cron
+        </Link>
+        <Link to="/css" className={`nav-link ${isActive('/css')}`} title="CSS Minifier">
+          <Minimize2 className="icon-sm" /> CSS Min
+        </Link>
       </div>
     </motion.nav>
   );
@@ -159,6 +171,9 @@ const AnimatedRoutes = () => {
         <Route path="/encryptor" element={<PageWrapper><FileEncryptor /></PageWrapper>} />
         <Route path="/bcrypt" element={<PageWrapper><BcryptGenerator /></PageWrapper>} />
         <Route path="/lorem" element={<PageWrapper><LoremIpsum /></PageWrapper>} />
+        <Route path="/markdown" element={<PageWrapper><MarkdownPreviewer /></PageWrapper>} />
+        <Route path="/cron" element={<PageWrapper><CronJobParser /></PageWrapper>} />
+        <Route path="/css" element={<PageWrapper><CSSMinifier /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

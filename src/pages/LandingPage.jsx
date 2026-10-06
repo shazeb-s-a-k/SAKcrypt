@@ -146,27 +146,48 @@ const features = [
     path: '/lorem',
     color: '#fbbf24'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'Markdown Previewer',
     desc: 'Live editor to write, preview, and export Markdown documents.',
-    icon: <Type size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <Type size={32} style={{ color: '#ec4899' }} />,
+    path: '/markdown',
+    color: '#ec4899'
   },
   {
     title: 'Cron Job Parser',
     desc: 'Convert complex cron expressions into human-readable text.',
-    icon: <Clock size={32} style={{ color: '#94a3b8' }} />,
+    icon: <Clock size={32} style={{ color: '#8b5cf6' }} />,
+    path: '/cron',
+    color: '#8b5cf6'
+  },
+  {
+    title: 'CSS Minifier',
+    desc: 'Compress and optimize CSS stylesheets for production.',
+    icon: <Minimize2 size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/css',
+    color: '#0ea5e9'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'HTTP Status Codes',
+    desc: 'Quickly lookup HTTP status codes and their detailed meanings.',
+    icon: <Code size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'CSS Minifier',
-    desc: 'Compress and optimize CSS stylesheets for production.',
-    icon: <Minimize2 size={32} style={{ color: '#94a3b8' }} />,
+    title: 'Meta Tag Generator',
+    desc: 'Generate perfect SEO meta tags for any website.',
+    icon: <Braces size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'XML Formatter',
+    desc: 'Format, minify, and validate XML payloads instantly.',
+    icon: <FileCode size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
