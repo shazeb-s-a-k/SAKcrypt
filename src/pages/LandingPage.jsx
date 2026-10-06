@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -335,27 +335,48 @@ const features = [
     path: '/fake-data',
     color: '#f59e0b'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'CRON Job Generator',
     desc: 'Generate and explain complex CRON schedule expressions.',
-    icon: <Calendar size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <Calendar size={32} style={{ color: '#ec4899' }} />,
+    path: '/cron',
+    color: '#ec4899'
   },
   {
     title: 'JWT Decoder',
     desc: 'Decode and inspect JSON Web Tokens securely offline.',
-    icon: <FileLock2 size={32} style={{ color: '#94a3b8' }} />,
+    icon: <FileLock2 size={32} style={{ color: '#14b8a6' }} />,
+    path: '/jwt',
+    color: '#14b8a6'
+  },
+  {
+    title: 'Meta Tag Generator',
+    desc: 'Generate optimized SEO and Social Media meta tags.',
+    icon: <Tags size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/meta',
+    color: '#0ea5e9'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'Regex Tester',
+    desc: 'Test regular expressions against target text in real-time.',
+    icon: <TestTube size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'Meta Tag Generator',
-    desc: 'Generate optimized SEO and Social Media meta tags.',
-    icon: <Tags size={32} style={{ color: '#94a3b8' }} />,
+    title: 'Base64 File Encoder',
+    desc: 'Convert images and files to Base64 strings instantly.',
+    icon: <FileArchive size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'JSON to CSV',
+    desc: 'Convert JSON data arrays to downloadable CSV spreadsheets.',
+    icon: <Table size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true

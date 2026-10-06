@@ -48,8 +48,10 @@ import SVGPlaceholderGen from './pages/tools/SVGPlaceholderGen';
 import ASCIIArtGenerator from './pages/tools/ASCIIArtGenerator';
 import WiFiQRGenerator from './pages/tools/WiFiQRGenerator';
 import FakeDataGenerator from './pages/tools/FakeDataGenerator';
+import CRONJobGenerator from './pages/tools/CRONJobGenerator';
+import JWTDecoder from './pages/tools/JWTDecoder';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -217,6 +219,12 @@ const TopBar = () => {
         <Link to="/fake-data" className={`nav-link ${isActive('/fake-data')}`} title="Fake Data Generator">
           <Users className="icon-sm" /> Fake Data
         </Link>
+        <Link to="/cron" className={`nav-link ${isActive('/cron')}`} title="CRON Generator">
+          <Calendar className="icon-sm" /> CRON Gen
+        </Link>
+        <Link to="/jwt" className={`nav-link ${isActive('/jwt')}`} title="JWT Decoder">
+          <FileLock2 className="icon-sm" /> JWT Decode
+        </Link>
       </div>
     </motion.nav>
   );
@@ -294,6 +302,8 @@ const AnimatedRoutes = () => {
         <Route path="/ascii" element={<PageWrapper><ASCIIArtGenerator /></PageWrapper>} />
         <Route path="/wifi-qr" element={<PageWrapper><WiFiQRGenerator /></PageWrapper>} />
         <Route path="/fake-data" element={<PageWrapper><FakeDataGenerator /></PageWrapper>} />
+        <Route path="/cron" element={<PageWrapper><CRONJobGenerator /></PageWrapper>} />
+        <Route path="/jwt" element={<PageWrapper><JWTDecoder /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
