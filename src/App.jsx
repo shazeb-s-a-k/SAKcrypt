@@ -50,8 +50,11 @@ import WiFiQRGenerator from './pages/tools/WiFiQRGenerator';
 import FakeDataGenerator from './pages/tools/FakeDataGenerator';
 import CRONJobGenerator from './pages/tools/CRONJobGenerator';
 import JWTDecoder from './pages/tools/JWTDecoder';
+import Base64FileEncoder from './pages/tools/Base64FileEncoder';
+import JSONToCSV from './pages/tools/JSONToCSV';
+import HTMLToJSXConverter from './pages/tools/HTMLToJSXConverter';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2 } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -225,6 +228,15 @@ const TopBar = () => {
         <Link to="/jwt" className={`nav-link ${isActive('/jwt')}`} title="JWT Decoder">
           <FileLock2 className="icon-sm" /> JWT Decode
         </Link>
+        <Link to="/base64file" className={`nav-link ${isActive('/base64file')}`} title="Base64 File Encoder">
+          <FileArchive className="icon-sm" /> File to B64
+        </Link>
+        <Link to="/json2csv" className={`nav-link ${isActive('/json2csv')}`} title="JSON to CSV">
+          <Table className="icon-sm" /> JSON2CSV
+        </Link>
+        <Link to="/html2jsx" className={`nav-link ${isActive('/html2jsx')}`} title="HTML to JSX">
+          <Code2 className="icon-sm" /> HTML2JSX
+        </Link>
       </div>
     </motion.nav>
   );
@@ -304,6 +316,9 @@ const AnimatedRoutes = () => {
         <Route path="/fake-data" element={<PageWrapper><FakeDataGenerator /></PageWrapper>} />
         <Route path="/cron" element={<PageWrapper><CRONJobGenerator /></PageWrapper>} />
         <Route path="/jwt" element={<PageWrapper><JWTDecoder /></PageWrapper>} />
+        <Route path="/base64file" element={<PageWrapper><Base64FileEncoder /></PageWrapper>} />
+        <Route path="/json2csv" element={<PageWrapper><JSONToCSV /></PageWrapper>} />
+        <Route path="/html2jsx" element={<PageWrapper><HTMLToJSXConverter /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

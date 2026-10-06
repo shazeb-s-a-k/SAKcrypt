@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table, Code2, Terminal, BookTemplate, FileType2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -356,27 +356,48 @@ const features = [
     path: '/meta',
     color: '#0ea5e9'
   },
-  // --- COMING SOON TOOLS ---
   {
-    title: 'Regex Tester',
-    desc: 'Test regular expressions against target text in real-time.',
-    icon: <TestTube size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    title: 'HTML to JSX Converter',
+    desc: 'Instantly convert raw HTML code into React-ready JSX syntax.',
+    icon: <Code2 size={32} style={{ color: '#06b6d4' }} />,
+    path: '/html2jsx',
+    color: '#06b6d4'
   },
   {
     title: 'Base64 File Encoder',
     desc: 'Convert images and files to Base64 strings instantly.',
-    icon: <FileArchive size={32} style={{ color: '#94a3b8' }} />,
+    icon: <FileArchive size={32} style={{ color: '#8b5cf6' }} />,
+    path: '/base64file',
+    color: '#8b5cf6'
+  },
+  {
+    title: 'JSON to CSV',
+    desc: 'Convert JSON data arrays to downloadable CSV spreadsheets.',
+    icon: <Table size={32} style={{ color: '#10b981' }} />,
+    path: '/json2csv',
+    color: '#10b981'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'CSV to JSON',
+    desc: 'Convert CSV spreadsheets back to nested JSON structures.',
+    icon: <FileType2 size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'JSON to CSV',
-    desc: 'Convert JSON data arrays to downloadable CSV spreadsheets.',
-    icon: <Table size={32} style={{ color: '#94a3b8' }} />,
+    title: 'Github Readme Gen',
+    desc: 'Create beautiful, standardized Github README.md files visually.',
+    icon: <BookTemplate size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'Curl Command Gen',
+    desc: 'Generate fetch and axios code from complex curl requests.',
+    icon: <Terminal size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
