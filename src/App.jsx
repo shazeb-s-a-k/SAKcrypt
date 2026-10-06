@@ -16,8 +16,10 @@ import URLEncoder from './pages/tools/URLEncoder';
 import TextTools from './pages/tools/TextTools';
 import NumberBaseConverter from './pages/tools/NumberBaseConverter';
 import PasswordStrength from './pages/tools/PasswordStrength';
+import EXIFScrubber from './pages/tools/EXIFScrubber';
+import NetworkScanner from './pages/tools/NetworkScanner';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -89,6 +91,12 @@ const TopBar = () => {
         <Link to="/pwdstrength" className={`nav-link ${isActive('/pwdstrength')}`} title="Password Strength">
           <ShieldAlert className="icon-sm" /> Pwd Test
         </Link>
+        <Link to="/exif" className={`nav-link ${isActive('/exif')}`} title="EXIF Scrubber">
+          <ImageMinus className="icon-sm" /> EXIF
+        </Link>
+        <Link to="/network" className={`nav-link ${isActive('/network')}`} title="Network Scanner">
+          <Network className="icon-sm" /> IP Trace
+        </Link>
       </div>
     </motion.nav>
   );
@@ -134,6 +142,8 @@ const AnimatedRoutes = () => {
         <Route path="/text" element={<PageWrapper><TextTools /></PageWrapper>} />
         <Route path="/base" element={<PageWrapper><NumberBaseConverter /></PageWrapper>} />
         <Route path="/pwdstrength" element={<PageWrapper><PasswordStrength /></PageWrapper>} />
+        <Route path="/exif" element={<PageWrapper><EXIFScrubber /></PageWrapper>} />
+        <Route path="/network" element={<PageWrapper><NetworkScanner /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

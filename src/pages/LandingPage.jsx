@@ -132,17 +132,15 @@ const features = [
     title: 'EXIF Scrubber',
     desc: 'Strip GPS and metadata from images to protect your privacy.',
     icon: <ImageMinus size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    path: '/exif',
+    color: '#94a3b8'
   },
   {
     title: 'Network Scanner',
     desc: 'Ping endpoints, scan open ports, and trace IP geolocations.',
     icon: <Network size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    path: '/network',
+    color: '#94a3b8'
   }
 ];
 
