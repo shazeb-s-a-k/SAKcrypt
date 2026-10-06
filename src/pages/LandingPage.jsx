@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -250,6 +250,27 @@ const features = [
     icon: <Palette size={32} style={{ color: '#a855f7' }} />,
     path: '/palette',
     color: '#a855f7'
+  },
+  {
+    title: 'AI Prompt Optimizer',
+    desc: 'Let AI rewrite and structure your prompts for max performance.',
+    icon: <Wand2 size={32} style={{ color: '#6366f1' }} />,
+    path: '/ai-prompt',
+    color: '#6366f1'
+  },
+  {
+    title: 'AI Code Explainer',
+    desc: 'Paste complex code and let AI explain exactly how it works.',
+    icon: <HelpCircle size={32} style={{ color: '#8b5cf6' }} />,
+    path: '/ai-code',
+    color: '#8b5cf6'
+  },
+  {
+    title: 'AI Regex Generator',
+    desc: 'Describe text to extract, and AI builds the Regex for you.',
+    icon: <Regex size={32} style={{ color: '#ec4899' }} />,
+    path: '/ai-regex',
+    color: '#ec4899'
   },
   // --- COMING SOON TOOLS ---
   {

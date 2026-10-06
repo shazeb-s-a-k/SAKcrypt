@@ -36,8 +36,11 @@ import RandomStringGen from './pages/tools/RandomStringGen';
 import JSONToYAML from './pages/tools/JSONToYAML';
 import HMACGenerator from './pages/tools/HMACGenerator';
 import ColorPaletteGen from './pages/tools/ColorPaletteGen';
+import AIPromptOptimizer from './pages/tools/AIPromptOptimizer';
+import AICodeExplainer from './pages/tools/AICodeExplainer';
+import AIRegexGenerator from './pages/tools/AIRegexGenerator';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -169,6 +172,15 @@ const TopBar = () => {
         <Link to="/palette" className={`nav-link ${isActive('/palette')}`} title="Color Palette">
           <Palette className="icon-sm" /> Colors
         </Link>
+        <Link to="/ai-prompt" className={`nav-link ${isActive('/ai-prompt')}`} title="AI Prompt Optimizer">
+          <Wand2 className="icon-sm" /> AI Prompts
+        </Link>
+        <Link to="/ai-code" className={`nav-link ${isActive('/ai-code')}`} title="AI Code Explainer">
+          <HelpCircle className="icon-sm" /> AI Explainer
+        </Link>
+        <Link to="/ai-regex" className={`nav-link ${isActive('/ai-regex')}`} title="AI Regex Gen">
+          <Regex className="icon-sm" /> AI Regex
+        </Link>
       </div>
     </motion.nav>
   );
@@ -234,6 +246,9 @@ const AnimatedRoutes = () => {
         <Route path="/json2yaml" element={<PageWrapper><JSONToYAML /></PageWrapper>} />
         <Route path="/hmac" element={<PageWrapper><HMACGenerator /></PageWrapper>} />
         <Route path="/palette" element={<PageWrapper><ColorPaletteGen /></PageWrapper>} />
+        <Route path="/ai-prompt" element={<PageWrapper><AIPromptOptimizer /></PageWrapper>} />
+        <Route path="/ai-code" element={<PageWrapper><AICodeExplainer /></PageWrapper>} />
+        <Route path="/ai-regex" element={<PageWrapper><AIRegexGenerator /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
