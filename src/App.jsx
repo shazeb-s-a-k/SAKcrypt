@@ -24,6 +24,9 @@ import LoremIpsum from './pages/tools/LoremIpsum';
 import MarkdownPreviewer from './pages/tools/MarkdownPreviewer';
 import CronJobParser from './pages/tools/CronJobParser';
 import CSSMinifier from './pages/tools/CSSMinifier';
+import HTTPStatusCodes from './pages/tools/HTTPStatusCodes';
+import MetaTagGenerator from './pages/tools/MetaTagGenerator';
+import XMLFormatter from './pages/tools/XMLFormatter';
 import LandingPage from './pages/LandingPage';
 import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2 } from 'lucide-react';
 import Logo from './components/Logo';
@@ -121,6 +124,15 @@ const TopBar = () => {
         <Link to="/css" className={`nav-link ${isActive('/css')}`} title="CSS Minifier">
           <Minimize2 className="icon-sm" /> CSS Min
         </Link>
+        <Link to="/http" className={`nav-link ${isActive('/http')}`} title="HTTP Status Codes">
+          <Code className="icon-sm" /> HTTP Codes
+        </Link>
+        <Link to="/meta" className={`nav-link ${isActive('/meta')}`} title="Meta Tag Generator">
+          <Braces className="icon-sm" /> Meta Tags
+        </Link>
+        <Link to="/xml" className={`nav-link ${isActive('/xml')}`} title="XML Formatter">
+          <FileCode className="icon-sm" /> XML
+        </Link>
       </div>
     </motion.nav>
   );
@@ -174,6 +186,9 @@ const AnimatedRoutes = () => {
         <Route path="/markdown" element={<PageWrapper><MarkdownPreviewer /></PageWrapper>} />
         <Route path="/cron" element={<PageWrapper><CronJobParser /></PageWrapper>} />
         <Route path="/css" element={<PageWrapper><CSSMinifier /></PageWrapper>} />
+        <Route path="/http" element={<PageWrapper><HTTPStatusCodes /></PageWrapper>} />
+        <Route path="/meta" element={<PageWrapper><MetaTagGenerator /></PageWrapper>} />
+        <Route path="/xml" element={<PageWrapper><XMLFormatter /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

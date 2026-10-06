@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -167,27 +167,48 @@ const features = [
     path: '/css',
     color: '#0ea5e9'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'HTTP Status Codes',
     desc: 'Quickly lookup HTTP status codes and their detailed meanings.',
-    icon: <Code size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <Code size={32} style={{ color: '#10b981' }} />,
+    path: '/http',
+    color: '#10b981'
   },
   {
     title: 'Meta Tag Generator',
     desc: 'Generate perfect SEO meta tags for any website.',
-    icon: <Braces size={32} style={{ color: '#94a3b8' }} />,
+    icon: <Braces size={32} style={{ color: '#6366f1' }} />,
+    path: '/meta',
+    color: '#6366f1'
+  },
+  {
+    title: 'XML Formatter',
+    desc: 'Format, minify, and validate XML payloads instantly.',
+    icon: <FileCode size={32} style={{ color: '#ec4899' }} />,
+    path: '/xml',
+    color: '#ec4899'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'SQL Formatter',
+    desc: 'Beautify and format complex SQL queries for readability.',
+    icon: <Database size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'XML Formatter',
-    desc: 'Format, minify, and validate XML payloads instantly.',
-    icon: <FileCode size={32} style={{ color: '#94a3b8' }} />,
+    title: 'Markdown to HTML',
+    desc: 'Convert Markdown strings into raw HTML markup.',
+    icon: <ArrowLeftRight size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'JWT Generator',
+    desc: 'Create and sign custom JSON Web Tokens instantly.',
+    icon: <Settings size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
