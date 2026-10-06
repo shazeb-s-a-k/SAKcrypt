@@ -7,32 +7,18 @@ import { useSupport } from '../components/SupportProvider';
 
 const features = [
   {
-    title: 'Phantom Text',
-    desc: 'Encode messages and files into completely invisible zero-width characters for ultimate stealth.',
-    icon: <Shield size={32} style={{ color: 'var(--accent)' }} />,
-    path: '/phantom',
-    color: 'var(--accent)'
+    title: 'JSON Formatter',
+    desc: 'Format, minify, and validate JSON payloads instantly.',
+    icon: <Braces size={32} style={{ color: '#fcd34d' }} />,
+    path: '/json',
+    color: '#fcd34d'
   },
   {
-    title: 'Sonic Transfer',
-    desc: 'Transmit text payloads over-the-air to nearby devices using high-frequency sound waves.',
-    icon: <Radio size={32} style={{ color: '#10b981' }} />,
-    path: '/sonic',
-    color: '#10b981'
-  },
-  {
-    title: 'QR Code Engine',
-    desc: 'Generate custom, high-res QR codes instantly with customizable foregrounds and backgrounds.',
-    icon: <QrCode size={32} style={{ color: '#f59e0b' }} />,
-    path: '/qrcode',
-    color: '#f59e0b'
-  },
-  {
-    title: 'Cyber Vault',
-    desc: 'Generate cryptographically secure, unbreakable passwords with highly customizable parameters.',
-    icon: <Key size={32} style={{ color: '#ec4899' }} />,
-    path: '/vault',
-    color: '#ec4899'
+    title: 'JWT Inspector',
+    desc: 'Decode, verify, and inspect JSON Web Tokens securely right in your browser.',
+    icon: <Code size={32} style={{ color: '#c084fc' }} />,
+    path: '/jwt',
+    color: '#c084fc'
   },
   {
     title: 'Regex Sandbox',
@@ -49,39 +35,11 @@ const features = [
     color: '#0ea5e9'
   },
   {
-    title: 'API Key Tester',
-    desc: 'Securely validate API keys for AI models and custom endpoints before deployment.',
-    icon: <KeyRound size={32} style={{ color: '#fb923c' }} />,
-    path: '/apikey',
-    color: '#fb923c'
-  },
-  {
-    title: 'Hash Engine',
-    desc: 'Generate highly secure cryptographic hashes (SHA-256, SHA-512) instantly.',
-    icon: <Fingerprint size={32} style={{ color: '#10b981' }} />,
-    path: '/hash',
-    color: '#10b981'
-  },
-  {
-    title: 'JWT Inspector',
-    desc: 'Decode, verify, and inspect JSON Web Tokens securely right in your browser.',
-    icon: <Code size={32} style={{ color: '#c084fc' }} />,
-    path: '/jwt',
-    color: '#c084fc'
-  },
-  {
     title: 'Base64 Converter',
     desc: 'Instantly encode and decode strings to and from Base64 format.',
     icon: <FileCode size={32} style={{ color: '#60a5fa' }} />,
     path: '/base64',
     color: '#60a5fa'
-  },
-  {
-    title: 'JSON Formatter',
-    desc: 'Format, minify, and validate JSON payloads instantly.',
-    icon: <Braces size={32} style={{ color: '#fcd34d' }} />,
-    path: '/json',
-    color: '#fcd34d'
   },
   {
     title: 'URL Encoder',
@@ -91,101 +49,17 @@ const features = [
     color: '#38bdf8'
   },
   {
-    title: 'Text Tools',
-    desc: 'Quickly manipulate, transform, and analyze text strings.',
-    icon: <Type size={32} style={{ color: '#a78bfa' }} />,
-    path: '/text',
-    color: '#a78bfa'
-  },
-  {
-    title: 'Base Converter',
-    desc: 'Instantly convert numbers between Binary, Octal, Decimal, and Hex.',
-    icon: <Binary size={32} style={{ color: '#4ade80' }} />,
-    path: '/base',
-    color: '#4ade80'
-  },
-  {
-    title: 'Password Strength',
-    desc: 'Test how long it would take hackers to crack your password.',
-    icon: <ShieldAlert size={32} style={{ color: '#ef4444' }} />,
-    path: '/pwdstrength',
-    color: '#ef4444'
-  },
-  {
-    title: 'EXIF Scrubber',
-    desc: 'Strip GPS and metadata from images to protect your privacy.',
-    icon: <ImageMinus size={32} style={{ color: '#94a3b8' }} />,
-    path: '/exif',
-    color: '#94a3b8'
-  },
-  {
-    title: 'Network Scanner',
-    desc: 'Ping endpoints, scan open ports, and trace IP geolocations.',
-    icon: <Network size={32} style={{ color: '#94a3b8' }} />,
-    path: '/network',
-    color: '#94a3b8'
-  },
-  {
-    title: 'File Encryptor',
-    desc: 'Encrypt and decrypt any file locally using military-grade AES-256.',
-    icon: <FileLock size={32} style={{ color: '#f87171' }} />,
-    path: '/encryptor',
-    color: '#f87171'
-  },
-  {
-    title: 'Bcrypt Generator',
-    desc: 'Generate and verify secure bcrypt hashes locally.',
-    icon: <Fingerprint size={32} style={{ color: '#6366f1' }} />,
-    path: '/bcrypt',
-    color: '#6366f1'
-  },
-  {
-    title: 'Lorem Ipsum Generator',
-    desc: 'Generate realistic placeholder text instantly.',
-    icon: <FileText size={32} style={{ color: '#fbbf24' }} />,
-    path: '/lorem',
-    color: '#fbbf24'
-  },
-  {
-    title: 'Markdown Previewer',
-    desc: 'Live editor to write, preview, and export Markdown documents.',
-    icon: <Type size={32} style={{ color: '#ec4899' }} />,
-    path: '/markdown',
-    color: '#ec4899'
-  },
-  {
-    title: 'Cron Job Parser',
-    desc: 'Convert complex cron expressions into human-readable text.',
-    icon: <Clock size={32} style={{ color: '#8b5cf6' }} />,
-    path: '/cron',
-    color: '#8b5cf6'
-  },
-  {
-    title: 'CSS Minifier',
-    desc: 'Compress and optimize CSS stylesheets for production.',
-    icon: <Minimize2 size={32} style={{ color: '#0ea5e9' }} />,
-    path: '/css',
-    color: '#0ea5e9'
-  },
-  {
-    title: 'HTTP Status Codes',
-    desc: 'Quickly lookup HTTP status codes and their detailed meanings.',
-    icon: <Code size={32} style={{ color: '#10b981' }} />,
-    path: '/http',
+    title: 'Hash Engine',
+    desc: 'Generate highly secure cryptographic hashes (SHA-256, SHA-512) instantly.',
+    icon: <Fingerprint size={32} style={{ color: '#10b981' }} />,
+    path: '/hash',
     color: '#10b981'
   },
   {
-    title: 'Meta Tag Generator',
-    desc: 'Generate perfect SEO meta tags for any website.',
-    icon: <Braces size={32} style={{ color: '#6366f1' }} />,
-    path: '/meta',
-    color: '#6366f1'
-  },
-  {
-    title: 'XML Formatter',
-    desc: 'Format, minify, and validate XML payloads instantly.',
-    icon: <FileCode size={32} style={{ color: '#ec4899' }} />,
-    path: '/xml',
+    title: 'CRON Job Generator',
+    desc: 'Generate and explain complex CRON schedule expressions.',
+    icon: <Calendar size={32} style={{ color: '#ec4899' }} />,
+    path: '/cron',
     color: '#ec4899'
   },
   {
@@ -196,25 +70,32 @@ const features = [
     color: '#38bdf8'
   },
   {
-    title: 'Markdown to HTML',
-    desc: 'Convert Markdown strings into raw HTML markup.',
-    icon: <ArrowLeftRight size={32} style={{ color: '#f472b6' }} />,
-    path: '/mdhtml',
-    color: '#f472b6'
+    title: 'Meta Tag Generator',
+    desc: 'Generate optimized SEO and Social Media meta tags.',
+    icon: <Tags size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/meta',
+    color: '#0ea5e9'
   },
   {
-    title: 'JWT Generator',
-    desc: 'Create and sign custom JSON Web Tokens instantly.',
-    icon: <Settings size={32} style={{ color: '#fb923c' }} />,
-    path: '/jwtgen',
-    color: '#fb923c'
+    title: 'Port Scanner',
+    desc: 'Scan domains and IPs for open ports and vulnerabilities.',
+    icon: <Network size={32} style={{ color: '#14b8a6' }} />,
+    path: '/port-scanner',
+    color: '#14b8a6'
   },
   {
-    title: 'YAML to JSON',
-    desc: 'Instantly convert YAML configurations into valid JSON.',
-    icon: <FileJson size={32} style={{ color: '#10b981' }} />,
-    path: '/yaml',
-    color: '#10b981'
+    title: 'SSL Checker',
+    desc: 'Inspect SSL/TLS certificates and check expiration dates.',
+    icon: <ShieldCheck size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/ssl',
+    color: '#0ea5e9'
+  },
+  {
+    title: 'Network Scanner',
+    desc: 'Ping endpoints, scan open ports, and trace IP geolocations.',
+    icon: <Network size={32} style={{ color: '#94a3b8' }} />,
+    path: '/network',
+    color: '#94a3b8'
   },
   {
     title: 'DNS Lookup',
@@ -224,11 +105,32 @@ const features = [
     color: '#6366f1'
   },
   {
-    title: 'Random String Gen',
-    desc: 'Generate secure random strings for secrets and passwords.',
-    icon: <Shuffle size={32} style={{ color: '#f59e0b' }} />,
-    path: '/random',
-    color: '#f59e0b'
+    title: 'API Key Tester',
+    desc: 'Securely validate API keys for AI models and custom endpoints before deployment.',
+    icon: <KeyRound size={32} style={{ color: '#fb923c' }} />,
+    path: '/apikey',
+    color: '#fb923c'
+  },
+  {
+    title: 'Password Strength',
+    desc: 'Test how long it would take hackers to crack your password.',
+    icon: <ShieldAlert size={32} style={{ color: '#ef4444' }} />,
+    path: '/pwdstrength',
+    color: '#ef4444'
+  },
+  {
+    title: 'Cyber Vault',
+    desc: 'Generate cryptographically secure, unbreakable passwords with highly customizable parameters.',
+    icon: <Key size={32} style={{ color: '#ec4899' }} />,
+    path: '/vault',
+    color: '#ec4899'
+  },
+  {
+    title: 'YAML to JSON',
+    desc: 'Instantly convert YAML configurations into valid JSON.',
+    icon: <FileJson size={32} style={{ color: '#10b981' }} />,
+    path: '/yaml',
+    color: '#10b981'
   },
   {
     title: 'JSON to YAML',
@@ -238,11 +140,74 @@ const features = [
     color: '#0ea5e9'
   },
   {
-    title: 'HMAC Generator',
-    desc: 'Generate Hash-based Message Authentication Codes.',
-    icon: <HmacIcon size={32} style={{ color: '#f43f5e' }} />,
-    path: '/hmac',
-    color: '#f43f5e'
+    title: 'JSON to CSV',
+    desc: 'Convert JSON data arrays to downloadable CSV spreadsheets.',
+    icon: <Table size={32} style={{ color: '#10b981' }} />,
+    path: '/json2csv',
+    color: '#10b981'
+  },
+  {
+    title: 'HTML to JSX Converter',
+    desc: 'Instantly convert raw HTML code into React-ready JSX syntax.',
+    icon: <Code2 size={32} style={{ color: '#06b6d4' }} />,
+    path: '/html2jsx',
+    color: '#06b6d4'
+  },
+  {
+    title: 'Markdown to HTML',
+    desc: 'Convert Markdown strings into raw HTML markup.',
+    icon: <ArrowLeftRight size={32} style={{ color: '#f472b6' }} />,
+    path: '/mdhtml',
+    color: '#f472b6'
+  },
+  {
+    title: 'Markdown Previewer',
+    desc: 'Live editor to write, preview, and export Markdown documents.',
+    icon: <Type size={32} style={{ color: '#ec4899' }} />,
+    path: '/markdown',
+    color: '#ec4899'
+  },
+  {
+    title: 'CSS Minifier',
+    desc: 'Compress and optimize CSS stylesheets for production.',
+    icon: <Minimize2 size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/css',
+    color: '#0ea5e9'
+  },
+  {
+    title: 'XML Formatter',
+    desc: 'Format, minify, and validate XML payloads instantly.',
+    icon: <FileCode size={32} style={{ color: '#ec4899' }} />,
+    path: '/xml',
+    color: '#ec4899'
+  },
+  {
+    title: 'Fake Data Generator',
+    desc: 'Generate large datasets of realistic mock user data.',
+    icon: <Users size={32} style={{ color: '#f59e0b' }} />,
+    path: '/fake-data',
+    color: '#f59e0b'
+  },
+  {
+    title: 'Base Converter',
+    desc: 'Instantly convert numbers between Binary, Octal, Decimal, and Hex.',
+    icon: <Binary size={32} style={{ color: '#4ade80' }} />,
+    path: '/base',
+    color: '#4ade80'
+  },
+  {
+    title: 'Text Tools',
+    desc: 'Quickly manipulate, transform, and analyze text strings.',
+    icon: <Type size={32} style={{ color: '#a78bfa' }} />,
+    path: '/text',
+    color: '#a78bfa'
+  },
+  {
+    title: 'Lorem Ipsum Generator',
+    desc: 'Generate realistic placeholder text instantly.',
+    icon: <FileText size={32} style={{ color: '#fbbf24' }} />,
+    path: '/lorem',
+    color: '#fbbf24'
   },
   {
     title: 'Color Palette Gen',
@@ -250,6 +215,41 @@ const features = [
     icon: <Palette size={32} style={{ color: '#a855f7' }} />,
     path: '/palette',
     color: '#a855f7'
+  },
+  {
+    title: 'SVG Placeholder Gen',
+    desc: 'Generate dynamic SVG placeholder images for development.',
+    icon: <ImageIcon size={32} style={{ color: '#f43f5e' }} />,
+    path: '/svg',
+    color: '#f43f5e'
+  },
+  {
+    title: 'ASCII Art Generator',
+    desc: 'Convert any text into retro ASCII banner art.',
+    icon: <Baseline size={32} style={{ color: '#8b5cf6' }} />,
+    path: '/ascii',
+    color: '#8b5cf6'
+  },
+  {
+    title: 'HTTP Status Codes',
+    desc: 'Quickly lookup HTTP status codes and their detailed meanings.',
+    icon: <Code size={32} style={{ color: '#10b981' }} />,
+    path: '/http',
+    color: '#10b981'
+  },
+  {
+    title: 'Chmod Calculator',
+    desc: 'Convert Linux file permissions between octal and symbolic.',
+    icon: <Calculator size={32} style={{ color: '#10b981' }} />,
+    path: '/chmod',
+    color: '#10b981'
+  },
+  {
+    title: 'IP Subnet Calculator',
+    desc: 'Calculate IPv4 subnets, CIDR, and usable host ranges.',
+    icon: <Globe size={32} style={{ color: '#3b82f6' }} />,
+    path: '/subnet',
+    color: '#3b82f6'
   },
   {
     title: 'AI Prompt Optimizer',
@@ -273,53 +273,25 @@ const features = [
     color: '#ec4899'
   },
   {
-    title: 'Port Scanner',
-    desc: 'Scan domains and IPs for open ports and vulnerabilities.',
-    icon: <Network size={32} style={{ color: '#14b8a6' }} />,
-    path: '/port-scanner',
-    color: '#14b8a6'
+    title: 'Phantom Text',
+    desc: 'Encode messages and files into completely invisible zero-width characters for ultimate stealth.',
+    icon: <Shield size={32} style={{ color: 'var(--accent)' }} />,
+    path: '/phantom',
+    color: 'var(--accent)'
   },
   {
-    title: 'SSL Checker',
-    desc: 'Inspect SSL/TLS certificates and check expiration dates.',
-    icon: <ShieldCheck size={32} style={{ color: '#0ea5e9' }} />,
-    path: '/ssl',
-    color: '#0ea5e9'
-  },
-  {
-    title: 'RSA Key Generator',
-    desc: 'Generate secure RSA public and private key pairs locally.',
-    icon: <LockKeyhole size={32} style={{ color: '#f59e0b' }} />,
-    path: '/rsa',
-    color: '#f59e0b'
-  },
-  {
-    title: 'Chmod Calculator',
-    desc: 'Convert Linux file permissions between octal and symbolic.',
-    icon: <Calculator size={32} style={{ color: '#10b981' }} />,
-    path: '/chmod',
+    title: 'Sonic Transfer',
+    desc: 'Transmit text payloads over-the-air to nearby devices using high-frequency sound waves.',
+    icon: <Radio size={32} style={{ color: '#10b981' }} />,
+    path: '/sonic',
     color: '#10b981'
   },
   {
-    title: 'IP Subnet Calculator',
-    desc: 'Calculate IPv4 subnets, CIDR, and usable host ranges.',
-    icon: <Globe size={32} style={{ color: '#3b82f6' }} />,
-    path: '/subnet',
-    color: '#3b82f6'
-  },
-  {
-    title: 'SVG Placeholder Gen',
-    desc: 'Generate dynamic SVG placeholder images for development.',
-    icon: <ImageIcon size={32} style={{ color: '#f43f5e' }} />,
-    path: '/svg',
-    color: '#f43f5e'
-  },
-  {
-    title: 'ASCII Art Generator',
-    desc: 'Convert any text into retro ASCII banner art.',
-    icon: <Baseline size={32} style={{ color: '#8b5cf6' }} />,
-    path: '/ascii',
-    color: '#8b5cf6'
+    title: 'QR Code Engine',
+    desc: 'Generate custom, high-res QR codes instantly with customizable foregrounds and backgrounds.',
+    icon: <QrCode size={32} style={{ color: '#f59e0b' }} />,
+    path: '/qrcode',
+    color: '#f59e0b'
   },
   {
     title: 'WiFi QR Generator',
@@ -329,39 +301,46 @@ const features = [
     color: '#10b981'
   },
   {
-    title: 'Fake Data Generator',
-    desc: 'Generate large datasets of realistic mock user data.',
-    icon: <Users size={32} style={{ color: '#f59e0b' }} />,
-    path: '/fake-data',
+    title: 'EXIF Scrubber',
+    desc: 'Strip GPS and metadata from images to protect your privacy.',
+    icon: <ImageMinus size={32} style={{ color: '#94a3b8' }} />,
+    path: '/exif',
+    color: '#94a3b8'
+  },
+  {
+    title: 'File Encryptor',
+    desc: 'Encrypt and decrypt any file locally using military-grade AES-256.',
+    icon: <FileLock size={32} style={{ color: '#f87171' }} />,
+    path: '/encryptor',
+    color: '#f87171'
+  },
+  {
+    title: 'Bcrypt Generator',
+    desc: 'Generate and verify secure bcrypt hashes locally.',
+    icon: <Fingerprint size={32} style={{ color: '#6366f1' }} />,
+    path: '/bcrypt',
+    color: '#6366f1'
+  },
+  {
+    title: 'JWT Generator',
+    desc: 'Create and sign custom JSON Web Tokens instantly.',
+    icon: <Settings size={32} style={{ color: '#fb923c' }} />,
+    path: '/jwtgen',
+    color: '#fb923c'
+  },
+  {
+    title: 'HMAC Generator',
+    desc: 'Generate Hash-based Message Authentication Codes.',
+    icon: <HmacIcon size={32} style={{ color: '#f43f5e' }} />,
+    path: '/hmac',
+    color: '#f43f5e'
+  },
+  {
+    title: 'RSA Key Generator',
+    desc: 'Generate secure RSA public and private key pairs locally.',
+    icon: <LockKeyhole size={32} style={{ color: '#f59e0b' }} />,
+    path: '/rsa',
     color: '#f59e0b'
-  },
-  {
-    title: 'CRON Job Generator',
-    desc: 'Generate and explain complex CRON schedule expressions.',
-    icon: <Calendar size={32} style={{ color: '#ec4899' }} />,
-    path: '/cron',
-    color: '#ec4899'
-  },
-  {
-    title: 'JWT Decoder',
-    desc: 'Decode and inspect JSON Web Tokens securely offline.',
-    icon: <FileLock2 size={32} style={{ color: '#14b8a6' }} />,
-    path: '/jwt',
-    color: '#14b8a6'
-  },
-  {
-    title: 'Meta Tag Generator',
-    desc: 'Generate optimized SEO and Social Media meta tags.',
-    icon: <Tags size={32} style={{ color: '#0ea5e9' }} />,
-    path: '/meta',
-    color: '#0ea5e9'
-  },
-  {
-    title: 'HTML to JSX Converter',
-    desc: 'Instantly convert raw HTML code into React-ready JSX syntax.',
-    icon: <Code2 size={32} style={{ color: '#06b6d4' }} />,
-    path: '/html2jsx',
-    color: '#06b6d4'
   },
   {
     title: 'Base64 File Encoder',
@@ -371,13 +350,27 @@ const features = [
     color: '#8b5cf6'
   },
   {
-    title: 'JSON to CSV',
-    desc: 'Convert JSON data arrays to downloadable CSV spreadsheets.',
-    icon: <Table size={32} style={{ color: '#10b981' }} />,
-    path: '/json2csv',
-    color: '#10b981'
+    title: 'JWT Decoder',
+    desc: 'Decode and inspect JSON Web Tokens securely offline.',
+    icon: <FileLock2 size={32} style={{ color: '#14b8a6' }} />,
+    path: '/jwt',
+    color: '#14b8a6'
   },
-  // --- COMING SOON TOOLS ---
+  {
+    title: 'Cron Job Parser',
+    desc: 'Convert complex cron expressions into human-readable text.',
+    icon: <Clock size={32} style={{ color: '#8b5cf6' }} />,
+    path: '/cron',
+    color: '#8b5cf6'
+  },
+  {
+    title: 'Random String Gen',
+    desc: 'Generate secure random strings for secrets and passwords.',
+    icon: <Shuffle size={32} style={{ color: '#f59e0b' }} />,
+    path: '/random',
+    color: '#f59e0b'
+  },
+  // --- COMING SOON TOOLS ---,
   {
     title: 'CSV to JSON',
     desc: 'Convert CSV spreadsheets back to nested JSON structures.',
