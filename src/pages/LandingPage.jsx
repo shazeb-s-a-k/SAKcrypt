@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -272,27 +272,48 @@ const features = [
     path: '/ai-regex',
     color: '#ec4899'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'Port Scanner',
     desc: 'Scan domains and IPs for open ports and vulnerabilities.',
-    icon: <Network size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <Network size={32} style={{ color: '#14b8a6' }} />,
+    path: '/port-scanner',
+    color: '#14b8a6'
   },
   {
     title: 'SSL Checker',
     desc: 'Inspect SSL/TLS certificates and check expiration dates.',
-    icon: <ShieldCheck size={32} style={{ color: '#94a3b8' }} />,
+    icon: <ShieldCheck size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/ssl',
+    color: '#0ea5e9'
+  },
+  {
+    title: 'RSA Key Generator',
+    desc: 'Generate secure RSA public and private key pairs locally.',
+    icon: <LockKeyhole size={32} style={{ color: '#f59e0b' }} />,
+    path: '/rsa',
+    color: '#f59e0b'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'Chmod Calculator',
+    desc: 'Convert Linux file permissions between octal and symbolic.',
+    icon: <Calculator size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'RSA Key Generator',
-    desc: 'Generate secure RSA public and private key pairs locally.',
-    icon: <LockKeyhole size={32} style={{ color: '#94a3b8' }} />,
+    title: 'IP Subnet Calculator',
+    desc: 'Calculate IPv4 subnets, CIDR, and usable host ranges.',
+    icon: <Globe size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'SVG Placeholder Gen',
+    desc: 'Generate dynamic SVG placeholder images for development.',
+    icon: <ImageIcon size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true

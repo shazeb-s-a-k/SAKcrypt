@@ -39,8 +39,11 @@ import ColorPaletteGen from './pages/tools/ColorPaletteGen';
 import AIPromptOptimizer from './pages/tools/AIPromptOptimizer';
 import AICodeExplainer from './pages/tools/AICodeExplainer';
 import AIRegexGenerator from './pages/tools/AIRegexGenerator';
+import PortScanner from './pages/tools/PortScanner';
+import SSLChecker from './pages/tools/SSLChecker';
+import RSAKeyGenerator from './pages/tools/RSAKeyGenerator';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -181,6 +184,15 @@ const TopBar = () => {
         <Link to="/ai-regex" className={`nav-link ${isActive('/ai-regex')}`} title="AI Regex Gen">
           <Regex className="icon-sm" /> AI Regex
         </Link>
+        <Link to="/port-scanner" className={`nav-link ${isActive('/port-scanner')}`} title="Port Scanner">
+          <Network className="icon-sm" /> Port Scan
+        </Link>
+        <Link to="/ssl" className={`nav-link ${isActive('/ssl')}`} title="SSL Checker">
+          <ShieldCheck className="icon-sm" /> SSL Check
+        </Link>
+        <Link to="/rsa" className={`nav-link ${isActive('/rsa')}`} title="RSA Key Generator">
+          <LockKeyhole className="icon-sm" /> RSA Keys
+        </Link>
       </div>
     </motion.nav>
   );
@@ -249,6 +261,9 @@ const AnimatedRoutes = () => {
         <Route path="/ai-prompt" element={<PageWrapper><AIPromptOptimizer /></PageWrapper>} />
         <Route path="/ai-code" element={<PageWrapper><AICodeExplainer /></PageWrapper>} />
         <Route path="/ai-regex" element={<PageWrapper><AIRegexGenerator /></PageWrapper>} />
+        <Route path="/port-scanner" element={<PageWrapper><PortScanner /></PageWrapper>} />
+        <Route path="/ssl" element={<PageWrapper><SSLChecker /></PageWrapper>} />
+        <Route path="/rsa" element={<PageWrapper><RSAKeyGenerator /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
