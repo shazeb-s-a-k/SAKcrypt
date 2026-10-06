@@ -42,8 +42,11 @@ import AIRegexGenerator from './pages/tools/AIRegexGenerator';
 import PortScanner from './pages/tools/PortScanner';
 import SSLChecker from './pages/tools/SSLChecker';
 import RSAKeyGenerator from './pages/tools/RSAKeyGenerator';
+import ChmodCalculator from './pages/tools/ChmodCalculator';
+import IPSubnetCalculator from './pages/tools/IPSubnetCalculator';
+import SVGPlaceholderGen from './pages/tools/SVGPlaceholderGen';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -193,6 +196,15 @@ const TopBar = () => {
         <Link to="/rsa" className={`nav-link ${isActive('/rsa')}`} title="RSA Key Generator">
           <LockKeyhole className="icon-sm" /> RSA Keys
         </Link>
+        <Link to="/chmod" className={`nav-link ${isActive('/chmod')}`} title="Chmod Calculator">
+          <Calculator className="icon-sm" /> Chmod
+        </Link>
+        <Link to="/subnet" className={`nav-link ${isActive('/subnet')}`} title="Subnet Calculator">
+          <Globe className="icon-sm" /> Subnet
+        </Link>
+        <Link to="/svg" className={`nav-link ${isActive('/svg')}`} title="SVG Placeholder">
+          <ImageIcon className="icon-sm" /> SVG Gen
+        </Link>
       </div>
     </motion.nav>
   );
@@ -264,6 +276,9 @@ const AnimatedRoutes = () => {
         <Route path="/port-scanner" element={<PageWrapper><PortScanner /></PageWrapper>} />
         <Route path="/ssl" element={<PageWrapper><SSLChecker /></PageWrapper>} />
         <Route path="/rsa" element={<PageWrapper><RSAKeyGenerator /></PageWrapper>} />
+        <Route path="/chmod" element={<PageWrapper><ChmodCalculator /></PageWrapper>} />
+        <Route path="/subnet" element={<PageWrapper><IPSubnetCalculator /></PageWrapper>} />
+        <Route path="/svg" element={<PageWrapper><SVGPlaceholderGen /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

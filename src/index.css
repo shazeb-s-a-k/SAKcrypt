@@ -37,11 +37,28 @@ body {
   min-height: 100vh;
   background-color: var(--bg-color);
   color: var(--primary);
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(94, 106, 210, 0.08), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(100, 100, 100, 0.08), transparent 25%);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(94, 106, 210, 0.15), transparent 35%),
+    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.1), transparent 35%);
+  pointer-events: none;
+  z-index: -1;
+  animation: orbFloat 20s infinite alternate ease-in-out;
+}
+
+@keyframes orbFloat {
+  0% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.1) translate(2%, 2%); }
+  100% { transform: scale(1) translate(-2%, -2%); }
 }
 
 .app-layout {
@@ -193,12 +210,14 @@ h1 {
 
 /* Card Style (Also maps to glass-card for older tools) */
 .card, .glass-card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: rgba(20, 20, 25, 0.5);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  transition: border-color 0.3s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 10;
 }

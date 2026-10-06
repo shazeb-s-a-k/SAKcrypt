@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -293,27 +293,48 @@ const features = [
     path: '/rsa',
     color: '#f59e0b'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'Chmod Calculator',
     desc: 'Convert Linux file permissions between octal and symbolic.',
-    icon: <Calculator size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <Calculator size={32} style={{ color: '#10b981' }} />,
+    path: '/chmod',
+    color: '#10b981'
   },
   {
     title: 'IP Subnet Calculator',
     desc: 'Calculate IPv4 subnets, CIDR, and usable host ranges.',
-    icon: <Globe size={32} style={{ color: '#94a3b8' }} />,
+    icon: <Globe size={32} style={{ color: '#3b82f6' }} />,
+    path: '/subnet',
+    color: '#3b82f6'
+  },
+  {
+    title: 'SVG Placeholder Gen',
+    desc: 'Generate dynamic SVG placeholder images for development.',
+    icon: <ImageIcon size={32} style={{ color: '#f43f5e' }} />,
+    path: '/svg',
+    color: '#f43f5e'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'ASCII Art Generator',
+    desc: 'Convert any text into retro ASCII banner art.',
+    icon: <Baseline size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'SVG Placeholder Gen',
-    desc: 'Generate dynamic SVG placeholder images for development.',
-    icon: <ImageIcon size={32} style={{ color: '#94a3b8' }} />,
+    title: 'WiFi QR Generator',
+    desc: 'Create secure QR codes to instantly connect to WiFi networks.',
+    icon: <Wifi size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'Fake Data Generator',
+    desc: 'Generate large datasets of realistic mock user data.',
+    icon: <Users size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
