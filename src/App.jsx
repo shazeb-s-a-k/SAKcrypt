@@ -30,8 +30,11 @@ import XMLFormatter from './pages/tools/XMLFormatter';
 import SQLFormatter from './pages/tools/SQLFormatter';
 import MarkdownToHTML from './pages/tools/MarkdownToHTML';
 import JWTGenerator from './pages/tools/JWTGenerator';
+import YAMLToJSON from './pages/tools/YAMLToJSON';
+import DNSLookup from './pages/tools/DNSLookup';
+import RandomStringGen from './pages/tools/RandomStringGen';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -145,6 +148,15 @@ const TopBar = () => {
         <Link to="/jwtgen" className={`nav-link ${isActive('/jwtgen')}`} title="JWT Generator">
           <Settings className="icon-sm" /> JWT Gen
         </Link>
+        <Link to="/yaml" className={`nav-link ${isActive('/yaml')}`} title="YAML to JSON">
+          <FileJson className="icon-sm" /> YAML2JSON
+        </Link>
+        <Link to="/dns" className={`nav-link ${isActive('/dns')}`} title="DNS Lookup">
+          <Globe className="icon-sm" /> DNS Lookup
+        </Link>
+        <Link to="/random" className={`nav-link ${isActive('/random')}`} title="Random String">
+          <Shuffle className="icon-sm" /> Random Str
+        </Link>
       </div>
     </motion.nav>
   );
@@ -204,6 +216,9 @@ const AnimatedRoutes = () => {
         <Route path="/sql" element={<PageWrapper><SQLFormatter /></PageWrapper>} />
         <Route path="/mdhtml" element={<PageWrapper><MarkdownToHTML /></PageWrapper>} />
         <Route path="/jwtgen" element={<PageWrapper><JWTGenerator /></PageWrapper>} />
+        <Route path="/yaml" element={<PageWrapper><YAMLToJSON /></PageWrapper>} />
+        <Route path="/dns" element={<PageWrapper><DNSLookup /></PageWrapper>} />
+        <Route path="/random" element={<PageWrapper><RandomStringGen /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -209,27 +209,48 @@ const features = [
     path: '/jwtgen',
     color: '#fb923c'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'YAML to JSON',
     desc: 'Instantly convert YAML configurations into valid JSON.',
-    icon: <FileJson size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <FileJson size={32} style={{ color: '#10b981' }} />,
+    path: '/yaml',
+    color: '#10b981'
   },
   {
     title: 'DNS Lookup',
     desc: 'Query DNS records (A, AAAA, MX, TXT) for any domain.',
-    icon: <Globe size={32} style={{ color: '#94a3b8' }} />,
+    icon: <Globe size={32} style={{ color: '#6366f1' }} />,
+    path: '/dns',
+    color: '#6366f1'
+  },
+  {
+    title: 'Random String Gen',
+    desc: 'Generate secure random strings for secrets and passwords.',
+    icon: <Shuffle size={32} style={{ color: '#f59e0b' }} />,
+    path: '/random',
+    color: '#f59e0b'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'JSON to YAML',
+    desc: 'Convert massive JSON structures into clean YAML.',
+    icon: <FileCode size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'Random String Gen',
-    desc: 'Generate secure random strings for secrets and passwords.',
-    icon: <Shuffle size={32} style={{ color: '#94a3b8' }} />,
+    title: 'HMAC Generator',
+    desc: 'Generate Hash-based Message Authentication Codes.',
+    icon: <HmacIcon size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'Color Palette Gen',
+    desc: 'Generate perfect UI color palettes and gradients.',
+    icon: <Palette size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
