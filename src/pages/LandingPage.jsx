@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -230,27 +230,48 @@ const features = [
     path: '/random',
     color: '#f59e0b'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'JSON to YAML',
     desc: 'Convert massive JSON structures into clean YAML.',
-    icon: <FileCode size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <FileCode size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/json2yaml',
+    color: '#0ea5e9'
   },
   {
     title: 'HMAC Generator',
     desc: 'Generate Hash-based Message Authentication Codes.',
-    icon: <HmacIcon size={32} style={{ color: '#94a3b8' }} />,
+    icon: <HmacIcon size={32} style={{ color: '#f43f5e' }} />,
+    path: '/hmac',
+    color: '#f43f5e'
+  },
+  {
+    title: 'Color Palette Gen',
+    desc: 'Generate perfect UI color palettes and gradients.',
+    icon: <Palette size={32} style={{ color: '#a855f7' }} />,
+    path: '/palette',
+    color: '#a855f7'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'Port Scanner',
+    desc: 'Scan domains and IPs for open ports and vulnerabilities.',
+    icon: <Network size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'Color Palette Gen',
-    desc: 'Generate perfect UI color palettes and gradients.',
-    icon: <Palette size={32} style={{ color: '#94a3b8' }} />,
+    title: 'SSL Checker',
+    desc: 'Inspect SSL/TLS certificates and check expiration dates.',
+    icon: <ShieldCheck size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'RSA Key Generator',
+    desc: 'Generate secure RSA public and private key pairs locally.',
+    icon: <LockKeyhole size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true

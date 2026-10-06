@@ -33,8 +33,11 @@ import JWTGenerator from './pages/tools/JWTGenerator';
 import YAMLToJSON from './pages/tools/YAMLToJSON';
 import DNSLookup from './pages/tools/DNSLookup';
 import RandomStringGen from './pages/tools/RandomStringGen';
+import JSONToYAML from './pages/tools/JSONToYAML';
+import HMACGenerator from './pages/tools/HMACGenerator';
+import ColorPaletteGen from './pages/tools/ColorPaletteGen';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -151,11 +154,20 @@ const TopBar = () => {
         <Link to="/yaml" className={`nav-link ${isActive('/yaml')}`} title="YAML to JSON">
           <FileJson className="icon-sm" /> YAML2JSON
         </Link>
+        <Link to="/json2yaml" className={`nav-link ${isActive('/json2yaml')}`} title="JSON to YAML">
+          <FileCode className="icon-sm" /> JSON2YAML
+        </Link>
         <Link to="/dns" className={`nav-link ${isActive('/dns')}`} title="DNS Lookup">
           <Globe className="icon-sm" /> DNS Lookup
         </Link>
         <Link to="/random" className={`nav-link ${isActive('/random')}`} title="Random String">
           <Shuffle className="icon-sm" /> Random Str
+        </Link>
+        <Link to="/hmac" className={`nav-link ${isActive('/hmac')}`} title="HMAC Generator">
+          <HmacIcon className="icon-sm" /> HMAC Gen
+        </Link>
+        <Link to="/palette" className={`nav-link ${isActive('/palette')}`} title="Color Palette">
+          <Palette className="icon-sm" /> Colors
         </Link>
       </div>
     </motion.nav>
@@ -219,6 +231,9 @@ const AnimatedRoutes = () => {
         <Route path="/yaml" element={<PageWrapper><YAMLToJSON /></PageWrapper>} />
         <Route path="/dns" element={<PageWrapper><DNSLookup /></PageWrapper>} />
         <Route path="/random" element={<PageWrapper><RandomStringGen /></PageWrapper>} />
+        <Route path="/json2yaml" element={<PageWrapper><JSONToYAML /></PageWrapper>} />
+        <Route path="/hmac" element={<PageWrapper><HMACGenerator /></PageWrapper>} />
+        <Route path="/palette" element={<PageWrapper><ColorPaletteGen /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
