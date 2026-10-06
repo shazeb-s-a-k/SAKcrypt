@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -188,27 +188,48 @@ const features = [
     path: '/xml',
     color: '#ec4899'
   },
-  // --- COMING SOON TOOLS ---
   {
     title: 'SQL Formatter',
     desc: 'Beautify and format complex SQL queries for readability.',
-    icon: <Database size={32} style={{ color: '#94a3b8' }} />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    icon: <Database size={32} style={{ color: '#38bdf8' }} />,
+    path: '/sql',
+    color: '#38bdf8'
   },
   {
     title: 'Markdown to HTML',
     desc: 'Convert Markdown strings into raw HTML markup.',
-    icon: <ArrowLeftRight size={32} style={{ color: '#94a3b8' }} />,
+    icon: <ArrowLeftRight size={32} style={{ color: '#f472b6' }} />,
+    path: '/mdhtml',
+    color: '#f472b6'
+  },
+  {
+    title: 'JWT Generator',
+    desc: 'Create and sign custom JSON Web Tokens instantly.',
+    icon: <Settings size={32} style={{ color: '#fb923c' }} />,
+    path: '/jwtgen',
+    color: '#fb923c'
+  },
+  // --- COMING SOON TOOLS ---
+  {
+    title: 'YAML to JSON',
+    desc: 'Instantly convert YAML configurations into valid JSON.',
+    icon: <FileJson size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true
   },
   {
-    title: 'JWT Generator',
-    desc: 'Create and sign custom JSON Web Tokens instantly.',
-    icon: <Settings size={32} style={{ color: '#94a3b8' }} />,
+    title: 'DNS Lookup',
+    desc: 'Query DNS records (A, AAAA, MX, TXT) for any domain.',
+    icon: <Globe size={32} style={{ color: '#94a3b8' }} />,
+    path: '#',
+    color: '#94a3b8',
+    comingSoon: true
+  },
+  {
+    title: 'Random String Gen',
+    desc: 'Generate secure random strings for secrets and passwords.',
+    icon: <Shuffle size={32} style={{ color: '#94a3b8' }} />,
     path: '#',
     color: '#94a3b8',
     comingSoon: true

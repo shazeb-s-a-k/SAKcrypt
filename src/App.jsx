@@ -27,8 +27,11 @@ import CSSMinifier from './pages/tools/CSSMinifier';
 import HTTPStatusCodes from './pages/tools/HTTPStatusCodes';
 import MetaTagGenerator from './pages/tools/MetaTagGenerator';
 import XMLFormatter from './pages/tools/XMLFormatter';
+import SQLFormatter from './pages/tools/SQLFormatter';
+import MarkdownToHTML from './pages/tools/MarkdownToHTML';
+import JWTGenerator from './pages/tools/JWTGenerator';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2 } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -133,6 +136,15 @@ const TopBar = () => {
         <Link to="/xml" className={`nav-link ${isActive('/xml')}`} title="XML Formatter">
           <FileCode className="icon-sm" /> XML
         </Link>
+        <Link to="/sql" className={`nav-link ${isActive('/sql')}`} title="SQL Formatter">
+          <Database className="icon-sm" /> SQL Formatter
+        </Link>
+        <Link to="/mdhtml" className={`nav-link ${isActive('/mdhtml')}`} title="Markdown to HTML">
+          <ArrowLeftRight className="icon-sm" /> MD to HTML
+        </Link>
+        <Link to="/jwtgen" className={`nav-link ${isActive('/jwtgen')}`} title="JWT Generator">
+          <Settings className="icon-sm" /> JWT Gen
+        </Link>
       </div>
     </motion.nav>
   );
@@ -189,6 +201,9 @@ const AnimatedRoutes = () => {
         <Route path="/http" element={<PageWrapper><HTTPStatusCodes /></PageWrapper>} />
         <Route path="/meta" element={<PageWrapper><MetaTagGenerator /></PageWrapper>} />
         <Route path="/xml" element={<PageWrapper><XMLFormatter /></PageWrapper>} />
+        <Route path="/sql" element={<PageWrapper><SQLFormatter /></PageWrapper>} />
+        <Route path="/mdhtml" element={<PageWrapper><MarkdownToHTML /></PageWrapper>} />
+        <Route path="/jwtgen" element={<PageWrapper><JWTGenerator /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

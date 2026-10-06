@@ -16,6 +16,7 @@
     "cronstrue": "^3.29.0",
     "framer-motion": "^13.2.0",
     "ggwave": "^0.4.0",
+    "jose": "^6.2.12",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^1.44.0",
     "qrcode.react": "^4.2.0",
@@ -23,6 +24,8 @@
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.18.4",
+    "showdown": "^2.1.0",
+    "sql-formatter": "^15.9.0",
     "three": "^0.186.0",
     "uuid": "^14.0.2",
     "xml-formatter": "^3.7.0"
