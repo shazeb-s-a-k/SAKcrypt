@@ -134,29 +134,30 @@ const APIKeyLaboratory = () => {
     setResults([...initialResults]);
 
     // Step 2: Test Keys Concurrently (Batched)
-    const concurrency = 5;
+    const concurrency = 20; // Increased concurrency
     for (let i = 0; i < initialResults.length; i += concurrency) {
       const chunk = initialResults.slice(i, i + concurrency);
       
       const promises = chunk.map(async (item) => {
         const testDetails = await testKey(item.key, item.provider.id);
-        return {
+        const updatedItem = {
           ...item,
           status: 'tested',
           details: testDetails
         };
+        
+        // Update UI progressively the exact millisecond this specific key finishes
+        setResults(prev => {
+          const newResults = [...prev];
+          const idx = newResults.findIndex(r => r.key === updatedItem.key);
+          if (idx !== -1) newResults[idx] = updatedItem;
+          return newResults;
+        });
+
+        return updatedItem;
       });
 
-      const testedChunk = await Promise.all(promises);
-      
-      setResults(prev => {
-        const newResults = [...prev];
-        testedChunk.forEach(tc => {
-          const idx = newResults.findIndex(r => r.key === tc.key);
-          if (idx !== -1) newResults[idx] = tc;
-        });
-        return newResults;
-      });
+      await Promise.all(promises); // Wait for the chunk to clear rate-limiting hurdles before moving to next batch
     }
 
     setAnalyzing(false);

@@ -114,20 +114,22 @@ const APIKeyTester = () => {
     setIsTestingBatch(true);
     setBatchResults([]);
     
-    // Process concurrently with a concurrency limit (e.g. 10 at a time) to avoid browser stalling
-    const concurrency = 10;
-    let results = [];
+    // Process concurrently with a concurrency limit to avoid browser stalling
+    const concurrency = 20; // Increased concurrency for speed
     
     for (let i = 0; i < batchKeys.length; i += concurrency) {
       const chunk = batchKeys.slice(i, i + concurrency);
       const chunkPromises = chunk.map(async (key) => {
         const res = await testKey(key);
-        return { key, status: res.success ? 'success' : 'error', msg: res.msg };
+        const resultItem = { key, status: res.success ? 'success' : 'error', msg: res.msg };
+        
+        // Update UI progressively the exact millisecond each key finishes
+        setBatchResults(prev => [...prev, resultItem]);
+        
+        return resultItem;
       });
       
-      const chunkResults = await Promise.all(chunkPromises);
-      results = [...results, ...chunkResults];
-      setBatchResults([...results]); // Update UI progressively
+      await Promise.all(chunkPromises); // Wait for chunk to complete before next batch
     }
     
     setIsTestingBatch(false);
