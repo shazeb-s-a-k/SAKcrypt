@@ -5,6 +5,17 @@ import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
 import { useSupport } from '../../components/SupportProvider';
 
+const PROVIDERS_LIST = [
+  { id: 'auto', name: 'Auto-Detect (Smart Routing)' },
+  { id: 'openai', name: 'OpenAI' },
+  { id: 'google', name: 'Google (Gemini / GCP)' },
+  { id: 'anthropic', name: 'Anthropic (Claude)' },
+  { id: 'groq', name: 'Groq' },
+  { id: 'github', name: 'GitHub Personal Access Token' },
+  { id: 'stripe', name: 'Stripe' },
+  { id: 'unknown', name: 'Unknown / Custom Provider' }
+];
+
 // --- KEY RECOGNITION HEURISTICS ---
 const detectProvider = (key) => {
   if (/^sk-ant-[a-zA-Z0-9_-]+$/.test(key)) return { id: 'anthropic', name: 'Anthropic (Claude)' };
@@ -83,6 +94,7 @@ const testKey = async (key, providerId) => {
 
 const APIKeyLaboratory = () => {
   const [inputText, setInputText] = useState('');
+  const [selectedProviderId, setSelectedProviderId] = useState('auto');
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState([]); // Array of { key, provider, status: 'pending'|'tested', details: {} }
   const [showKeys, setShowKeys] = useState(false);
@@ -124,12 +136,18 @@ const APIKeyLaboratory = () => {
     }
 
     // Step 1: Detect Providers
-    const initialResults = uniqueKeys.map(k => ({
-      key: k,
-      provider: detectProvider(k),
-      status: 'pending',
-      details: null
-    }));
+    const initialResults = uniqueKeys.map(k => {
+      const prov = selectedProviderId === 'auto' 
+        ? detectProvider(k) 
+        : PROVIDERS_LIST.find(p => p.id === selectedProviderId) || { id: 'unknown', name: 'Unknown' };
+
+      return {
+        key: k,
+        provider: prov,
+        status: 'pending',
+        details: null
+      };
+    });
 
     setResults([...initialResults]);
 
@@ -185,42 +203,60 @@ const APIKeyLaboratory = () => {
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         {/* Input Area */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'stretch' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <label style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              <span>PASTE KEYS (OR JSON/TEXT DUMP)</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              TARGET PROVIDER
             </label>
-            <textarea 
-              className="textarea-glass"
-              placeholder="sk-...\nAIza...\nPaste raw text here. The Laboratory will auto-extract and analyze."
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              style={{ flex: 1, minHeight: '150px', fontFamily: 'var(--font-mono)' }}
-            />
+            <select 
+              className="input-glass" 
+              value={selectedProviderId} 
+              onChange={(e) => setSelectedProviderId(e.target.value)}
+              style={{ width: '100%', cursor: 'pointer', padding: '1rem', fontSize: '1rem' }}
+            >
+              {PROVIDERS_LIST.map(p => (
+                <option key={p.id} value={p.id} style={{ background: '#111' }}>{p.name}</option>
+              ))}
+            </select>
           </div>
 
-          <div 
-            style={{ 
-              border: `2px dashed rgba(94, 106, 210, 0.4)`, 
-              borderRadius: '12px', 
-              padding: '2rem', 
-              textAlign: 'center', 
-              background: 'rgba(0,0,0,0.2)', 
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '1rem'
-            }}
-            onClick={() => fileInputRef.current.click()}
-          >
-            <UploadCloud size={48} style={{ color: 'var(--primary)' }} />
-            <div>
-              <h4 style={{ color: 'var(--primary)', margin: '0 0 0.5rem 0' }}>Upload Dump File</h4>
-              <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>.txt, .csv, .json</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'stretch' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <label style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                <span>PASTE KEYS (OR JSON/TEXT DUMP)</span>
+              </label>
+              <textarea 
+                className="textarea-glass"
+                placeholder="sk-...\nAIza...\nPaste raw text here. The Laboratory will auto-extract and analyze."
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                style={{ flex: 1, minHeight: '150px', fontFamily: 'var(--font-mono)' }}
+              />
             </div>
-            <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload(e.target.files[0])} />
+
+            <div 
+              style={{ 
+                border: `2px dashed rgba(94, 106, 210, 0.4)`, 
+                borderRadius: '12px', 
+                padding: '2rem', 
+                textAlign: 'center', 
+                background: 'rgba(0,0,0,0.2)', 
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '1rem'
+              }}
+              onClick={() => fileInputRef.current.click()}
+            >
+              <UploadCloud size={48} style={{ color: 'var(--primary)' }} />
+              <div>
+                <h4 style={{ color: 'var(--primary)', margin: '0 0 0.5rem 0' }}>Upload Dump File</h4>
+                <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>.txt, .csv, .json</p>
+              </div>
+              <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload(e.target.files[0])} />
+            </div>
           </div>
         </div>
 
