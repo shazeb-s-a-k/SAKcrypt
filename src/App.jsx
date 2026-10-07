@@ -53,8 +53,9 @@ import JWTDecoder from './pages/tools/JWTDecoder';
 import Base64FileEncoder from './pages/tools/Base64FileEncoder';
 import JSONToCSV from './pages/tools/JSONToCSV';
 import HTMLToJSXConverter from './pages/tools/HTMLToJSXConverter';
+import LLMChatSandbox from './pages/tools/LLMChatSandbox';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2 } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2, Bot } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -195,6 +196,9 @@ const TopBar = () => {
         <Link to="/ai-regex" className={`nav-link ${isActive('/ai-regex')}`} title="AI Regex Gen">
           <Regex className="icon-sm" /> AI Regex
         </Link>
+        <Link to="/llm-chat" className={`nav-link ${isActive('/llm-chat')}`} title="LLM Chat Sandbox">
+          <Bot className="icon-sm" /> LLM Chat
+        </Link>
         <Link to="/port-scanner" className={`nav-link ${isActive('/port-scanner')}`} title="Port Scanner">
           <Network className="icon-sm" /> Port Scan
         </Link>
@@ -319,6 +323,7 @@ const AnimatedRoutes = () => {
         <Route path="/base64file" element={<PageWrapper><Base64FileEncoder /></PageWrapper>} />
         <Route path="/json2csv" element={<PageWrapper><JSONToCSV /></PageWrapper>} />
         <Route path="/html2jsx" element={<PageWrapper><HTMLToJSXConverter /></PageWrapper>} />
+        <Route path="/llm-chat" element={<PageWrapper><LLMChatSandbox /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
