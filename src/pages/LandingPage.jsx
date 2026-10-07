@@ -1,5 +1,5 @@
-import React from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table, Code2, Terminal, BookTemplate, FileType2, Bot } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table, Code2, Terminal, BookTemplate, FileType2, Bot, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -419,6 +419,12 @@ const itemVariants = {
 
 const LandingPage = () => {
   const showSupport = useSupport();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredFeatures = features.filter(feat => 
+    feat.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    feat.desc.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div style={{ width: '100%' }}>
@@ -444,6 +450,27 @@ const LandingPage = () => {
         >
           <Heart size={16} style={{ color: '#ef4444' }} /> Support the Developer
         </button>
+
+        <div style={{ marginTop: '3rem', maxWidth: '600px', margin: '3rem auto 0 auto', position: 'relative' }}>
+          <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
+            <Search size={20} />
+          </div>
+          <input 
+            type="text" 
+            className="input-glass" 
+            placeholder="Search for tools... (e.g. JSON, JWT, API)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '1rem 1rem 1rem 3rem', 
+              fontSize: '1.1rem', 
+              borderRadius: '12px',
+              border: '1px solid rgba(94, 106, 210, 0.3)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+            }}
+          />
+        </div>
       </motion.div>
 
       <motion.div 
@@ -458,7 +485,7 @@ const LandingPage = () => {
           margin: '0 auto'
         }}
       >
-        {features.map((feat, idx) => (
+        {filteredFeatures.map((feat, idx) => (
           <motion.div key={idx} variants={itemVariants}>
             <Link to={feat.path} onClick={(e) => feat.comingSoon && e.preventDefault()} style={{ textDecoration: 'none', display: 'block', height: '100%', cursor: feat.comingSoon ? 'not-allowed' : 'pointer' }}>
               <div 
@@ -510,6 +537,13 @@ const LandingPage = () => {
             </Link>
           </motion.div>
         ))}
+        {filteredFeatures.length === 0 && (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+            <Search size={48} style={{ opacity: 0.2, margin: '0 auto 1rem auto' }} />
+            <h3 style={{ margin: 0 }}>No tools found</h3>
+            <p>Try adjusting your search query.</p>
+          </div>
+        )}
       </motion.div>
     </div>
   );
