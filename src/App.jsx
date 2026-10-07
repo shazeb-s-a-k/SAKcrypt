@@ -54,8 +54,9 @@ import Base64FileEncoder from './pages/tools/Base64FileEncoder';
 import JSONToCSV from './pages/tools/JSONToCSV';
 import HTMLToJSXConverter from './pages/tools/HTMLToJSXConverter';
 import LLMChatSandbox from './pages/tools/LLMChatSandbox';
+import APIKeyLaboratory from './pages/tools/APIKeyLaboratory';
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2, Bot } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2, Bot, Stethoscope } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -102,6 +103,9 @@ const TopBar = () => {
         </Link>
         <Link to="/apikey" className={`nav-link ${isActive('/apikey')}`} title="API Key Tester">
           <KeyRound className="icon-sm" /> API Keys
+        </Link>
+        <Link to="/api-lab" className={`nav-link ${isActive('/api-lab')}`} title="API Key Laboratory">
+          <Stethoscope className="icon-sm" /> API Lab
         </Link>
         <Link to="/hash" className={`nav-link ${isActive('/hash')}`} title="Hash Engine">
           <Fingerprint className="icon-sm" /> Hash
@@ -324,6 +328,7 @@ const AnimatedRoutes = () => {
         <Route path="/json2csv" element={<PageWrapper><JSONToCSV /></PageWrapper>} />
         <Route path="/html2jsx" element={<PageWrapper><HTMLToJSXConverter /></PageWrapper>} />
         <Route path="/llm-chat" element={<PageWrapper><LLMChatSandbox /></PageWrapper>} />
+        <Route path="/api-lab" element={<PageWrapper><APIKeyLaboratory /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
