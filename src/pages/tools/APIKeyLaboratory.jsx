@@ -170,31 +170,35 @@ const APIKeyLaboratory = () => {
 
     setResults([...initialResults]);
 
+    // Yield to allow React to paint the extracted keys UI before locking the thread
+    await new Promise(r => setTimeout(r, 100));
+
     // Step 2: Test Keys Concurrently (Batched)
-    const concurrency = 20; // Increased concurrency
+    const concurrency = 20;
+    let currentResults = [...initialResults];
+
     for (let i = 0; i < initialResults.length; i += concurrency) {
       const chunk = initialResults.slice(i, i + concurrency);
       
       const promises = chunk.map(async (item) => {
         const testDetails = await testKey(item.key, item.provider.id);
-        const updatedItem = {
+        return {
           ...item,
           status: 'tested',
           details: testDetails
         };
-        
-        // Update UI progressively the exact millisecond this specific key finishes
-        setResults(prev => {
-          const newResults = [...prev];
-          const idx = newResults.findIndex(r => r.key === updatedItem.key);
-          if (idx !== -1) newResults[idx] = updatedItem;
-          return newResults;
-        });
-
-        return updatedItem;
       });
 
-      await Promise.all(promises); // Wait for the chunk to clear rate-limiting hurdles before moving to next batch
+      const completedChunk = await Promise.all(promises);
+      
+      // Merge results into our local array
+      completedChunk.forEach(updatedItem => {
+        const idx = currentResults.findIndex(r => r.key === updatedItem.key);
+        if (idx !== -1) currentResults[idx] = updatedItem;
+      });
+      
+      // Update UI once per chunk to prevent array-copying freezing on massive numbers
+      setResults([...currentResults]);
     }
 
     setAnalyzing(false);
@@ -334,7 +338,7 @@ const APIKeyLaboratory = () => {
                   <CheckCircle size={18} /> Active & Verified ({workingKeys.length})
                 </div>
                 <div style={{ padding: '1rem', maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {workingKeys.map((item, i) => (
+                  {workingKeys.slice(0, 100).map((item, i) => (
                     <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                         <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{item.provider.name}</span>
@@ -350,6 +354,11 @@ const APIKeyLaboratory = () => {
                       </div>
                     </div>
                   ))}
+                  {workingKeys.length > 100 && (
+                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>
+                      + {workingKeys.length - 100} more keys (Export to view all)
+                    </div>
+                  )}
                   {workingKeys.length === 0 && <div style={{ color: 'rgba(16,185,129,0.5)', textAlign: 'center', padding: '2rem 0' }}>No active keys found.</div>}
                 </div>
               </div>
@@ -360,7 +369,7 @@ const APIKeyLaboratory = () => {
                   <XCircle size={18} /> Expired / Invalid ({deadKeys.length})
                 </div>
                 <div style={{ padding: '1rem', maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {deadKeys.map((item, i) => (
+                  {deadKeys.slice(0, 100).map((item, i) => (
                     <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                         <span style={{ color: 'var(--text-muted)', fontWeight: 'bold' }}>{item.provider.name}</span>
@@ -373,6 +382,11 @@ const APIKeyLaboratory = () => {
                       </div>
                     </div>
                   ))}
+                  {deadKeys.length > 100 && (
+                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>
+                      + {deadKeys.length - 100} more keys (Export to view all)
+                    </div>
+                  )}
                   {deadKeys.length === 0 && <div style={{ color: 'rgba(239,68,68,0.5)', textAlign: 'center', padding: '2rem 0' }}>No dead keys found.</div>}
                 </div>
               </div>
@@ -383,7 +397,7 @@ const APIKeyLaboratory = () => {
                   <AlertTriangle size={18} /> Unknown / Unverified ({unknownKeys.length})
                 </div>
                 <div style={{ padding: '1rem', maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {unknownKeys.map((item, i) => (
+                  {unknownKeys.slice(0, 100).map((item, i) => (
                     <div key={i} style={{ background: 'rgba(0,0,0,0.3)', padding: '0.8rem', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#e2e8f0', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
                         {maskKey(item.key)}
@@ -395,6 +409,11 @@ const APIKeyLaboratory = () => {
                       </div>
                     </div>
                   ))}
+                  {unknownKeys.length > 100 && (
+                    <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>
+                      + {unknownKeys.length - 100} more keys (Export to view all)
+                    </div>
+                  )}
                   {unknownKeys.length === 0 && <div style={{ color: 'rgba(245,158,11,0.5)', textAlign: 'center', padding: '2rem 0' }}>All keys recognized!</div>}
                 </div>
               </div>

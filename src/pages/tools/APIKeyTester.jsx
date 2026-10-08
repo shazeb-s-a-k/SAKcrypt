@@ -141,22 +141,25 @@ const APIKeyTester = () => {
     setBatchKeys(uniqueKeys);
     showToast(`Testing ${uniqueKeys.length} unique keys...`, 'success');
 
+    // Yield to let React render the "X Keys Loaded" text before locking into the heavy loop
+    await new Promise(r => setTimeout(r, 100));
+
     // Process concurrently with a concurrency limit to avoid browser stalling
-    const concurrency = 20; // Increased concurrency for speed
+    const concurrency = 20;
+    let localResults = [];
     
     for (let i = 0; i < uniqueKeys.length; i += concurrency) {
       const chunk = uniqueKeys.slice(i, i + concurrency);
       const chunkPromises = chunk.map(async (key) => {
         const res = await testKey(key);
-        const resultItem = { key, status: res.success ? 'success' : 'error', msg: res.msg };
-        
-        // Update UI progressively the exact millisecond each key finishes
-        setBatchResults(prev => [...prev, resultItem]);
-        
-        return resultItem;
+        return { key, status: res.success ? 'success' : 'error', msg: res.msg };
       });
       
-      await Promise.all(chunkPromises); // Wait for chunk to complete before next batch
+      const completedChunk = await Promise.all(chunkPromises);
+      localResults = localResults.concat(completedChunk);
+      
+      // Update UI once per chunk to prevent React array-copying death spiral on 800k keys
+      setBatchResults([...localResults]);
     }
     
     setIsTestingBatch(false);
@@ -377,11 +380,16 @@ const APIKeyTester = () => {
                         </button>
                       </div>
                       <div style={{ padding: '1rem', height: '300px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
-                        {workingKeys.map((r, i) => (
+                        {workingKeys.slice(0, 100).map((r, i) => (
                           <div key={i} style={{ color: 'var(--success)', padding: '0.5rem', borderBottom: '1px solid rgba(16,185,129,0.1)', wordBreak: 'break-all' }}>
                             {r.key.substring(0, 8)}...{r.key.substring(r.key.length - 8)}
                           </div>
                         ))}
+                        {workingKeys.length > 100 && (
+                          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>
+                            + {workingKeys.length - 100} more (Export to view)
+                          </div>
+                        )}
                         {workingKeys.length === 0 && <div style={{ color: 'rgba(16,185,129,0.5)', textAlign: 'center', marginTop: '2rem' }}>No working keys yet</div>}
                       </div>
                     </div>
@@ -397,12 +405,17 @@ const APIKeyTester = () => {
                         </button>
                       </div>
                       <div style={{ padding: '1rem', height: '300px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
-                        {deadKeys.map((r, i) => (
+                        {deadKeys.slice(0, 100).map((r, i) => (
                           <div key={i} style={{ padding: '0.5rem', borderBottom: '1px solid rgba(239,68,68,0.1)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                             <div style={{ color: 'var(--danger)', wordBreak: 'break-all' }}>{r.key.substring(0, 8)}...{r.key.substring(r.key.length - 8)}</div>
                             <div style={{ color: 'rgba(239,68,68,0.7)', fontSize: '0.75rem' }}>{r.msg}</div>
                           </div>
                         ))}
+                        {deadKeys.length > 100 && (
+                          <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>
+                            + {deadKeys.length - 100} more (Export to view)
+                          </div>
+                        )}
                         {deadKeys.length === 0 && <div style={{ color: 'rgba(239,68,68,0.5)', textAlign: 'center', marginTop: '2rem' }}>No dead keys yet</div>}
                       </div>
                     </div>
