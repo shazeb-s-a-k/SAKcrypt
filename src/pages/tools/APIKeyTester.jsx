@@ -26,6 +26,8 @@ const APIKeyTester = () => {
   const [isTestingBatch, setIsTestingBatch] = useState(false);
   const [batchResults, setBatchResults] = useState([]); // { key, status, msg }
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedBatchFile, setSelectedBatchFile] = useState(null);
+  const [inputBatchText, setInputBatchText] = useState('');
   const fileInputRef = useRef(null);
 
   // Custom Fields
@@ -96,29 +98,54 @@ const APIKeyTester = () => {
 
   const handleFileUpload = (file) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      const keys = text.split(/\r?\n/).map(k => k.trim()).filter(k => k.length > 0);
-      setBatchKeys(keys);
-      setBatchResults([]);
-      showToast(`Loaded ${keys.length} keys from file`, 'success');
-    };
-    reader.readAsText(file);
+    setSelectedBatchFile(file);
+    setInputBatchText('');
+    showToast(`File ${file.name} ready for batch test`, 'success');
   };
 
   const handleBatchTest = async () => {
-    if (batchKeys.length === 0) { showToast('No keys loaded', 'error'); return; }
+    if (!inputBatchText.trim() && !selectedBatchFile) { showToast('No keys or file provided', 'error'); return; }
     if (provider === PROVIDERS.CUSTOM && !customUrl) { showToast('Please enter a custom URL', 'error'); return; }
 
     setIsTestingBatch(true);
     setBatchResults([]);
     
+    // Robust extraction: matches anything that looks like an API key token
+    const tokenRegex = /[a-zA-Z0-9_-]{15,}/g;
+    const keySet = new Set();
+    
+    if (selectedBatchFile) {
+      const CHUNK_SIZE = 10 * 1024 * 1024;
+      let offset = 0;
+      showToast('Extracting keys from large file...', 'info');
+      while (offset < selectedBatchFile.size) {
+        const chunk = selectedBatchFile.slice(offset, offset + CHUNK_SIZE);
+        const text = await chunk.text();
+        const matches = text.match(tokenRegex) || [];
+        for (const m of matches) keySet.add(m);
+        offset += CHUNK_SIZE;
+        await new Promise(r => setTimeout(r, 10)); // Yield
+      }
+    } else {
+      const matches = inputBatchText.match(tokenRegex) || [];
+      for (const m of matches) keySet.add(m);
+    }
+    
+    const uniqueKeys = Array.from(keySet);
+    if (uniqueKeys.length === 0) {
+      showToast('No valid keys found to test.', 'error');
+      setIsTestingBatch(false);
+      return;
+    }
+    
+    setBatchKeys(uniqueKeys);
+    showToast(`Testing ${uniqueKeys.length} unique keys...`, 'success');
+
     // Process concurrently with a concurrency limit to avoid browser stalling
     const concurrency = 20; // Increased concurrency for speed
     
-    for (let i = 0; i < batchKeys.length; i += concurrency) {
-      const chunk = batchKeys.slice(i, i + concurrency);
+    for (let i = 0; i < uniqueKeys.length; i += concurrency) {
+      const chunk = uniqueKeys.slice(i, i + concurrency);
       const chunkPromises = chunk.map(async (key) => {
         const res = await testKey(key);
         const resultItem = { key, status: res.success ? 'success' : 'error', msg: res.msg };
@@ -249,20 +276,67 @@ const APIKeyTester = () => {
           ) : (
             <motion.div key="batch" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
-              <div 
-                style={{ border: `2px dashed ${isDragging ? '#ec4899' : 'rgba(236,72,153,0.3)'}`, borderRadius: '12px', padding: '3rem', textAlign: 'center', background: isDragging ? 'rgba(236,72,153,0.05)' : 'rgba(0,0,0,0.2)', transition: 'all 0.2s', cursor: 'pointer' }}
-                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => { e.preventDefault(); setIsDragging(false); if(e.dataTransfer.files.length) handleFileUpload(e.dataTransfer.files[0]); }}
-                onClick={() => fileInputRef.current.click()}
-              >
-                <UploadCloud size={48} style={{ color: isDragging ? '#ec4899' : 'var(--text-muted)', marginBottom: '1rem' }} />
-                <h3 style={{ color: '#ec4899', margin: '0 0 0.5rem 0' }}>Upload Keys File (.txt)</h3>
-                <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.9rem' }}>One API key per line. No size limit.</p>
-                <input type="file" accept=".txt" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload(e.target.files[0])} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '1.5rem', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    <span>PASTE KEYS (OR UPLOAD DUMP)</span>
+                  </label>
+                  <textarea 
+                    className="textarea-glass"
+                    placeholder={`sk-...\nAIza...\nPaste raw ${provider} keys here. Auto-extraction will ignore spaces/garbage.`}
+                    value={inputBatchText}
+                    disabled={!!selectedBatchFile}
+                    onChange={(e) => setInputBatchText(e.target.value)}
+                    style={{ flex: 1, minHeight: '150px', fontFamily: 'var(--font-mono)', opacity: selectedBatchFile ? 0.5 : 1 }}
+                  />
+                </div>
+
+                <div 
+                  style={{ 
+                    border: `2px dashed ${selectedBatchFile ? 'var(--success)' : (isDragging ? '#ec4899' : 'rgba(236,72,153,0.3)')}`, 
+                    borderRadius: '12px', 
+                    padding: '2rem', 
+                    textAlign: 'center', 
+                    background: selectedBatchFile ? 'rgba(16, 185, 129, 0.1)' : (isDragging ? 'rgba(236,72,153,0.05)' : 'rgba(0,0,0,0.2)'), 
+                    transition: 'all 0.2s', 
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1rem'
+                  }}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => { e.preventDefault(); setIsDragging(false); if(e.dataTransfer.files.length) handleFileUpload(e.dataTransfer.files[0]); }}
+                  onClick={() => {
+                    if (selectedBatchFile) setSelectedBatchFile(null);
+                    else fileInputRef.current.click();
+                  }}
+                >
+                  {selectedBatchFile ? (
+                    <>
+                      <CheckCircle size={48} style={{ color: 'var(--success)' }} />
+                      <div>
+                        <h4 style={{ color: 'var(--success)', margin: '0 0 0.5rem 0' }}>File Ready</h4>
+                        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>{selectedBatchFile.name}</p>
+                        <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '0.75rem' }}>(Click to clear)</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud size={48} style={{ color: isDragging ? '#ec4899' : 'var(--text-muted)' }} />
+                      <div>
+                        <h4 style={{ color: '#ec4899', margin: '0 0 0.5rem 0' }}>Upload Keys File</h4>
+                        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>No size limit (safely streams GBs)</p>
+                      </div>
+                    </>
+                  )}
+                  <input type="file" accept=".txt,.json,.csv" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload(e.target.files[0])} />
+                </div>
               </div>
 
-              {batchKeys.length > 0 && (
+              {((batchKeys.length > 0) || inputBatchText.trim() || selectedBatchFile) && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <FileText size={24} style={{ color: '#ec4899' }} />

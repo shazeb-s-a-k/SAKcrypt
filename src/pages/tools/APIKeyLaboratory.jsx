@@ -98,6 +98,7 @@ const APIKeyLaboratory = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState([]); // Array of { key, provider, status: 'pending'|'tested', details: {} }
   const [showKeys, setShowKeys] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
   const showToast = useToast();
@@ -105,35 +106,53 @@ const APIKeyLaboratory = () => {
 
   const handleFileUpload = (file) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setInputText(e.target.result);
-      showToast('File loaded. Click Analyze.', 'success');
-    };
-    reader.readAsText(file);
+    setSelectedFile(file);
+    setInputText(''); // Clear text area to prevent double processing
+    showToast(`File ${file.name} queued for processing. Click Analyze.`, 'success');
   };
 
   const handleAnalyze = async () => {
-    if (!inputText.trim()) {
-      showToast('Please enter keys or upload a file.', 'error');
+    if (!inputText.trim() && !selectedFile) {
+      showToast('Please paste keys or upload a file.', 'error');
       return;
     }
 
     setAnalyzing(true);
     setResults([]);
 
-    // Extract potential keys from text using basic whitespace splitting
-    // (A more advanced regex could extract keys hidden inside json files)
-    const rawLines = inputText.split(/\r?\n/).join(' ').split(/\s+/);
-    
-    // Filter and unique
-    const uniqueKeys = [...new Set(rawLines.filter(k => k.trim().length > 15))];
+    const keyRegex = /(?:sk-(?:proj-)?[a-zA-Z0-9_-]{32,}|AIza[0-9A-Za-z-_]{35}|sk-ant-[a-zA-Z0-9_-]+|gsk_[a-zA-Z0-9]{32,}|ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82}|sk_(?:live|test)_[a-zA-Z0-9]{24,})/g;
+    const keySet = new Set();
+
+    if (selectedFile) {
+      // Stream file in chunks to prevent crashing on massive (e.g. 3GB) dumps
+      const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+      let offset = 0;
+      
+      showToast('Extracting keys from large file...', 'info');
+      while (offset < selectedFile.size) {
+        const chunk = selectedFile.slice(offset, offset + CHUNK_SIZE);
+        const text = await chunk.text();
+        const matches = text.match(keyRegex) || [];
+        for (const m of matches) keySet.add(m);
+        offset += CHUNK_SIZE;
+        // Yield to prevent UI freeze
+        await new Promise(r => setTimeout(r, 10));
+      }
+    } else {
+      // Process raw text field
+      const matches = inputText.match(keyRegex) || [];
+      for (const m of matches) keySet.add(m);
+    }
+
+    const uniqueKeys = Array.from(keySet);
 
     if (uniqueKeys.length === 0) {
-      showToast('No recognizable keys found.', 'warning');
+      showToast('No recognizable keys found. Ensure formats are correct.', 'warning');
       setAnalyzing(false);
       return;
     }
+
+    showToast(`Extracted ${uniqueKeys.length} unique keys. Testing...`, 'success');
 
     // Step 1: Detect Providers
     const initialResults = uniqueKeys.map(k => {
@@ -229,32 +248,50 @@ const APIKeyLaboratory = () => {
                 className="textarea-glass"
                 placeholder="sk-...\nAIza...\nPaste raw text here. The Laboratory will auto-extract and analyze."
                 value={inputText}
+                disabled={!!selectedFile}
                 onChange={(e) => setInputText(e.target.value)}
-                style={{ flex: 1, minHeight: '150px', fontFamily: 'var(--font-mono)' }}
+                style={{ flex: 1, minHeight: '150px', fontFamily: 'var(--font-mono)', opacity: selectedFile ? 0.5 : 1 }}
               />
             </div>
 
             <div 
               style={{ 
-                border: `2px dashed rgba(94, 106, 210, 0.4)`, 
+                border: `2px dashed ${selectedFile ? 'var(--success)' : 'rgba(94, 106, 210, 0.4)'}`, 
                 borderRadius: '12px', 
                 padding: '2rem', 
                 textAlign: 'center', 
-                background: 'rgba(0,0,0,0.2)', 
+                background: selectedFile ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0,0,0,0.2)', 
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '1rem'
+                gap: '1rem',
+                position: 'relative'
               }}
-              onClick={() => fileInputRef.current.click()}
+              onClick={() => {
+                if (selectedFile) setSelectedFile(null); // click to remove
+                else fileInputRef.current.click();
+              }}
             >
-              <UploadCloud size={48} style={{ color: 'var(--primary)' }} />
-              <div>
-                <h4 style={{ color: 'var(--primary)', margin: '0 0 0.5rem 0' }}>Upload Dump File</h4>
-                <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>.txt, .csv, .json</p>
-              </div>
+              {selectedFile ? (
+                <>
+                  <CheckCircle size={48} style={{ color: 'var(--success)' }} />
+                  <div>
+                    <h4 style={{ color: 'var(--success)', margin: '0 0 0.5rem 0' }}>File Ready</h4>
+                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>{selectedFile.name}</p>
+                    <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '0.75rem' }}>(Click to clear)</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <UploadCloud size={48} style={{ color: 'var(--primary)' }} />
+                  <div>
+                    <h4 style={{ color: 'var(--primary)', margin: '0 0 0.5rem 0' }}>Upload Dump File</h4>
+                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>No file size limit (safely streams GBs)</p>
+                  </div>
+                </>
+              )}
               <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload(e.target.files[0])} />
             </div>
           </div>
@@ -263,7 +300,7 @@ const APIKeyLaboratory = () => {
         <button 
           className="btn-primary" 
           onClick={handleAnalyze}
-          disabled={analyzing || !inputText.trim()}
+          disabled={analyzing || (!inputText.trim() && !selectedFile)}
           style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', justifyContent: 'center' }}
         >
           {analyzing ? (
