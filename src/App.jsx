@@ -54,6 +54,11 @@ import Base64FileEncoder from './pages/tools/Base64FileEncoder';
 import JSONToCSV from './pages/tools/JSONToCSV';
 import HTMLToJSXConverter from './pages/tools/HTMLToJSXConverter';
 import LLMChatSandbox from './pages/tools/LLMChatSandbox';
+import GlassmorphismGen from "./pages/tools/GlassmorphismGen";
+import BrowserFingerprint from "./pages/tools/BrowserFingerprint";
+import PayloadObfuscator from "./pages/tools/PayloadObfuscator";
+import ColorContrastChecker from "./pages/tools/ColorContrastChecker";
+import CodeToImage from "./pages/tools/CodeToImage";
 import APIKeyLaboratory from './pages/tools/APIKeyLaboratory';
 import LandingPage from './pages/LandingPage';
 import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2, Bot, Stethoscope } from 'lucide-react';
@@ -329,6 +334,11 @@ const AnimatedRoutes = () => {
         <Route path="/html2jsx" element={<PageWrapper><HTMLToJSXConverter /></PageWrapper>} />
         <Route path="/llm-chat" element={<PageWrapper><LLMChatSandbox /></PageWrapper>} />
         <Route path="/api-lab" element={<PageWrapper><APIKeyLaboratory /></PageWrapper>} />
+        <Route path="/glassmorphism" element={<PageWrapper><GlassmorphismGen /></PageWrapper>} />
+        <Route path="/fingerprint" element={<PageWrapper><BrowserFingerprint /></PageWrapper>} />
+        <Route path="/payload-obfuscator" element={<PageWrapper><PayloadObfuscator /></PageWrapper>} />
+        <Route path="/color-contrast" element={<PageWrapper><ColorContrastChecker /></PageWrapper>} />
+        <Route path="/code-to-image" element={<PageWrapper><CodeToImage /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

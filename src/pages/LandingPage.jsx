@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table, Code2, Terminal, BookTemplate, FileType2, Bot, Search, Stethoscope } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table, Code2, Terminal, BookTemplate, FileType2, Bot, Search, Stethoscope, Monitor, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
@@ -383,6 +383,41 @@ const features = [
     icon: <Shuffle size={32} style={{ color: '#f59e0b' }} />,
     path: '/random',
     color: '#f59e0b'
+  },
+  {
+    title: 'Glassmorphism Generator', category: 'Web Dev Tools',
+    desc: 'Create stunning frosted-glass CSS effects instantly.',
+    icon: <Palette size={32} style={{ color: '#0ea5e9' }} />,
+    path: '/glassmorphism',
+    color: '#0ea5e9'
+  },
+  {
+    title: 'Device Fingerprint', category: 'Security & Cryptography',
+    desc: 'Extract hardware, software, network, and canvas fingerprinting data.',
+    icon: <Monitor size={32} style={{ color: '#f87171' }} />,
+    path: '/fingerprint',
+    color: '#f87171'
+  },
+  {
+    title: 'Payload Obfuscator', category: 'Security & Cryptography',
+    desc: 'Obfuscate and encode payloads for WAF bypass and security testing.',
+    icon: <ShieldAlert size={32} style={{ color: '#ef4444' }} />,
+    path: '/payload-obfuscator',
+    color: '#ef4444'
+  },
+  {
+    title: 'Color Contrast Checker', category: 'Web Dev Tools',
+    desc: 'Verify WCAG accessibility compliance for your color combinations.',
+    icon: <Eye size={32} style={{ color: '#3b82f6' }} />,
+    path: '/color-contrast',
+    color: '#3b82f6'
+  },
+  {
+    title: 'Code to Image', category: 'Utilities & Generators',
+    desc: 'Create stunning, shareable images of your source code.',
+    icon: <Code2 size={32} style={{ color: '#ec4899' }} />,
+    path: '/code-to-image',
+    color: '#ec4899'
   },
   // --- COMING SOON TOOLS ---,
   {
