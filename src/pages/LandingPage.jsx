@@ -419,6 +419,41 @@ const features = [
     path: '/code-to-image',
     color: '#ec4899'
   },
+  {
+    title: 'AI Persona Gen', category: 'AI Tools',
+    desc: 'Craft precise system prompts to enforce strict LLM behavior and tone.',
+    icon: <Bot size={32} style={{ color: '#8b5cf6' }} />,
+    path: '/ai-persona',
+    color: '#8b5cf6'
+  },
+  {
+    title: 'Text Diff Viewer', category: 'Utilities & Generators',
+    desc: 'Compare two blocks of text or code to instantly spot differences.',
+    icon: <ArrowLeftRight size={32} style={{ color: '#14b8a6' }} />,
+    path: '/text-diff',
+    color: '#14b8a6'
+  },
+  {
+    title: 'CORS Tester', category: 'Web Dev Tools',
+    desc: 'Test Cross-Origin Resource Sharing headers directly from the browser.',
+    icon: <Network size={32} style={{ color: '#eab308' }} />,
+    path: '/cors-tester',
+    color: '#eab308'
+  },
+  {
+    title: 'Markdown Table Gen', category: 'Utilities & Generators',
+    desc: 'Visually create and format Github-flavored markdown tables.',
+    icon: <Table size={32} style={{ color: '#6366f1' }} />,
+    path: '/md-table',
+    color: '#6366f1'
+  },
+  {
+    title: 'Keypair Generator', category: 'Security & Cryptography',
+    desc: 'Securely generate asymmetric EC/RSA keys directly in the browser.',
+    icon: <KeyRound size={32} style={{ color: '#10b981' }} />,
+    path: '/keypair-gen',
+    color: '#10b981'
+  },
   // --- COMING SOON TOOLS ---,
   {
     title: 'CSV to JSON', category: 'Utilities & Generators',

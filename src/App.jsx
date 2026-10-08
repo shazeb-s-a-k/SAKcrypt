@@ -59,6 +59,11 @@ import BrowserFingerprint from "./pages/tools/BrowserFingerprint";
 import PayloadObfuscator from "./pages/tools/PayloadObfuscator";
 import ColorContrastChecker from "./pages/tools/ColorContrastChecker";
 import CodeToImage from "./pages/tools/CodeToImage";
+import AIPersonaGen from "./pages/tools/AIPersonaGen";
+import TextDiffViewer from "./pages/tools/TextDiffViewer";
+import CORSTester from "./pages/tools/CORSTester";
+import MarkdownTableGen from "./pages/tools/MarkdownTableGen";
+import KeypairGen from "./pages/tools/KeypairGen";
 import APIKeyLaboratory from './pages/tools/APIKeyLaboratory';
 import LandingPage from './pages/LandingPage';
 import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2, Bot, Stethoscope } from 'lucide-react';
@@ -339,6 +344,11 @@ const AnimatedRoutes = () => {
         <Route path="/payload-obfuscator" element={<PageWrapper><PayloadObfuscator /></PageWrapper>} />
         <Route path="/color-contrast" element={<PageWrapper><ColorContrastChecker /></PageWrapper>} />
         <Route path="/code-to-image" element={<PageWrapper><CodeToImage /></PageWrapper>} />
+        <Route path="/ai-persona" element={<PageWrapper><AIPersonaGen /></PageWrapper>} />
+        <Route path="/text-diff" element={<PageWrapper><TextDiffViewer /></PageWrapper>} />
+        <Route path="/cors-tester" element={<PageWrapper><CORSTester /></PageWrapper>} />
+        <Route path="/md-table" element={<PageWrapper><MarkdownTableGen /></PageWrapper>} />
+        <Route path="/keypair-gen" element={<PageWrapper><KeypairGen /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );
