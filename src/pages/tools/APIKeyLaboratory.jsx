@@ -96,6 +96,7 @@ const APIKeyLaboratory = () => {
   const [inputText, setInputText] = useState('');
   const [selectedProviderId, setSelectedProviderId] = useState('auto');
   const [analyzing, setAnalyzing] = useState(false);
+  const [extractionProgress, setExtractionProgress] = useState(0);
   const [results, setResults] = useState([]); // Array of { key, provider, status: 'pending'|'tested', details: {} }
   const [showKeys, setShowKeys] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -118,6 +119,7 @@ const APIKeyLaboratory = () => {
     }
 
     setAnalyzing(true);
+    setExtractionProgress(0);
     setResults([]);
 
     const keyRegex = /(?:sk-(?:proj-)?[a-zA-Z0-9_-]{32,}|AIza[0-9A-Za-z-_]{35}|sk-ant-[a-zA-Z0-9_-]+|gsk_[a-zA-Z0-9]{32,}|ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82}|sk_(?:live|test)_[a-zA-Z0-9]{24,})/g;
@@ -135,6 +137,7 @@ const APIKeyLaboratory = () => {
         const matches = text.match(keyRegex) || [];
         for (const m of matches) keySet.add(m);
         offset += CHUNK_SIZE;
+        setExtractionProgress(Math.floor(Math.min((offset / selectedFile.size) * 100, 100)));
         // Yield to prevent UI freeze
         await new Promise(r => setTimeout(r, 10));
       }
@@ -305,10 +308,17 @@ const APIKeyLaboratory = () => {
           className="btn-primary" 
           onClick={handleAnalyze}
           disabled={analyzing || (!inputText.trim() && !selectedFile)}
-          style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', justifyContent: 'center' }}
+          style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}
         >
+          {analyzing && extractionProgress > 0 && extractionProgress < 100 && (
+            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'rgba(255,255,255,0.1)', width: `${extractionProgress}%`, transition: 'width 0.1s' }} />
+          )}
           {analyzing ? (
-            <><RefreshCw className="spin icon-sm" /> Running Diagnostics...</>
+            <><RefreshCw className="spin icon-sm" style={{ position: 'relative', zIndex: 1 }} /> 
+            <span style={{ position: 'relative', zIndex: 1 }}>
+              {extractionProgress > 0 && extractionProgress < 100 ? `Extracting... ${extractionProgress}%` : 'Running Diagnostics...'}
+            </span>
+            </>
           ) : (
             <><Stethoscope className="icon-sm" /> Analyze & Test Keys</>
           )}

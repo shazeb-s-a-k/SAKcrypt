@@ -24,6 +24,7 @@ const APIKeyTester = () => {
   // Batch Mode State
   const [batchKeys, setBatchKeys] = useState([]);
   const [isTestingBatch, setIsTestingBatch] = useState(false);
+  const [extractionProgress, setExtractionProgress] = useState(0);
   const [batchResults, setBatchResults] = useState([]); // { key, status, msg }
   const [isDragging, setIsDragging] = useState(false);
   const [selectedBatchFile, setSelectedBatchFile] = useState(null);
@@ -108,6 +109,7 @@ const APIKeyTester = () => {
     if (provider === PROVIDERS.CUSTOM && !customUrl) { showToast('Please enter a custom URL', 'error'); return; }
 
     setIsTestingBatch(true);
+    setExtractionProgress(0);
     setBatchResults([]);
     
     // Robust extraction: matches anything that looks like an API key token
@@ -124,6 +126,7 @@ const APIKeyTester = () => {
         const matches = text.match(tokenRegex) || [];
         for (const m of matches) keySet.add(m);
         offset += CHUNK_SIZE;
+        setExtractionProgress(Math.floor(Math.min((offset / selectedBatchFile.size) * 100, 100)));
         await new Promise(r => setTimeout(r, 10)); // Yield
       }
     } else {
@@ -352,9 +355,21 @@ const APIKeyTester = () => {
                     className="btn-primary" 
                     onClick={handleBatchTest}
                     disabled={isTestingBatch}
-                    style={{ background: '#ec4899', color: '#fff', border: 'none' }}
+                    style={{ background: '#ec4899', color: '#fff', border: 'none', position: 'relative', overflow: 'hidden' }}
                   >
-                    {isTestingBatch ? <><RefreshCw className="icon-sm spin" /> Testing...</> : <><Play className="icon-sm" /> Start Batch Test</>}
+                    {isTestingBatch && extractionProgress > 0 && extractionProgress < 100 && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'rgba(255,255,255,0.2)', width: `${extractionProgress}%`, transition: 'width 0.1s' }} />
+                    )}
+                    {isTestingBatch ? (
+                      <>
+                        <RefreshCw className="icon-sm spin" style={{ position: 'relative', zIndex: 1 }} /> 
+                        <span style={{ position: 'relative', zIndex: 1 }}>
+                          {extractionProgress > 0 && extractionProgress < 100 ? `Extracting... ${extractionProgress}%` : 'Testing...'}
+                        </span>
+                      </>
+                    ) : (
+                      <><Play className="icon-sm" /> Start Batch Test</>
+                    )}
                   </button>
                 </div>
               )}

@@ -51,7 +51,8 @@ const LLMChatSandbox = () => {
   }, [messages]);
 
   const callOpenAICompatible = async (messagesHistory, prov, apiKeyToUse) => {
-    const formattedMessages = messagesHistory.map(m => ({
+    const validHistory = messagesHistory.filter(m => !m.isError);
+    const formattedMessages = validHistory.map(m => ({
       role: m.role === 'ai' ? 'assistant' : 'user',
       content: m.content
     }));
@@ -76,10 +77,28 @@ const LLMChatSandbox = () => {
 
   const callGemini = async (messagesHistory, apiKeyToUse) => {
     // Gemini has a different format: { contents: [{ role: 'user'|'model', parts: [{ text }] }] }
-    const formattedContents = messagesHistory.map(m => ({
-      role: m.role === 'ai' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
+    const validHistory = messagesHistory.filter(m => !m.isError);
+    
+    // Gemini strictly requires alternating roles starting with 'user'.
+    // We collapse consecutive roles and ensure it's valid.
+    let formattedContents = [];
+    let lastRole = null;
+    
+    for (const m of validHistory) {
+      const gRole = m.role === 'ai' ? 'model' : 'user';
+      if (gRole === lastRole) {
+        // Append to the last message if roles are identical to prevent 400 errors
+        formattedContents[formattedContents.length - 1].parts[0].text += '\n\n' + m.content;
+      } else {
+        formattedContents.push({ role: gRole, parts: [{ text: m.content }] });
+        lastRole = gRole;
+      }
+    }
+    
+    // Ensure the first message is 'user' (Gemini requirement)
+    if (formattedContents.length > 0 && formattedContents[0].role !== 'user') {
+      formattedContents.unshift({ role: 'user', parts: [{ text: '(System: The assistant initiated the conversation)' }] });
+    }
 
     const endpoint = provider.endpoint.replace('{model}', model) + `?key=${apiKeyToUse}`;
     
