@@ -454,6 +454,41 @@ const features = [
     path: '/keypair-gen',
     color: '#10b981'
   },
+  {
+    title: 'BIP39 Seed Generator', category: 'Security & Cryptography',
+    desc: 'Generate cryptographically secure mnemonic seed phrases for crypto wallets.',
+    icon: <KeyRound size={32} style={{ color: '#f59e0b' }} />,
+    path: '/bip39',
+    color: '#f59e0b'
+  },
+  {
+    title: 'GraphQL Playground', category: 'Web Dev Tools',
+    desc: 'A sleek, browser-based GraphQL client to query APIs directly.',
+    icon: <Database size={32} style={{ color: '#e11d48' }} />,
+    path: '/graphql',
+    color: '#e11d48'
+  },
+  {
+    title: 'AES-256-GCM Encryptor', category: 'Security & Cryptography',
+    desc: 'Military-grade authenticated encryption using Web Crypto API.',
+    icon: <LockKeyhole size={32} style={{ color: '#10b981' }} />,
+    path: '/aes-gcm',
+    color: '#10b981'
+  },
+  {
+    title: 'Docker Compose Gen', category: 'Utilities & Generators',
+    desc: 'Visually construct multi-container docker-compose.yml files.',
+    icon: <Server size={32} style={{ color: '#3b82f6' }} />,
+    path: '/docker-compose',
+    color: '#3b82f6'
+  },
+  {
+    title: 'Visual SQL Builder', category: 'Utilities & Generators',
+    desc: 'Quickly generate standard SELECT queries without making syntax errors.',
+    icon: <Database size={32} style={{ color: '#8b5cf6' }} />,
+    path: '/sql-builder',
+    color: '#8b5cf6'
+  },
   // --- COMING SOON TOOLS ---,
   {
     title: 'CSV to JSON', category: 'Utilities & Generators',

@@ -64,6 +64,11 @@ import TextDiffViewer from "./pages/tools/TextDiffViewer";
 import CORSTester from "./pages/tools/CORSTester";
 import MarkdownTableGen from "./pages/tools/MarkdownTableGen";
 import KeypairGen from "./pages/tools/KeypairGen";
+import BIP39Generator from "./pages/tools/BIP39Generator";
+import GraphQLPlayground from "./pages/tools/GraphQLPlayground";
+import AES256GCMEncryptor from "./pages/tools/AES256GCMEncryptor";
+import DockerComposeGen from "./pages/tools/DockerComposeGen";
+import SQLQueryBuilder from "./pages/tools/SQLQueryBuilder";
 import APIKeyLaboratory from './pages/tools/APIKeyLaboratory';
 import LandingPage from './pages/LandingPage';
 import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2, Bot, Stethoscope } from 'lucide-react';
@@ -255,6 +260,21 @@ const TopBar = () => {
         <Link to="/html2jsx" className={`nav-link ${isActive('/html2jsx')}`} title="HTML to JSX">
           <Code2 className="icon-sm" /> HTML2JSX
         </Link>
+        <Link to="/bip39" className={`nav-link ${isActive('/bip39')}`} title="BIP39 Generator">
+          <KeyRound className="icon-sm" /> BIP39 Seed
+        </Link>
+        <Link to="/graphql" className={`nav-link ${isActive('/graphql')}`} title="GraphQL Playground">
+          <Database className="icon-sm" /> GraphQL
+        </Link>
+        <Link to="/aes-gcm" className={`nav-link ${isActive('/aes-gcm')}`} title="AES-256-GCM Encryptor">
+          <LockKeyhole className="icon-sm" /> AES-256
+        </Link>
+        <Link to="/docker-compose" className={`nav-link ${isActive('/docker-compose')}`} title="Docker Compose Builder">
+          <Server className="icon-sm" /> Docker Gen
+        </Link>
+        <Link to="/sql-builder" className={`nav-link ${isActive('/sql-builder')}`} title="Visual SQL Builder">
+          <Database className="icon-sm" /> SQL Builder
+        </Link>
       </div>
     </motion.nav>
   );
@@ -349,6 +369,11 @@ const AnimatedRoutes = () => {
         <Route path="/cors-tester" element={<PageWrapper><CORSTester /></PageWrapper>} />
         <Route path="/md-table" element={<PageWrapper><MarkdownTableGen /></PageWrapper>} />
         <Route path="/keypair-gen" element={<PageWrapper><KeypairGen /></PageWrapper>} />
+        <Route path="/bip39" element={<PageWrapper><BIP39Generator /></PageWrapper>} />
+        <Route path="/graphql" element={<PageWrapper><GraphQLPlayground /></PageWrapper>} />
+        <Route path="/aes-gcm" element={<PageWrapper><AES256GCMEncryptor /></PageWrapper>} />
+        <Route path="/docker-compose" element={<PageWrapper><DockerComposeGen /></PageWrapper>} />
+        <Route path="/sql-builder" element={<PageWrapper><SQLQueryBuilder /></PageWrapper>} />
       </Routes>
     </AnimatePresence>
   );

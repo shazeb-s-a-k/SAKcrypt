@@ -100,6 +100,7 @@ const APIKeyLaboratory = () => {
   const [results, setResults] = useState([]); // Array of { key, provider, status: 'pending'|'tested', details: {} }
   const [showKeys, setShowKeys] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showCompressionGuide, setShowCompressionGuide] = useState(false);
   const fileInputRef = useRef(null);
 
   const showToast = useToast();
@@ -126,20 +127,47 @@ const APIKeyLaboratory = () => {
     const keySet = new Set();
 
     if (selectedFile) {
-      // Stream file in chunks to prevent crashing on massive (e.g. 3GB) dumps
-      const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
-      let offset = 0;
-      
-      showToast('Extracting keys from large file...', 'info');
-      while (offset < selectedFile.size) {
-        const chunk = selectedFile.slice(offset, offset + CHUNK_SIZE);
-        const text = await chunk.text();
-        const matches = text.match(keyRegex) || [];
-        for (const m of matches) keySet.add(m);
-        offset += CHUNK_SIZE;
-        setExtractionProgress(Math.floor(Math.min((offset / selectedFile.size) * 100, 100)));
-        // Yield to prevent UI freeze
-        await new Promise(r => setTimeout(r, 10));
+      const isGzip = selectedFile.name.endsWith('.gz');
+
+      if (isGzip) {
+        showToast('Decompressing and extracting keys from massive GZIP file...', 'info');
+        try {
+          const ds = new DecompressionStream('gzip');
+          const stream = selectedFile.stream().pipeThrough(ds);
+          const reader = stream.getReader();
+          const decoder = new TextDecoder('utf-8');
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const text = decoder.decode(value, { stream: true });
+            const matches = text.match(keyRegex) || [];
+            for (const m of matches) keySet.add(m);
+            setExtractionProgress(prev => (prev + 5) % 100); // Simulate progress for streaming decompression
+            await new Promise(r => setTimeout(r, 5));
+          }
+          setExtractionProgress(100);
+        } catch (err) {
+          showToast(`Error decompressing GZIP: ${err.message}`, 'error');
+          setAnalyzing(false);
+          return;
+        }
+      } else {
+        // Stream file in chunks to prevent crashing on massive (e.g. 3GB) dumps
+        const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
+        let offset = 0;
+        
+        showToast('Extracting keys from large file...', 'info');
+        while (offset < selectedFile.size) {
+          const chunk = selectedFile.slice(offset, offset + CHUNK_SIZE);
+          const text = await chunk.text();
+          const matches = text.match(keyRegex) || [];
+          for (const m of matches) keySet.add(m);
+          offset += CHUNK_SIZE;
+          setExtractionProgress(Math.floor(Math.min((offset / selectedFile.size) * 100, 100)));
+          // Yield to prevent UI freeze
+          await new Promise(r => setTimeout(r, 10));
+        }
       }
     } else {
       // Process raw text field
@@ -261,45 +289,54 @@ const APIKeyLaboratory = () => {
               />
             </div>
 
-            <div 
-              style={{ 
-                border: `2px dashed ${selectedFile ? 'var(--success)' : 'rgba(94, 106, 210, 0.4)'}`, 
-                borderRadius: '12px', 
-                padding: '2rem', 
-                textAlign: 'center', 
-                background: selectedFile ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0,0,0,0.2)', 
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '1rem',
-                position: 'relative'
-              }}
-              onClick={() => {
-                if (selectedFile) setSelectedFile(null); // click to remove
-                else fileInputRef.current.click();
-              }}
-            >
-              {selectedFile ? (
-                <>
-                  <CheckCircle size={48} style={{ color: 'var(--success)' }} />
-                  <div>
-                    <h4 style={{ color: 'var(--success)', margin: '0 0 0.5rem 0' }}>File Ready</h4>
-                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>{selectedFile.name}</p>
-                    <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '0.75rem' }}>(Click to clear)</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <UploadCloud size={48} style={{ color: 'var(--primary)' }} />
-                  <div>
-                    <h4 style={{ color: 'var(--primary)', margin: '0 0 0.5rem 0' }}>Upload Dump File</h4>
-                    <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>No file size limit (safely streams GBs)</p>
-                  </div>
-                </>
-              )}
-              <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => handleFileUpload(e.target.files[0])} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div 
+                style={{ 
+                  border: `2px dashed ${selectedFile ? 'var(--success)' : 'rgba(94, 106, 210, 0.4)'}`, 
+                  borderRadius: '12px', 
+                  padding: '2rem', 
+                  textAlign: 'center', 
+                  background: selectedFile ? 'rgba(16, 185, 129, 0.1)' : 'rgba(0,0,0,0.2)', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '1rem',
+                  position: 'relative',
+                  flex: 1
+                }}
+                onClick={() => {
+                  if (selectedFile) setSelectedFile(null); // click to remove
+                  else fileInputRef.current.click();
+                }}
+              >
+                {selectedFile ? (
+                  <>
+                    <CheckCircle size={48} style={{ color: 'var(--success)' }} />
+                    <div>
+                      <h4 style={{ color: 'var(--success)', margin: '0 0 0.5rem 0' }}>File Ready</h4>
+                      <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>{selectedFile.name}</p>
+                      <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '0.75rem' }}>(Click to clear)</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={48} style={{ color: 'var(--primary)' }} />
+                    <div>
+                      <h4 style={{ color: 'var(--primary)', margin: '0 0 0.5rem 0' }}>Upload Dump File</h4>
+                      <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.85rem' }}>Native support for .txt and .gz</p>
+                    </div>
+                  </>
+                )}
+                <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".txt,.csv,.json,.gz" onChange={(e) => handleFileUpload(e.target.files[0])} />
+              </div>
+              <button 
+                onClick={() => setShowCompressionGuide(true)}
+                style={{ background: 'transparent', border: '1px solid var(--border)', color: 'var(--accent)', padding: '0.5rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', width: '100%', textAlign: 'center' }}
+              >
+                Upload huge files? (Convert to .gz format)
+              </button>
             </div>
           </div>
         </div>
@@ -433,6 +470,47 @@ const APIKeyLaboratory = () => {
         )}
 
       </div>
+      
+      {/* Compression Guide Modal */}
+      <AnimatePresence>
+        {showCompressionGuide && (
+          <div className="modal-overlay" onClick={() => setShowCompressionGuide(false)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="modal-content"
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxWidth: '500px', textAlign: 'left' }}
+            >
+              <button className="close-btn" onClick={() => setShowCompressionGuide(false)}>&times;</button>
+              <h2 style={{ color: '#fff', marginTop: 0 }}>GZIP Compression Guide</h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                If you have a massive API key dump (e.g., 7GB+ of text files), uploading raw text can crash browsers. You can natively upload highly-compact <strong>.gz</strong> files, and the Laboratory will decompress and stream them on the fly!
+              </p>
+              
+              <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '1rem' }}>
+                <div style={{ color: 'var(--primary)', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>Mac / Linux (Terminal)</div>
+                <code style={{ color: '#10b981', fontFamily: 'var(--font-mono)' }}>gzip -k keys_dump.txt</code>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.5rem 0 0 0' }}>This creates a highly compressed <code>keys_dump.txt.gz</code> file you can directly upload here.</p>
+              </div>
+
+              <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div style={{ color: 'var(--primary)', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>Windows (PowerShell)</div>
+                <code style={{ color: '#10b981', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                  $inFile = "keys_dump.txt"{"\n"}
+                  $outFile = "keys_dump.gz"{"\n"}
+                  $in = [IO.File]::OpenRead($inFile){"\n"}
+                  $out = [IO.File]::Create($outFile){"\n"}
+                  $gz = New-Object IO.Compression.GZipStream($out, [IO.Compression.CompressionMode]::Compress){"\n"}
+                  $in.CopyTo($gz); $gz.Close(); $out.Close(); $in.Close();
+                </code>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </motion.div>
   );
 };
