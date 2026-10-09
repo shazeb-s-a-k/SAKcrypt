@@ -47,6 +47,29 @@ body {
   background-size: 40px 40px;
 }
 
+::selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030305;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(94, 106, 210, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.6);
+}
+
 body::before {
   content: '';
   position: fixed;
