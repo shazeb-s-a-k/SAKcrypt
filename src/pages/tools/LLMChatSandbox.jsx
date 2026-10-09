@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Send, KeyRound, Bot, User, Cpu, AlertTriangle, Settings2, Trash2 } from 'lucide-react';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
