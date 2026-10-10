@@ -161,7 +161,14 @@ const APIKeyLaboratory = () => {
             const textToProcess = tail + chunkText;
             
             const matches = textToProcess.match(keyRegex) || [];
-            for (const m of matches) keySet.add(m);
+            for (const m of matches) {
+              keySet.add(m);
+            }
+            
+            if (keySet.size >= 100000) {
+              showToast('Reached 100,000 unique keys limit to prevent browser memory crash.', 'warning');
+              break;
+            }
             
             // Keep the last 150 characters for the next iteration to prevent splitting keys across chunks
             tail = textToProcess.slice(-150);
@@ -190,6 +197,12 @@ const APIKeyLaboratory = () => {
           const text = await chunk.text();
           const matches = text.match(keyRegex) || [];
           for (const m of matches) keySet.add(m);
+          
+          if (keySet.size >= 100000) {
+            showToast('Reached 100,000 unique keys limit to prevent browser memory crash.', 'warning');
+            break;
+          }
+
           offset += CHUNK_SIZE;
           setExtractionProgress(Math.floor(Math.min((offset / selectedFile.size) * 100, 100)));
           // Yield to prevent UI freeze
@@ -517,9 +530,15 @@ const APIKeyLaboratory = () => {
               </p>
               
               <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '1rem' }}>
-                <div style={{ color: 'var(--primary)', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>Mac / Linux (Terminal)</div>
-                <code style={{ color: '#10b981', fontFamily: 'var(--font-mono)' }}>gzip -k keys_dump.txt</code>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.5rem 0 0 0' }}>This creates a highly compressed <code>keys_dump.txt.gz</code> file you can directly upload here.</p>
+                <div style={{ color: 'var(--primary)', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>Mac / Linux (Terminal) - Max Compression</div>
+                <code style={{ color: '#10b981', fontFamily: 'var(--font-mono)' }}>gzip -9 keys_dump.txt</code>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.5rem 0 0 0' }}>This creates a highly compressed <code>keys_dump.txt.gz</code> file you can directly upload here. The <code>-9</code> flag ensures maximum compression ratio.</p>
+              </div>
+
+              <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '1rem' }}>
+                <div style={{ color: 'var(--primary)', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>Split File Without Cutting Keys (Mac / Linux)</div>
+                <code style={{ color: '#10b981', fontFamily: 'var(--font-mono)' }}>split -l 1000000 keys_dump.txt part_</code>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.5rem 0 0 0' }}>Splits a huge text file into smaller files of exactly 1,000,000 lines each. This ensures keys are never cut in half.</p>
               </div>
 
               <div style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
