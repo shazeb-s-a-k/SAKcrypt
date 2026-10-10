@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table, Code2, Terminal, BookTemplate, FileType2, Bot, Search, Stethoscope, Monitor, Eye } from 'lucide-react';
+import { Shield, Radio, QrCode, Key, Regex, Hash, ArrowRight, Heart, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, Cpu, FileLock, Network, FileImage, ImageMinus, Loader2, FileText, Minimize2, Clock, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, ShieldCheck, LockKeyhole, Server, Wand2, HelpCircle, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, TestTube, FileArchive, Table, Code2, Terminal, BookTemplate, FileType2, Bot, Search, Stethoscope, Monitor, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
