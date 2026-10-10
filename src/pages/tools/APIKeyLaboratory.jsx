@@ -132,19 +132,46 @@ const APIKeyLaboratory = () => {
       if (isGzip) {
         showToast('Decompressing and extracting keys from massive GZIP file...', 'info');
         try {
+          let compressedBytesRead = 0;
+          const progressStream = new TransformStream({
+            transform(chunk, controller) {
+              compressedBytesRead += chunk.byteLength;
+              controller.enqueue(chunk);
+            }
+          });
+
           const ds = new DecompressionStream('gzip');
-          const stream = selectedFile.stream().pipeThrough(ds);
+          const stream = selectedFile.stream().pipeThrough(progressStream).pipeThrough(ds);
           const reader = stream.getReader();
           const decoder = new TextDecoder('utf-8');
           
+          let tail = "";
+          let lastYield = performance.now();
+
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
-            const text = decoder.decode(value, { stream: true });
-            const matches = text.match(keyRegex) || [];
+            if (done) {
+              // Process any remaining tail
+              const matches = tail.match(keyRegex) || [];
+              for (const m of matches) keySet.add(m);
+              break;
+            }
+            
+            const chunkText = decoder.decode(value, { stream: true });
+            const textToProcess = tail + chunkText;
+            
+            const matches = textToProcess.match(keyRegex) || [];
             for (const m of matches) keySet.add(m);
-            setExtractionProgress(prev => (prev + 5) % 100); // Simulate progress for streaming decompression
-            await new Promise(r => setTimeout(r, 5));
+            
+            // Keep the last 150 characters for the next iteration to prevent splitting keys across chunks
+            tail = textToProcess.slice(-150);
+            
+            // Yield to UI roughly every 100ms
+            if (performance.now() - lastYield > 100) {
+              setExtractionProgress(Math.floor((compressedBytesRead / selectedFile.size) * 100));
+              await new Promise(r => setTimeout(r, 0));
+              lastYield = performance.now();
+            }
           }
           setExtractionProgress(100);
         } catch (err) {
