@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Stethoscope, UploadCloud, FileText, CheckCircle, XCircle, 
-  AlertTriangle, RefreshCw, Download, Server, Key, Eye, EyeOff, 
+  Stethoscope, UploadCloud, CheckCircle, XCircle, 
+  AlertTriangle, RefreshCw, Download, Server, Eye, EyeOff, 
   Send, MessageSquare, MapPin, CloudSun, CreditCard, Copy, 
   Check, Zap, Sparkles, Terminal, Layers, Bot
 } from 'lucide-react';
@@ -81,7 +81,7 @@ const probeKeyDiagnostics = async (key, providerHint = 'auto', sendHiPrompt = tr
           details.latencyMs = Math.round(performance.now() - startTime);
           return details;
         }
-      } catch (e) {}
+      } catch {}
     }
 
     // Probe 1B: Google Maps Geocoding API
@@ -103,7 +103,7 @@ const probeKeyDiagnostics = async (key, providerHint = 'auto', sendHiPrompt = tr
         details.plan = 'GCP Project Key';
         details.extraInfo = mapsData.error_message;
       }
-    } catch (e) {}
+    } catch {}
 
     // Probe 1C: YouTube Data API v3
     try {
@@ -118,7 +118,7 @@ const probeKeyDiagnostics = async (key, providerHint = 'auto', sendHiPrompt = tr
         details.latencyMs = Math.round(performance.now() - startTime);
         return details;
       }
-    } catch (e) {}
+    } catch {}
 
     // If all Google probes fail
     details.valid = false;
@@ -147,7 +147,7 @@ const probeKeyDiagnostics = async (key, providerHint = 'auto', sendHiPrompt = tr
         details.latencyMs = Math.round(performance.now() - startTime);
         return details;
       }
-    } catch (e) {}
+    } catch {}
 
     // Probe 2B: WeatherAPI.com
     try {
@@ -163,7 +163,7 @@ const probeKeyDiagnostics = async (key, providerHint = 'auto', sendHiPrompt = tr
         details.latencyMs = Math.round(performance.now() - startTime);
         return details;
       }
-    } catch (e) {}
+    } catch {}
   }
 
   // 3. OPENAI KEYS -> Probes Chat Completions with "hi" message
@@ -416,7 +416,7 @@ const probeKeyDiagnostics = async (key, providerHint = 'auto', sendHiPrompt = tr
         details.latencyMs = Math.round(performance.now() - startTime);
         return details;
       }
-    } catch (e) {}
+    } catch {}
   }
 
   // 9. UNKNOWN / UNVERIFIED

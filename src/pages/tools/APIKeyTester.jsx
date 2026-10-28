@@ -180,7 +180,7 @@ const APIKeyTester = () => {
               subType: 'OpenWeatherMap'
             };
           }
-        } catch (e) {}
+        } catch {}
 
         // Probe WeatherAPI
         try {
@@ -194,7 +194,7 @@ const APIKeyTester = () => {
               subType: 'WeatherAPI.com'
             };
           }
-        } catch (e) {}
+        } catch {}
 
         return { success: false, msg: 'Invalid Weather key for OpenWeatherMap and WeatherAPI.', subType: 'Weather' };
       }
