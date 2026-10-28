@@ -1,31 +1,44 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { KeyRound, CheckCircle, XCircle, RefreshCw, Server, AlertTriangle, UploadCloud, FileText, Copy, Download, Play } from 'lucide-react';
+import { 
+  CheckCircle, XCircle, RefreshCw, Server, 
+  UploadCloud, FileText, Download, Play, Send, Sparkles, 
+  MessageSquare, Zap
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
 import { useSupport } from '../../components/SupportProvider';
 
 const PROVIDERS = {
-  OPENAI: 'OpenAI',
-  GOOGLE: 'Google AI (Gemini)',
-  NVIDIA: 'Nvidia NIM',
+  OPENAI: 'OpenAI (GPT-4o / mini)',
+  GOOGLE: 'Google Gemini AI',
+  GOOGLE_MAPS: 'Google Maps (Geocoding / Places)',
+  WEATHER: 'Weather API (OpenWeather / WeatherAPI)',
+  GROQ: 'Groq Cloud (Llama 3.1)',
+  ANTHROPIC: 'Anthropic Claude',
+  GITHUB: 'GitHub Token',
+  STRIPE: 'Stripe Secret Key',
   CUSTOM: 'Custom Endpoint'
 };
 
 const APIKeyTester = () => {
   const [provider, setProvider] = useState(PROVIDERS.OPENAI);
   const [mode, setMode] = useState('single'); // 'single' or 'batch'
+  const [sendHiMessage, setSendHiMessage] = useState(true);
   
   // Single Mode State
   const [apiKey, setApiKey] = useState('');
   const [singleStatus, setSingleStatus] = useState(null);
   const [singleMsg, setSingleMsg] = useState('');
+  const [singleHiResponse, setSingleHiResponse] = useState(null);
+  const [singleLatencyMs, setSingleLatencyMs] = useState(null);
   
   // Batch Mode State
   const [batchKeys, setBatchKeys] = useState([]);
   const [isTestingBatch, setIsTestingBatch] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState(0);
-  const [batchResults, setBatchResults] = useState([]); // { key, status, msg }
+  const [batchResults, setBatchResults] = useState([]); // { key, status, msg, hiResponse, latencyMs, subType }
   const [isDragging, setIsDragging] = useState(false);
   const [selectedBatchFile, setSelectedBatchFile] = useState(null);
   const [inputBatchText, setInputBatchText] = useState('');
@@ -39,43 +52,292 @@ const APIKeyTester = () => {
   const showToast = useToast();
   const showSupport = useSupport();
 
-  // Core test function for a single key
+  // Core test function for a single key with live "Hi" sandbox message
   const testKey = async (keyToTest) => {
+    const keyClean = keyToTest.trim();
+    const startTime = performance.now();
+
     try {
-      let response;
+      // 1. OPENAI
       if (provider === PROVIDERS.OPENAI) {
-        response = await fetch('https://api.openai.com/v1/models', {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${keyToTest}` }
+        if (sendHiMessage) {
+          const chatRes = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${keyClean}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'user', content: 'hi' }],
+              max_tokens: 25
+            })
+          });
+          const chatData = await chatRes.json();
+          if (chatRes.ok && chatData.choices?.[0]?.message?.content) {
+            return {
+              success: true,
+              msg: 'Verified active OpenAI account (gpt-4o-mini)',
+              hiResponse: chatData.choices[0].message.content.trim(),
+              latencyMs: Math.round(performance.now() - startTime),
+              subType: 'OpenAI AI'
+            };
+          } else if (chatData.error?.code === 'insufficient_quota') {
+            return {
+              success: false,
+              msg: 'Quota Exceeded: Key is valid, but billing quota has run out.',
+              subType: 'OpenAI'
+            };
+          }
+        }
+
+        // Fallback models check
+        const response = await fetch('https://api.openai.com/v1/models', {
+          headers: { 'Authorization': `Bearer ${keyClean}` }
         });
-      } else if (provider === PROVIDERS.GOOGLE) {
-        response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${keyToTest}`, {
-          method: 'GET'
+        const data = await response.json();
+        if (response.ok) {
+          return {
+            success: true,
+            msg: `Valid OpenAI key. Access to ${data.data?.length || 0} models.`,
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: 'OpenAI AI'
+          };
+        } else {
+          return { success: false, msg: data.error?.message || `Error ${response.status}`, subType: 'OpenAI' };
+        }
+      } 
+      // 2. GOOGLE GEMINI AI
+      else if (provider === PROVIDERS.GOOGLE) {
+        if (sendHiMessage) {
+          const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${keyClean}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: "hi" }] }],
+              generationConfig: { maxOutputTokens: 25 }
+            })
+          });
+          const geminiData = await geminiRes.json();
+          if (geminiRes.ok && geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
+            return {
+              success: true,
+              msg: 'Verified Google Gemini AI key (gemini-1.5-flash)',
+              hiResponse: geminiData.candidates[0].content.parts[0].text.trim(),
+              latencyMs: Math.round(performance.now() - startTime),
+              subType: 'Google Gemini AI'
+            };
+          }
+        }
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${keyClean}`);
+        const data = await response.json();
+        if (response.ok) {
+          return {
+            success: true,
+            msg: `Valid Gemini AI key. Access to ${data.models?.length || 0} models.`,
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: 'Google Gemini AI'
+          };
+        } else {
+          return { success: false, msg: data.error?.message || `Error ${response.status}`, subType: 'Google Gemini AI' };
+        }
+      }
+      // 3. GOOGLE MAPS API
+      else if (provider === PROVIDERS.GOOGLE_MAPS) {
+        const mapsRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=Paris&key=${keyClean}`);
+        const mapsData = await mapsRes.json();
+        if (mapsData.status === 'OK') {
+          const formatted = mapsData.results?.[0]?.formatted_address || 'Paris, France';
+          return {
+            success: true,
+            msg: `Active Google Maps Geocoding Key! Resolved address: "${formatted}"`,
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: 'Google Maps'
+          };
+        } else if (mapsData.status === 'REQUEST_DENIED' && !mapsData.error_message?.toLowerCase().includes('api key is invalid')) {
+          return {
+            success: false,
+            msg: `Google Cloud Key recognized, but Maps Geocoding API is not enabled: ${mapsData.error_message}`,
+            subType: 'Google Cloud (Maps Disabled)'
+          };
+        } else {
+          return { success: false, msg: mapsData.error_message || 'Invalid Google Maps API key.', subType: 'Google Maps' };
+        }
+      }
+      // 4. WEATHER SERVICES
+      else if (provider === PROVIDERS.WEATHER) {
+        // Probe OpenWeatherMap
+        try {
+          const owmRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=London&appid=${keyClean}`);
+          const owmData = await owmRes.json();
+          if (owmRes.ok && owmData.main) {
+            const tempC = Math.round(owmData.main.temp - 273.15);
+            return {
+              success: true,
+              msg: `Active OpenWeatherMap Key! ${owmData.name}: ${tempC}°C, ${owmData.weather?.[0]?.description || 'Clear'}.`,
+              latencyMs: Math.round(performance.now() - startTime),
+              subType: 'OpenWeatherMap'
+            };
+          }
+        } catch (e) {}
+
+        // Probe WeatherAPI
+        try {
+          const wapiRes = await fetch(`https://api.weatherapi.com/v1/current.json?key=${keyClean}&q=London`);
+          const wapiData = await wapiRes.json();
+          if (wapiRes.ok && wapiData.current) {
+            return {
+              success: true,
+              msg: `Active WeatherAPI.com Key! ${wapiData.location?.name}: ${wapiData.current.temp_c}°C, ${wapiData.current.condition?.text}.`,
+              latencyMs: Math.round(performance.now() - startTime),
+              subType: 'WeatherAPI.com'
+            };
+          }
+        } catch (e) {}
+
+        return { success: false, msg: 'Invalid Weather key for OpenWeatherMap and WeatherAPI.', subType: 'Weather' };
+      }
+      // 5. GROQ CLOUD
+      else if (provider === PROVIDERS.GROQ) {
+        if (sendHiMessage) {
+          const groqChat = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${keyClean}`
+            },
+            body: JSON.stringify({
+              model: 'llama-3.1-8b-instant',
+              messages: [{ role: 'user', content: 'hi' }],
+              max_tokens: 25
+            })
+          });
+          const groqData = await groqChat.json();
+          if (groqChat.ok && groqData.choices?.[0]?.message?.content) {
+            return {
+              success: true,
+              msg: 'Verified Groq Cloud LPU key (llama-3.1-8b)',
+              hiResponse: groqData.choices[0].message.content.trim(),
+              latencyMs: Math.round(performance.now() - startTime),
+              subType: 'Groq Cloud'
+            };
+          }
+        }
+
+        const response = await fetch('https://api.groq.com/openai/v1/models', {
+          headers: { 'Authorization': `Bearer ${keyClean}` }
         });
-      } else if (provider === PROVIDERS.NVIDIA) {
-        response = await fetch('https://integrate.api.nvidia.com/v1/models', {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${keyToTest}` }
+        const data = await response.json();
+        if (response.ok) {
+          return {
+            success: true,
+            msg: `Valid Groq key. Access to ${data.data?.length || 0} models.`,
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: 'Groq Cloud'
+          };
+        } else {
+          return { success: false, msg: data.error?.message || `Error ${response.status}`, subType: 'Groq' };
+        }
+      }
+      // 6. ANTHROPIC CLAUDE
+      else if (provider === PROVIDERS.ANTHROPIC) {
+        const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': keyClean,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-haiku-20241022',
+            max_tokens: 25,
+            messages: [{ role: 'user', content: 'hi' }]
+          })
         });
-      } else if (provider === PROVIDERS.CUSTOM) {
+        const claudeData = await claudeRes.json();
+        if (claudeRes.ok && claudeData.content?.[0]?.text) {
+          return {
+            success: true,
+            msg: 'Verified Anthropic Claude key (claude-3-5-haiku)',
+            hiResponse: claudeData.content[0].text.trim(),
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: 'Anthropic Claude'
+          };
+        } else {
+          return { success: false, msg: claudeData.error?.message || `Error ${claudeRes.status}`, subType: 'Anthropic' };
+        }
+      }
+      // 7. GITHUB
+      else if (provider === PROVIDERS.GITHUB) {
+        const ghRes = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${keyClean}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+        const ghData = await ghRes.json();
+        if (ghRes.ok && ghData.login) {
+          return {
+            success: true,
+            msg: `Verified GitHub PAT! User: @${ghData.login}, Public Repos: ${ghData.public_repos}.`,
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: 'GitHub PAT'
+          };
+        } else {
+          return { success: false, msg: ghData.message || 'Invalid GitHub token.', subType: 'GitHub' };
+        }
+      }
+      // 8. STRIPE
+      else if (provider === PROVIDERS.STRIPE) {
+        const isLive = keyClean.startsWith('sk_live_');
+        const stripeRes = await fetch('https://api.stripe.com/v1/balance', {
+          headers: { 'Authorization': `Bearer ${keyClean}` }
+        });
+        const stripeData = await stripeRes.json();
+        if (stripeRes.ok) {
+          const curr = stripeData.available?.[0]?.currency?.toUpperCase() || 'USD';
+          return {
+            success: true,
+            msg: `Verified Stripe key (${isLive ? 'LIVE' : 'TEST'})! Balance currency: ${curr}.`,
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: isLive ? 'Stripe LIVE' : 'Stripe Test'
+          };
+        } else {
+          return { success: false, msg: stripeData.error?.message || 'Invalid Stripe key.', subType: 'Stripe' };
+        }
+      }
+      // 9. CUSTOM ENDPOINT
+      else if (provider === PROVIDERS.CUSTOM) {
         const headers = {};
         if (customHeader) {
-          headers[customHeader] = `${customPrefix}${keyToTest}`;
+          headers[customHeader] = `${customPrefix}${keyClean}`;
         }
-        response = await fetch(customUrl, {
+        const response = await fetch(customUrl, {
           method: 'GET',
           headers: Object.keys(headers).length > 0 ? headers : undefined
         });
+        const data = await response.json();
+        if (response.ok) {
+          return {
+            success: true,
+            msg: `Custom Endpoint responded HTTP 200 OK`,
+            latencyMs: Math.round(performance.now() - startTime),
+            subType: 'Custom Endpoint'
+          };
+        } else {
+          return { success: false, msg: data.error?.message || data.message || `Error ${response.status}`, subType: 'Custom' };
+        }
       }
 
-      const data = await response.json();
-      if (response.ok) {
-        return { success: true, msg: `Valid key for ${provider}` };
-      } else {
-        return { success: false, msg: data.error?.message || data.message || `Error ${response.status}` };
-      }
+      return { success: false, msg: 'Unknown provider', subType: 'Unknown' };
     } catch (err) {
-      return { success: false, msg: err.message === 'Failed to fetch' ? 'Network/CORS error' : err.message };
+      return { 
+        success: false, 
+        msg: err.message === 'Failed to fetch' ? 'Network/CORS error' : err.message,
+        subType: 'Network Error' 
+      };
     }
   };
 
@@ -85,11 +347,15 @@ const APIKeyTester = () => {
     
     setSingleStatus('loading');
     setSingleMsg('');
+    setSingleHiResponse(null);
+    setSingleLatencyMs(null);
     
     const result = await testKey(apiKey.trim());
     if (result.success) {
       setSingleStatus('success');
       setSingleMsg(result.msg);
+      setSingleHiResponse(result.hiResponse || null);
+      setSingleLatencyMs(result.latencyMs || null);
       setTimeout(showSupport, 1500);
     } else {
       setSingleStatus('error');
@@ -112,7 +378,6 @@ const APIKeyTester = () => {
     setExtractionProgress(0);
     setBatchResults([]);
     
-    // Robust extraction: matches anything that looks like an API key token
     const tokenRegex = /[a-zA-Z0-9_-]{15,}/g;
     const keySet = new Set();
     
@@ -127,7 +392,7 @@ const APIKeyTester = () => {
         for (const m of matches) keySet.add(m);
         offset += CHUNK_SIZE;
         setExtractionProgress(Math.floor(Math.min((offset / selectedBatchFile.size) * 100, 100)));
-        await new Promise(r => setTimeout(r, 10)); // Yield
+        await new Promise(r => setTimeout(r, 10));
       }
     } else {
       const matches = inputBatchText.match(tokenRegex) || [];
@@ -144,24 +409,27 @@ const APIKeyTester = () => {
     setBatchKeys(uniqueKeys);
     showToast(`Testing ${uniqueKeys.length} unique keys...`, 'success');
 
-    // Yield to let React render the "X Keys Loaded" text before locking into the heavy loop
     await new Promise(r => setTimeout(r, 100));
 
-    // Process concurrently with a concurrency limit to avoid browser stalling
-    const concurrency = 20;
+    const concurrency = 15;
     let localResults = [];
     
     for (let i = 0; i < uniqueKeys.length; i += concurrency) {
       const chunk = uniqueKeys.slice(i, i + concurrency);
       const chunkPromises = chunk.map(async (key) => {
         const res = await testKey(key);
-        return { key, status: res.success ? 'success' : 'error', msg: res.msg };
+        return { 
+          key, 
+          status: res.success ? 'success' : 'error', 
+          msg: res.msg,
+          hiResponse: res.hiResponse || null,
+          latencyMs: res.latencyMs || null,
+          subType: res.subType || 'Key'
+        };
       });
       
       const completedChunk = await Promise.all(chunkPromises);
       localResults = localResults.concat(completedChunk);
-      
-      // Update UI once per chunk to prevent React array-copying death spiral on 800k keys
       setBatchResults([...localResults]);
     }
     
@@ -192,25 +460,45 @@ const APIKeyTester = () => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className="container animate-float"
-      style={{ animationDuration: '9s', maxWidth: '1000px' }}
+      style={{ animationDuration: '9s', maxWidth: '1100px' }}
     >
-      <ToolHeader title="API Key Tester" subtitle="Verify single or massive batches of API keys instantly" />
+      <ToolHeader 
+        title="API Key Tester & Sandbox Prober" 
+        subtitle="Verify single or massive batches of API keys instantly with live 'Hi' message verification." 
+      />
 
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
         {/* Provider Selection */}
         <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>TARGET PROVIDER</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.8rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+            <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 'bold' }}>
+              TARGET PROVIDER & SUB-KEY ENGINE
+            </label>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.82rem', color: '#10b981', fontWeight: 600 }}>
+              <input 
+                type="checkbox" 
+                checked={sendHiMessage} 
+                onChange={(e) => setSendHiMessage(e.target.checked)}
+                style={{ accentColor: '#10b981' }}
+              />
+              <Send size={13} /> Auto-Send "Hi" Verification
+            </label>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.8rem' }}>
             {Object.values(PROVIDERS).map(prov => (
               <button
                 key={prov}
-                className={`btn-primary`}
+                className="btn-primary"
                 onClick={() => { setProvider(prov); setSingleStatus(null); setBatchResults([]); }}
                 style={{ 
-                  background: provider === prov ? 'rgba(94, 106, 210, 0.2)' : 'transparent',
-                  border: `1px solid ${provider === prov ? 'var(--accent)' : 'var(--border)'}`,
-                  color: provider === prov ? '#fff' : 'var(--text-muted)'
+                  background: provider === prov ? 'rgba(94, 106, 210, 0.25)' : 'rgba(255, 255, 255, 0.03)',
+                  border: `1px solid ${provider === prov ? 'var(--accent)' : 'rgba(255, 255, 255, 0.08)'}`,
+                  color: provider === prov ? '#fff' : 'var(--text-muted)',
+                  fontSize: '0.86rem',
+                  padding: '0.65rem 0.8rem',
+                  borderRadius: '10px'
                 }}
               >
                 {prov}
@@ -247,15 +535,15 @@ const APIKeyTester = () => {
         <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
           <button 
             onClick={() => setMode('single')}
-            style={{ background: 'transparent', border: 'none', color: mode === 'single' ? 'var(--primary)' : 'var(--text-muted)', fontSize: '1.1rem', fontWeight: mode === 'single' ? 'bold' : 'normal', cursor: 'pointer', padding: '0.5rem 1rem', borderBottom: mode === 'single' ? '2px solid var(--primary)' : '2px solid transparent' }}
+            style={{ background: 'transparent', border: 'none', color: mode === 'single' ? 'var(--primary)' : 'var(--text-muted)', fontSize: '1rem', fontWeight: mode === 'single' ? 'bold' : 'normal', cursor: 'pointer', padding: '0.5rem 1rem', borderBottom: mode === 'single' ? '2px solid var(--primary)' : '2px solid transparent' }}
           >
             Single Key Mode
           </button>
           <button 
             onClick={() => setMode('batch')}
-            style={{ background: 'transparent', border: 'none', color: mode === 'batch' ? '#ec4899' : 'var(--text-muted)', fontSize: '1.1rem', fontWeight: mode === 'batch' ? 'bold' : 'normal', cursor: 'pointer', padding: '0.5rem 1rem', borderBottom: mode === 'batch' ? '2px solid #ec4899' : '2px solid transparent' }}
+            style={{ background: 'transparent', border: 'none', color: mode === 'batch' ? '#ec4899' : 'var(--text-muted)', fontSize: '1rem', fontWeight: mode === 'batch' ? 'bold' : 'normal', cursor: 'pointer', padding: '0.5rem 1rem', borderBottom: mode === 'batch' ? '2px solid #ec4899' : '2px solid transparent' }}
           >
-            Mass Batch Mode (.txt)
+            Mass Batch Dump Mode (.txt)
           </button>
         </div>
 
@@ -264,18 +552,81 @@ const APIKeyTester = () => {
             <motion.div key="single" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>API KEY</label>
-                <input type="password" className="input-glass" placeholder={`Enter your ${provider} key...`} value={apiKey} onChange={(e) => setApiKey(e.target.value)} style={{ fontFamily: 'var(--font-mono)' }} />
+                <input 
+                  type="password" 
+                  className="input-glass" 
+                  placeholder={`Enter your ${provider} key...`} 
+                  value={apiKey} 
+                  onChange={(e) => setApiKey(e.target.value)} 
+                  style={{ fontFamily: 'var(--font-mono)' }} 
+                />
               </div>
-              <button className="btn-primary" onClick={handleSingleTest} disabled={singleStatus === 'loading'} style={{ width: '100%', justifyContent: 'center', padding: '0.8rem', fontSize: '1rem' }}>
-                {singleStatus === 'loading' ? <><RefreshCw className="icon-sm spin" /> Testing Connection...</> : <><Server className="icon-sm" /> Test API Key</>}
+
+              <button 
+                className="btn-primary" 
+                onClick={handleSingleTest} 
+                disabled={singleStatus === 'loading'} 
+                style={{ width: '100%', justifyContent: 'center', padding: '0.9rem', fontSize: '1rem' }}
+              >
+                {singleStatus === 'loading' ? (
+                  <><RefreshCw className="icon-sm spin" /> Probing & Testing Connection...</>
+                ) : (
+                  <><Server className="icon-sm" /> Test & Probe Key</>
+                )}
               </button>
+
               {singleStatus && singleStatus !== 'loading' && (
-                <div style={{ padding: '1.2rem', borderRadius: '8px', background: singleStatus === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${singleStatus === 'success' ? 'var(--success)' : 'var(--danger)'}`, display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-                  {singleStatus === 'success' ? <CheckCircle size={24} style={{ color: 'var(--success)' }} /> : <XCircle size={24} style={{ color: 'var(--danger)' }} />}
-                  <div>
-                    <h4 style={{ margin: '0 0 0.2rem 0', color: singleStatus === 'success' ? 'var(--success)' : 'var(--danger)' }}>{singleStatus === 'success' ? 'Connection Successful' : 'Connection Failed'}</h4>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#ccc' }}>{singleMsg}</p>
+                <div style={{ 
+                  padding: '1.25rem', 
+                  borderRadius: '12px', 
+                  background: singleStatus === 'success' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)', 
+                  border: `1px solid ${singleStatus === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`, 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      {singleStatus === 'success' ? <CheckCircle size={22} style={{ color: 'var(--success)' }} /> : <XCircle size={22} style={{ color: 'var(--danger)' }} />}
+                      <h4 style={{ margin: 0, color: singleStatus === 'success' ? 'var(--success)' : 'var(--danger)', fontSize: '1.05rem' }}>
+                        {singleStatus === 'success' ? 'Key Verified & Operational' : 'Connection Failed'}
+                      </h4>
+                    </div>
+
+                    {singleLatencyMs && (
+                      <span style={{ fontSize: '0.75rem', color: '#10b981', fontFamily: 'var(--font-mono)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Zap size={13} /> {singleLatencyMs}ms
+                      </span>
+                    )}
                   </div>
+
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#ccc', lineHeight: 1.4 }}>{singleMsg}</p>
+
+                  {/* Live "Hi" Response Bubble */}
+                  {singleHiResponse && (
+                    <div className="hi-response-bubble">
+                      <div className="hi-bubble-header">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Sparkles size={12} /> LIVE MODEL "HI" RESPONSE
+                        </span>
+                        <span>HTTP 200 OK</span>
+                      </div>
+                      <div style={{ fontStyle: 'italic', color: '#ecfdf5' }}>
+                        "{singleHiResponse}"
+                      </div>
+                    </div>
+                  )}
+
+                  {singleStatus === 'success' && (
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.4rem' }}>
+                      <Link 
+                        to="/llm-chat" 
+                        style={{ color: 'var(--accent)', fontSize: '0.84rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none' }}
+                      >
+                        <MessageSquare size={14} /> Open in LLM Chat Sandbox →
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -289,7 +640,7 @@ const APIKeyTester = () => {
                   </label>
                   <textarea 
                     className="textarea-glass"
-                    placeholder={`sk-...\nAIza...\nPaste raw ${provider} keys here. Auto-extraction will ignore spaces/garbage.`}
+                    placeholder={`Paste raw ${provider} keys here. Auto-extraction will extract all tokens.`}
                     value={inputBatchText}
                     disabled={!!selectedBatchFile}
                     onChange={(e) => setInputBatchText(e.target.value)}
@@ -364,7 +715,7 @@ const APIKeyTester = () => {
                       <>
                         <RefreshCw className="icon-sm spin" style={{ position: 'relative', zIndex: 1 }} /> 
                         <span style={{ position: 'relative', zIndex: 1 }}>
-                          {extractionProgress > 0 && extractionProgress < 100 ? `Extracting... ${extractionProgress}%` : 'Testing...'}
+                          {extractionProgress > 0 && extractionProgress < 100 ? `Extracting... ${extractionProgress}%` : 'Testing with "Hi" Probes...'}
                         </span>
                       </>
                     ) : (
@@ -388,16 +739,25 @@ const APIKeyTester = () => {
                     <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ padding: '1rem', borderBottom: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ color: 'var(--success)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <CheckCircle size={18} /> Working ({workingKeys.length})
+                          <CheckCircle size={18} /> Verified Active ({workingKeys.length})
                         </div>
                         <button className="icon-btn" onClick={() => exportKeys(workingKeys, 'working')} title="Export Working Keys" disabled={workingKeys.length === 0} style={{ color: 'var(--success)' }}>
                           <Download size={16} />
                         </button>
                       </div>
-                      <div style={{ padding: '1rem', height: '300px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                      <div style={{ padding: '1rem', height: '350px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                         {workingKeys.slice(0, 100).map((r, i) => (
-                          <div key={i} style={{ color: 'var(--success)', padding: '0.5rem', borderBottom: '1px solid rgba(16,185,129,0.1)', wordBreak: 'break-all' }}>
-                            {r.key.substring(0, 8)}...{r.key.substring(r.key.length - 8)}
+                          <div key={i} style={{ color: 'var(--success)', padding: '0.6rem', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.2)', wordBreak: 'break-all' }}>
+                            <div style={{ fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+                              <span>{r.key.substring(0, 8)}...{r.key.substring(r.key.length - 8)}</span>
+                              {r.latencyMs && <span style={{ fontSize: '0.72rem', color: '#10b981' }}>{r.latencyMs}ms</span>}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.msg}</div>
+                            {r.hiResponse && (
+                              <div style={{ fontSize: '0.72rem', color: '#ecfdf5', fontStyle: 'italic', marginTop: '0.2rem' }}>
+                                "{r.hiResponse.substring(0, 80)}..."
+                              </div>
+                            )}
                           </div>
                         ))}
                         {workingKeys.length > 100 && (
@@ -413,15 +773,15 @@ const APIKeyTester = () => {
                     <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ padding: '1rem', borderBottom: '1px solid rgba(239, 68, 68, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ color: 'var(--danger)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <XCircle size={18} /> Dead ({deadKeys.length})
+                          <XCircle size={18} /> Dead / Quota Exceeded ({deadKeys.length})
                         </div>
                         <button className="icon-btn" onClick={() => exportKeys(deadKeys, 'dead')} title="Export Dead Keys" disabled={deadKeys.length === 0} style={{ color: 'var(--danger)' }}>
                           <Download size={16} />
                         </button>
                       </div>
-                      <div style={{ padding: '1rem', height: '300px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                      <div style={{ padding: '1rem', height: '350px', overflowY: 'auto', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
                         {deadKeys.slice(0, 100).map((r, i) => (
-                          <div key={i} style={{ padding: '0.5rem', borderBottom: '1px solid rgba(239,68,68,0.1)', display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                          <div key={i} style={{ padding: '0.6rem', borderBottom: '1px solid rgba(239,68,68,0.1)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                             <div style={{ color: 'var(--danger)', wordBreak: 'break-all' }}>{r.key.substring(0, 8)}...{r.key.substring(r.key.length - 8)}</div>
                             <div style={{ color: 'rgba(239,68,68,0.7)', fontSize: '0.75rem' }}>{r.msg}</div>
                           </div>
