@@ -4,10 +4,46 @@ const CLIENT_AGENT = 'SAKrypt:2.1.0:https://github.com/shazeb-s-a-k/SAKrypt';
 const DEFAULT_TIMEOUT_MS = 9 * 60 * 1000;
 const DEFAULT_POLL_INTERVAL_MS = 3000;
 
-export async function generatePollinationsImage(prompt, { fetchImpl = fetch, signal } = {}) {
+const IMAGE_DIMENSIONS = {
+  '1:1': {
+    aihorde: { width: 512, height: 512 },
+    pollinations: { width: 768, height: 768 }
+  },
+  '16:9': {
+    aihorde: { width: 1024, height: 576 },
+    pollinations: { width: 768, height: 432 }
+  },
+  '9:16': {
+    aihorde: { width: 576, height: 1024 },
+    pollinations: { width: 432, height: 768 }
+  },
+  '4:3': {
+    aihorde: { width: 768, height: 576 },
+    pollinations: { width: 768, height: 576 }
+  },
+  '3:4': {
+    aihorde: { width: 576, height: 768 },
+    pollinations: { width: 576, height: 768 }
+  }
+};
+
+export function getImageDimensions(aspectRatio, provider) {
+  const dimensions = IMAGE_DIMENSIONS[aspectRatio]?.[provider];
+  if (!dimensions) {
+    throw new Error('Choose a supported image aspect ratio and provider.');
+  }
+  return dimensions;
+}
+
+export async function generatePollinationsImage(prompt, {
+  fetchImpl = fetch,
+  signal,
+  aspectRatio = '1:1'
+} = {}) {
   const url = new URL(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`);
-  url.searchParams.set('width', '768');
-  url.searchParams.set('height', '768');
+  const { width, height } = getImageDimensions(aspectRatio, 'pollinations');
+  url.searchParams.set('width', String(width));
+  url.searchParams.set('height', String(height));
   url.searchParams.set('safe', 'true');
 
   const response = await fetchImpl(url, { signal });
@@ -142,6 +178,7 @@ export async function generateHordeImage(prompt, {
   onStatus = () => {},
   signal,
   model,
+  aspectRatio = '1:1',
   timeoutMs = DEFAULT_TIMEOUT_MS,
   pollIntervalMs = DEFAULT_POLL_INTERVAL_MS
 } = {}) {
@@ -155,8 +192,7 @@ export async function generateHordeImage(prompt, {
     body: JSON.stringify({
       prompt,
       params: {
-        width: 512,
-        height: 512,
+        ...getImageDimensions(aspectRatio, 'aihorde'),
         steps: 20,
         n: 1
       },

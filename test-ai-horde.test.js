@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   fetchAvailableImageModels,
+  getImageDimensions,
   generateHordeImage,
   generatePollinationsImage
 } from './src/utils/aiHorde.js';
@@ -45,6 +46,10 @@ test('submits an anonymous SFW request and returns its queued WebP result', asyn
   assert.equal(submission.options.headers.apikey, '0000000000');
   assert.equal(submission.options.headers['Client-Agent'].startsWith('SAKrypt:'), true);
   assert.equal(request.prompt, 'A red apple on a white table');
+  assert.deepEqual(
+    { width: request.params.width, height: request.params.height },
+    { width: 512, height: 512 }
+  );
   assert.equal(request.nsfw, false);
   assert.equal(request.censor_nsfw, true);
   assert.equal(request.params.n, 1);
@@ -53,6 +58,20 @@ test('submits an anonymous SFW request and returns its queued WebP result', asyn
   assert.equal(image.size, 'test image'.length);
   assert.equal(statuses[0].queuePosition, 4);
   assert.equal(statuses.at(-1).phase, 'retrieving');
+});
+
+test('maps supported aspect ratios to exact provider-compatible dimensions', () => {
+  assert.deepEqual(getImageDimensions('1:1', 'aihorde'), { width: 512, height: 512 });
+  assert.deepEqual(getImageDimensions('16:9', 'aihorde'), { width: 1024, height: 576 });
+  assert.deepEqual(getImageDimensions('9:16', 'aihorde'), { width: 576, height: 1024 });
+  assert.deepEqual(getImageDimensions('4:3', 'aihorde'), { width: 768, height: 576 });
+  assert.deepEqual(getImageDimensions('3:4', 'aihorde'), { width: 576, height: 768 });
+  assert.deepEqual(getImageDimensions('1:1', 'pollinations'), { width: 768, height: 768 });
+  assert.deepEqual(getImageDimensions('16:9', 'pollinations'), { width: 768, height: 432 });
+  assert.deepEqual(getImageDimensions('9:16', 'pollinations'), { width: 432, height: 768 });
+  assert.deepEqual(getImageDimensions('4:3', 'pollinations'), { width: 768, height: 576 });
+  assert.deepEqual(getImageDimensions('3:4', 'pollinations'), { width: 576, height: 768 });
+  assert.throws(() => getImageDimensions('2:1', 'aihorde'), /supported image aspect ratio/);
 });
 
 test('lists only image models with active workers and sorts them', async () => {
@@ -91,9 +110,14 @@ test('restricts generation to the selected community model when requested', asyn
   await generateHordeImage('A landscape', {
     fetchImpl,
     sleep: async () => {},
-    model: 'Juggernaut XL'
+    model: 'Juggernaut XL',
+    aspectRatio: '16:9'
   });
   assert.deepEqual(submittedRequest.models, ['Juggernaut XL']);
+  assert.deepEqual(
+    { width: submittedRequest.params.width, height: submittedRequest.params.height },
+    { width: 1024, height: 576 }
+  );
 });
 
 test('generates a safe Pollinations Classic image without a user API key', async () => {
@@ -102,12 +126,13 @@ test('generates a safe Pollinations Classic image without a user API key', async
       const requestUrl = new URL(url);
       assert.equal(requestUrl.hostname, 'image.pollinations.ai');
       assert.equal(requestUrl.pathname, '/prompt/A%20fox%20in%20a%20snowy%20forest');
-      assert.equal(requestUrl.searchParams.get('width'), '768');
+      assert.equal(requestUrl.searchParams.get('width'), '432');
       assert.equal(requestUrl.searchParams.get('height'), '768');
       assert.equal(requestUrl.searchParams.get('safe'), 'true');
       assert.equal(requestUrl.searchParams.has('key'), false);
       return new Response(new Blob(['jpeg image'], { type: 'image/jpeg' }));
-    }
+    },
+    aspectRatio: '9:16'
   });
 
   assert.equal(image.type, 'image/jpeg');
@@ -120,7 +145,8 @@ test('explains Pollinations free-tier cooldowns from provider responses', async 
       fetchImpl: async () => new Response(
         JSON.stringify({ message: 'Please wait' }),
         { status: 402, headers: { 'Content-Type': 'application/json', 'Retry-After': '67' } }
-      )
+      ),
+      aspectRatio: '9:16'
     }),
     /Pollinations' free per-IP limit.*67 seconds/
   );

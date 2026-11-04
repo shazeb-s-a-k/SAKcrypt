@@ -5,6 +5,7 @@ import JSZip from 'jszip';
 import ToolHeader from '../../components/ToolHeader';
 import {
   fetchAvailableImageModels,
+  getImageDimensions,
   generateHordeImage,
   generatePollinationsImage
 } from '../../utils/aiHorde';
@@ -48,6 +49,7 @@ function downloadBlob(blob, filename) {
 const AIImageGenerator = () => {
   const [mode, setMode] = useState('single');
   const [selectedProvider, setSelectedProvider] = useState('aihorde');
+  const [aspectRatio, setAspectRatio] = useState('1:1');
   const [prompt, setPrompt] = useState('');
   const [batchFileName, setBatchFileName] = useState('');
   const [batchPromptText, setBatchPromptText] = useState('');
@@ -118,11 +120,12 @@ const AIImageGenerator = () => {
 
       lastPollinationsRequestRef.current = Date.now();
       onStatus('Generating with Pollinations Classic...');
-      return generatePollinationsImage(imagePrompt);
+      return generatePollinationsImage(imagePrompt, { aspectRatio });
     }
 
     return generateHordeImage(imagePrompt, {
       model: selectedModel,
+      aspectRatio,
       onStatus
     });
   };
@@ -357,6 +360,31 @@ const AIImageGenerator = () => {
               {selectedProvider === 'aihorde'
                 ? 'Free community models with active workers; availability changes.'
                 : 'Single free model; Pollinations adds a small logo to images.'}
+            </span>
+          </label>
+          <label style={{ flex: '1 1 160px', maxWidth: '240px' }}>
+            <span style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+              ASPECT RATIO
+            </span>
+            <select
+              className="input-glass"
+              aria-label="Image aspect ratio"
+              value={aspectRatio}
+              onChange={(event) => setAspectRatio(event.target.value)}
+              disabled={isGenerating}
+              style={{ width: '100%', minHeight: '44px' }}
+            >
+              <option value="1:1">1:1 - Square</option>
+              <option value="16:9">16:9 - Landscape</option>
+              <option value="9:16">9:16 - Portrait</option>
+              <option value="4:3">4:3 - Classic landscape</option>
+              <option value="3:4">3:4 - Classic portrait</option>
+            </select>
+            <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              {(() => {
+                const { width, height } = getImageDimensions(aspectRatio, selectedProvider);
+                return `${width} × ${height} output`;
+              })()}
             </span>
           </label>
         </div>
