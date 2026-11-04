@@ -10,6 +10,10 @@ const IMAGE_DIMENSIONS = {
       standard: { width: 512, height: 512 },
       hd: { width: 1024, height: 1024 }
     },
+    cloudflare: {
+      standard: { width: 512, height: 512 },
+      hd: { width: 1024, height: 1024 }
+    },
     pollinations: {
       standard: { width: 512, height: 512 },
       hd: { width: 768, height: 768 }
@@ -18,6 +22,10 @@ const IMAGE_DIMENSIONS = {
   '16:9': {
     aihorde: {
       standard: { width: 1024, height: 576 },
+      hd: { width: 1024, height: 576 }
+    },
+    cloudflare: {
+      standard: { width: 768, height: 432 },
       hd: { width: 1024, height: 576 }
     },
     pollinations: {
@@ -30,6 +38,10 @@ const IMAGE_DIMENSIONS = {
       standard: { width: 576, height: 1024 },
       hd: { width: 576, height: 1024 }
     },
+    cloudflare: {
+      standard: { width: 432, height: 768 },
+      hd: { width: 576, height: 1024 }
+    },
     pollinations: {
       standard: { width: 288, height: 512 },
       hd: { width: 432, height: 768 }
@@ -40,6 +52,10 @@ const IMAGE_DIMENSIONS = {
       standard: { width: 768, height: 576 },
       hd: { width: 1024, height: 768 }
     },
+    cloudflare: {
+      standard: { width: 768, height: 576 },
+      hd: { width: 1024, height: 768 }
+    },
     pollinations: {
       standard: { width: 512, height: 384 },
       hd: { width: 768, height: 576 }
@@ -47,6 +63,10 @@ const IMAGE_DIMENSIONS = {
   },
   '3:4': {
     aihorde: {
+      standard: { width: 576, height: 768 },
+      hd: { width: 768, height: 1024 }
+    },
+    cloudflare: {
       standard: { width: 576, height: 768 },
       hd: { width: 768, height: 1024 }
     },
@@ -167,6 +187,62 @@ export async function generatePollinationsImage(prompt, {
     sleep,
     shouldStop,
     defaultRetryDelaySeconds: 5,
+    isRetryable: (error) => (
+      error.retryable || (error instanceof TypeError && error.name !== 'AbortError')
+    )
+  });
+}
+
+export async function generateCloudflareImage(prompt, {
+  fetchImpl = fetch,
+  signal,
+  aspectRatio = '1:1',
+  resolution = 'standard',
+  onStatus = () => {},
+  sleep,
+  shouldStop
+} = {}) {
+  getImageDimensions(aspectRatio, 'cloudflare', resolution);
+  if (shouldStop?.()) return null;
+
+  return withRetries(async () => {
+    const response = await fetchImpl('/api/image-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, aspectRatio, resolution }),
+      signal
+    });
+
+    if (!response.ok) {
+      let details = {};
+      try {
+        details = await response.json();
+      } catch {
+        details = {};
+      }
+
+      const error = new Error(
+        typeof details.error === 'string'
+          ? details.error
+          : `Cloudflare Workers AI could not generate this image (${response.status}).`
+      );
+      error.retryable = details.retryable === true;
+      error.retryAfterSeconds = Number(details.retryAfterSeconds)
+        || getRetryAfterSeconds(response.headers);
+      throw error;
+    }
+
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) {
+      throw new Error(
+        'The Cloudflare image endpoint did not return an image. Deploy the Vercel API route and configure its credentials.'
+      );
+    }
+    return blob;
+  }, {
+    onStatus,
+    sleep,
+    shouldStop,
     isRetryable: (error) => (
       error.retryable || (error instanceof TypeError && error.name !== 'AbortError')
     )

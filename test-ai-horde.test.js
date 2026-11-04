@@ -4,6 +4,7 @@ import {
   fetchAvailableImageModels,
   getImageDimensions,
   generateHordeImage,
+  generateCloudflareImage,
   generatePollinationsImage
 } from './src/utils/aiHorde.js';
 
@@ -71,6 +72,7 @@ test('maps supported aspect ratios to exact provider-compatible dimensions', () 
   assert.deepEqual(getImageDimensions('9:16', 'aihorde', 'hd'), { width: 576, height: 1024 });
   assert.deepEqual(getImageDimensions('4:3', 'aihorde', 'hd'), { width: 1024, height: 768 });
   assert.deepEqual(getImageDimensions('3:4', 'aihorde', 'hd'), { width: 768, height: 1024 });
+  assert.deepEqual(getImageDimensions('16:9', 'cloudflare', 'hd'), { width: 1024, height: 576 });
   assert.deepEqual(getImageDimensions('1:1', 'pollinations', 'hd'), { width: 768, height: 768 });
   assert.deepEqual(getImageDimensions('16:9', 'pollinations', 'hd'), { width: 768, height: 432 });
   assert.deepEqual(getImageDimensions('9:16', 'pollinations', 'hd'), { width: 432, height: 768 });
@@ -168,6 +170,49 @@ test('generates a safe Pollinations Classic image without a user API key', async
 
   assert.equal(image.type, 'image/jpeg');
   assert.equal(image.size, 'jpeg image'.length);
+});
+
+test('generates a Cloudflare SDXL image through the same-origin server route', async () => {
+  const image = await generateCloudflareImage('A dramatic mountain lake', {
+    aspectRatio: '16:9',
+    resolution: 'hd',
+    fetchImpl: async (url, options) => {
+      assert.equal(url, '/api/image-generate');
+      assert.equal(options.method, 'POST');
+      assert.equal(options.headers['Content-Type'], 'application/json');
+      assert.deepEqual(JSON.parse(options.body), {
+        prompt: 'A dramatic mountain lake',
+        aspectRatio: '16:9',
+        resolution: 'hd'
+      });
+      return new Response(new Blob(['png image'], { type: 'image/png' }));
+    }
+  });
+  assert.equal(image.type, 'image/png');
+  assert.equal(image.size, 'png image'.length);
+});
+
+test('retries Cloudflare rate limits and uses the server retry delay', async () => {
+  let requests = 0;
+  const statuses = [];
+  const image = await generateCloudflareImage('A quiet forest', {
+    fetchImpl: async () => {
+      requests += 1;
+      if (requests === 1) {
+        return Response.json(
+          { error: 'Rate limited', retryable: true, retryAfterSeconds: 2 },
+          { status: 429, headers: { 'Retry-After': '2' } }
+        );
+      }
+      return new Response(new Blob(['png image'], { type: 'image/png' }));
+    },
+    onStatus: (status) => statuses.push(status),
+    sleep: async () => {}
+  });
+  assert.equal(image.type, 'image/png');
+  assert.equal(requests, 2);
+  assert.equal(statuses.length, 2);
+  assert.equal(statuses[0].waitSeconds, 2);
 });
 
 test('honors Retry-After and retries Pollinations rate limits with a countdown', async () => {

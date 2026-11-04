@@ -141,7 +141,7 @@ const features = [
     title: 'AI Image Generator',
     categoryId: 'ai',
     tag: 'IMAGE SYNTHESIS',
-    desc: 'Choose free AI Horde or Pollinations, select from active community models, and generate prompt batches.',
+    desc: 'Choose free AI Horde or Pollinations, or configure hosted Cloudflare SDXL for prompt batches.',
     icon: <ImageIcon />,
     path: '/image',
     color: '#06b6d4'

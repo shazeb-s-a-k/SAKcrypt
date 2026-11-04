@@ -7,6 +7,7 @@ import {
   fetchAvailableImageModels,
   getImageDimensions,
   generateHordeImage,
+  generateCloudflareImage,
   generatePollinationsImage
 } from '../../utils/aiHorde';
 import { createImageFilename, parseImagePrompts } from '../../utils/imageBatch';
@@ -132,12 +133,16 @@ const AIImageGenerator = () => {
       });
     }
 
-    return generateHordeImage(imagePrompt, {
-      model: selectedModel,
-      aspectRatio,
-      resolution,
-      onStatus
-    });
+    if (selectedProvider === 'cloudflare') {
+      return generateCloudflareImage(imagePrompt, {
+        aspectRatio,
+        resolution,
+        onStatus,
+        shouldStop
+      });
+    }
+
+    return generateHordeImage(imagePrompt, { model: selectedModel, aspectRatio, resolution, onStatus });
   };
 
   const handleGenerateSingle = async (event) => {
@@ -152,7 +157,9 @@ const AIImageGenerator = () => {
     setServiceStatus(
       selectedProvider === 'pollinations'
         ? 'Generating with Pollinations Classic...'
-        : 'Submitting to the AI Horde community queue...'
+        : selectedProvider === 'cloudflare'
+          ? 'Submitting to Cloudflare Workers AI...'
+          : 'Submitting to the AI Horde community queue...'
     );
 
     try {
@@ -214,7 +221,9 @@ const AIImageGenerator = () => {
 
         const currentNumber = index + 1;
         const currentPrompt = batchPrompts[index];
-        setServiceStatus(`Submitting image ${currentNumber} of ${batchPrompts.length} to volunteer workers...`);
+        setServiceStatus(selectedProvider === 'cloudflare'
+          ? `Submitting image ${currentNumber} of ${batchPrompts.length} to Cloudflare Workers AI...`
+          : `Submitting image ${currentNumber} of ${batchPrompts.length} to volunteer workers...`);
 
         try {
           const blob = await generateWithSelectedProvider(
@@ -282,7 +291,7 @@ const AIImageGenerator = () => {
     >
       <ToolHeader
         title="AI Image Generator"
-        subtitle="Generate images with free community-powered GPU workers"
+        subtitle="Generate images with free community and hosted models"
       />
 
       <div className="glass-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -336,9 +345,10 @@ const AIImageGenerator = () => {
             >
               <option value="aihorde">AI Horde - volunteer GPUs</option>
               <option value="pollinations">Pollinations Classic - fast, rate-limited</option>
+              <option value="cloudflare">Cloudflare Workers AI - SDXL (setup required)</option>
             </select>
             <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-              Both providers are free to use without a personal API key.
+              AI Horde and Pollinations need no setup; Cloudflare uses the site's server-side account.
             </span>
           </label>
           <label style={{ flex: '1 1 240px', maxWidth: '360px' }}>
@@ -348,7 +358,9 @@ const AIImageGenerator = () => {
             <select
               className="input-glass"
               aria-label="Generation model"
-              value={selectedProvider === 'aihorde' ? selectedModel : 'pollinations-classic'}
+              value={selectedProvider === 'aihorde'
+                ? selectedModel
+                : selectedProvider === 'pollinations' ? 'pollinations-classic' : 'cloudflare-sdxl'}
               onChange={(event) => setSelectedModel(event.target.value)}
               disabled={isGenerating || (selectedProvider === 'aihorde' ? isLoadingModels : true)}
               style={{ width: '100%', minHeight: '44px' }}
@@ -357,8 +369,10 @@ const AIImageGenerator = () => {
                 <option value="">
                 {isLoadingModels ? 'Loading available models...' : 'Auto - any available model'}
                 </option>
-              ) : (
+              ) : selectedProvider === 'pollinations' ? (
                 <option value="pollinations-classic">Pollinations Classic (fixed model)</option>
+              ) : (
+                <option value="cloudflare-sdxl">Stable Diffusion XL Base (Cloudflare)</option>
               )}
               {selectedProvider === 'aihorde' && imageModels.map((model) => (
                 <option key={model.name} value={model.name}>
@@ -369,7 +383,9 @@ const AIImageGenerator = () => {
             <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
               {selectedProvider === 'aihorde'
                 ? 'Free community models with active workers; availability changes.'
-                : 'Single free model; Pollinations adds a small logo to images.'}
+                : selectedProvider === 'pollinations'
+                  ? 'Single free model; Pollinations adds a small logo to images.'
+                  : 'Requires Cloudflare Vercel environment variables; the provider token stays on the server.'}
             </span>
           </label>
           <label style={{ flex: '1 1 160px', maxWidth: '240px' }}>
@@ -413,9 +429,9 @@ const AIImageGenerator = () => {
               <option value="hd">HD (provider maximum)</option>
             </select>
             <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-              {selectedProvider === 'aihorde'
-                ? 'HD can use up to 1024px per side; worker support varies.'
-                : 'Pollinations Classic is capped at 768px per side.'}
+              {selectedProvider === 'pollinations'
+                ? 'Pollinations Classic is capped at 768px per side.'
+                : 'HD can use up to 1024px per side; model/worker support varies.'}
             </span>
           </label>
         </div>
