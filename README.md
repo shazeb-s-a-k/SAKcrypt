@@ -20,7 +20,7 @@ It features an array of powerful tools, including encoding secret payloads into 
 - **QR Code Engine**: Generate custom, high-res QR codes instantly with customizable foregrounds and backgrounds.
 - **Regex Sandbox**: A live playground to test, debug, and execute Regular Expressions on the fly.
 - **UUID Generator**: Instantly generate universally unique identifiers (v4).
-- **AI Image Generator**: Generate and view images directly in the app using the AI Horde community's volunteer GPU network; no personal API key or sign-in is required.
+- **AI Image Generator**: Choose from the AI Horde community's currently available free image models and generate images directly in the app; no personal API key or sign-in is required.
 - **Mass Generate**: Upload a text file with one prompt per line, generate images sequentially, and download the results together as an ordered ZIP archive.
 
 ## 💎 Design & Animations
@@ -45,11 +45,11 @@ npm run dev
 
 ### AI Image Generator notes
 
-The image generator uses AI Horde's documented anonymous API with its public anonymous access key. It submits one image-generation request at a time to the community's volunteer GPU network. No personal API key, sign-in, or payment setup is required. Anonymous requests are lower priority and are shared with LAION by the provider. Prompts are sent to AI Horde, so do not include sensitive information.
+The image generator uses AI Horde's documented anonymous API with its public anonymous access key. The model selector loads currently available models from the community worker catalog, omitting model names explicitly labeled NSFW; choose a specific model or let the service select any compatible model. The same selection applies to single and mass generation. It submits one image-generation request at a time to the community's volunteer GPU network. No personal API key, sign-in, or payment setup is required. Anonymous requests are lower priority and are shared with LAION by the provider. Prompts are sent to AI Horde, so do not include sensitive information.
 
 This is a community-run service rather than a production API with an availability guarantee. Generation can queue for several minutes, anonymous requests may be limited during high load, and availability depends on volunteer workers. The app respects the provider's queue and limits; it does not rotate identities or attempt to bypass them.
 
-The **Mass Generate** mode accepts `.txt`, `.text`, and `.md` files, treating each saved line as one prompt and ignoring blank lines. It generates images sequentially in file order with no hard prompt-count cap. Filenames use a sanitized prompt prefix and a zero-padded sequence number (for example, `Image_of_Bird_001.webp`). Download the batch as one ZIP. If generation fails, already completed images remain downloadable; the ZIP also contains a note identifying the failed prompt. Very large batches may take a long time and consume substantial browser memory.
+The **Mass Generate** mode accepts pasted text as well as `.txt`, `.text`, and `.md` files, treating each actual line as one prompt and ignoring blank lines. It generates images sequentially in file order with no hard prompt-count cap. Filenames use a sanitized prompt prefix and a zero-padded sequence number (for example, `Image_of_Bird_001.webp`). Download the batch as one ZIP. If generation fails, already completed images remain downloadable; the ZIP also contains a note identifying the failed prompt. Very large batches may take a long time and consume substantial browser memory.
 
 ## 🔐 Secure Build
 The project is configured in `vite.config.js` to strip out all `console.log` statements and completely disable source maps in production to ensure private code details are never leaked.

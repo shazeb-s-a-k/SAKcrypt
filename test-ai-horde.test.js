@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { generateHordeImage } from './src/utils/aiHorde.js';
+import { fetchAvailableImageModels, generateHordeImage } from './src/utils/aiHorde.js';
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -49,6 +49,47 @@ test('submits an anonymous SFW request and returns its queued WebP result', asyn
   assert.equal(image.size, 'test image'.length);
   assert.equal(statuses[0].queuePosition, 4);
   assert.equal(statuses.at(-1).phase, 'retrieving');
+});
+
+test('lists only image models with active workers and sorts them', async () => {
+  const models = await fetchAvailableImageModels({
+    fetchImpl: async (url) => {
+      assert.match(url, /status\/models\?type=image$/);
+      return jsonResponse([
+        { name: 'Zeta', type: 'image', count: 2 },
+        { name: 'No workers', type: 'image', count: 0 },
+        { name: 'Alpha', type: 'image', count: 1 },
+        { name: 'Hentai Diffusion', type: 'image', count: 10 },
+        { name: 'WAI-NSFW-illustrious', type: 'image', count: 8 },
+        { name: 'Text model', type: 'text', count: 10 },
+        { name: '', type: 'image', count: 1 }
+      ]);
+    }
+  });
+
+  assert.deepEqual(models.map((model) => model.name), ['Alpha', 'Zeta']);
+});
+
+test('restricts generation to the selected community model when requested', async () => {
+  let submittedRequest;
+  const fetchImpl = async (url, options = {}) => {
+    if (options.method === 'POST') {
+      submittedRequest = JSON.parse(options.body);
+      return jsonResponse({ id: 'request-model' }, 202);
+    }
+    if (url.endsWith('/check/request-model')) return jsonResponse({ done: true });
+    if (url.endsWith('/status/request-model')) {
+      return jsonResponse({ generations: [{ img: btoa('model result') }] });
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  };
+
+  await generateHordeImage('A landscape', {
+    fetchImpl,
+    sleep: async () => {},
+    model: 'Juggernaut XL'
+  });
+  assert.deepEqual(submittedRequest.models, ['Juggernaut XL']);
 });
 
 test('explains provider rate limiting without retrying or changing identities', async () => {

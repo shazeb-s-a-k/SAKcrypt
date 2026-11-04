@@ -4,6 +4,29 @@ const CLIENT_AGENT = 'SAKrypt:2.1.0:https://github.com/shazeb-s-a-k/SAKrypt';
 const DEFAULT_TIMEOUT_MS = 9 * 60 * 1000;
 const DEFAULT_POLL_INTERVAL_MS = 3000;
 
+export async function fetchAvailableImageModels({ fetchImpl = fetch, signal } = {}) {
+  const response = await fetchImpl(`${AI_HORDE_API}/status/models?type=image`, {
+    headers: { 'Client-Agent': CLIENT_AGENT },
+    signal
+  });
+  const models = await readResponse(response);
+  if (!Array.isArray(models)) {
+    throw new Error('The image service returned an invalid model list.');
+  }
+
+  return models
+    .filter((model) => (
+      model
+      && model.type === 'image'
+      && typeof model.name === 'string'
+      && model.name.length > 0
+      && Number.isFinite(model.count)
+      && model.count > 0
+      && !/(?:nsfw|hentai|afterdark|yiff|porn|sex)/i.test(model.name)
+    ))
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
 async function readResponse(response) {
   const text = await response.text();
   let data = {};
@@ -82,6 +105,7 @@ export async function generateHordeImage(prompt, {
   now = Date.now,
   onStatus = () => {},
   signal,
+  model,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   pollIntervalMs = DEFAULT_POLL_INTERVAL_MS
 } = {}) {
@@ -104,6 +128,7 @@ export async function generateHordeImage(prompt, {
       censor_nsfw: true,
       slow_workers: true,
       validated_backends: true,
+      models: model ? [model] : undefined,
       r2: false
     }),
     signal

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Archive, Download, FileText, Image as ImageIcon, LoaderCircle, Square } from 'lucide-react';
 import { motion } from 'framer-motion';
 import JSZip from 'jszip';
 import ToolHeader from '../../components/ToolHeader';
-import { generateHordeImage } from '../../utils/aiHorde';
+import { fetchAvailableImageModels, generateHordeImage } from '../../utils/aiHorde';
 import { createImageFilename, parseImagePrompts } from '../../utils/imageBatch';
 
 const MAX_PROMPT_LENGTH = 1000;
@@ -44,7 +44,11 @@ const AIImageGenerator = () => {
   const [mode, setMode] = useState('single');
   const [prompt, setPrompt] = useState('');
   const [batchFileName, setBatchFileName] = useState('');
-  const [batchPrompts, setBatchPrompts] = useState([]);
+  const [batchPromptText, setBatchPromptText] = useState('');
+  const [imageModels, setImageModels] = useState([]);
+  const [selectedModel, setSelectedModel] = useState('');
+  const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [modelCatalogError, setModelCatalogError] = useState('');
   const [generatedImages, setGeneratedImages] = useState([]);
   const [batchFailure, setBatchFailure] = useState(null);
   const [batchProgress, setBatchProgress] = useState({ completed: 0, total: 0 });
@@ -54,9 +58,25 @@ const AIImageGenerator = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const imageUrlsRef = useRef([]);
   const cancelBatchRef = useRef(false);
+  const batchPrompts = useMemo(() => parseImagePrompts(batchPromptText), [batchPromptText]);
 
-  useEffect(() => () => {
-    imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchAvailableImageModels({ signal: controller.signal })
+      .then(setImageModels)
+      .catch((modelError) => {
+        if (modelError.name !== 'AbortError') {
+          setModelCatalogError(getErrorMessage(modelError));
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingModels(false);
+      });
+
+    return () => {
+      controller.abort();
+      imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
   }, []);
 
   const clearGeneratedImages = () => {
@@ -89,6 +109,7 @@ const AIImageGenerator = () => {
 
     try {
       const blob = await generateHordeImage(trimmedPrompt, {
+        model: selectedModel,
         onStatus: (status) => setServiceStatus(getGenerationStatus(status))
       });
       setGeneratedImages([saveGeneratedImage(blob, trimmedPrompt, 1, 1)]);
@@ -106,7 +127,6 @@ const AIImageGenerator = () => {
     if (!file) return;
 
     setBatchFileName(file.name);
-    setBatchPrompts([]);
     setError('');
     setBatchFailure(null);
     clearGeneratedImages();
@@ -117,11 +137,13 @@ const AIImageGenerator = () => {
       if (prompts.length === 0) {
         throw new Error('This file does not contain any prompts. Put one prompt on each non-empty line.');
       }
-      setBatchPrompts(prompts);
+      setBatchPromptText(text);
       setBatchProgress({ completed: 0, total: prompts.length });
     } catch (fileError) {
       setError(getErrorMessage(fileError));
       setBatchFileName('');
+      setBatchPromptText('');
+      setBatchProgress({ completed: 0, total: 0 });
     }
 
     event.target.value = '';
@@ -148,6 +170,7 @@ const AIImageGenerator = () => {
 
         try {
           const blob = await generateHordeImage(currentPrompt, {
+            model: selectedModel,
             onStatus: (status) => setServiceStatus(
               `Image ${currentNumber} of ${batchPrompts.length}: ${getGenerationStatus(status, cancelBatchRef.current)}`
             )
@@ -214,31 +237,72 @@ const AIImageGenerator = () => {
 
       <div className="glass-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div
-          role="tablist"
-          aria-label="Image generation mode"
-          style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'end',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            marginBottom: '1.5rem'
+          }}
         >
-          <button
-            type="button"
-            className={`btn-secondary ${mode === 'single' ? 'active' : ''}`}
-            role="tab"
-            aria-selected={mode === 'single'}
-            disabled={isGenerating}
-            onClick={() => setMode('single')}
+          <div
+            role="tablist"
+            aria-label="Image generation mode"
+            style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}
           >
-            Single Generate
-          </button>
-          <button
-            type="button"
-            className={`btn-secondary ${mode === 'mass' ? 'active' : ''}`}
-            role="tab"
-            aria-selected={mode === 'mass'}
-            disabled={isGenerating}
-            onClick={() => setMode('mass')}
-          >
-            Mass Generate
-          </button>
+            <button
+              type="button"
+              className={`btn-secondary ${mode === 'single' ? 'active' : ''}`}
+              role="tab"
+              aria-selected={mode === 'single'}
+              disabled={isGenerating}
+              onClick={() => setMode('single')}
+            >
+              Single Generate
+            </button>
+            <button
+              type="button"
+              className={`btn-secondary ${mode === 'mass' ? 'active' : ''}`}
+              role="tab"
+              aria-selected={mode === 'mass'}
+              disabled={isGenerating}
+              onClick={() => setMode('mass')}
+            >
+              Mass Generate
+            </button>
+          </div>
+          <label style={{ flex: '1 1 240px', maxWidth: '360px' }}>
+            <span style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+              FREE GENERATION MODEL
+            </span>
+            <select
+              className="input-glass"
+              aria-label="Free generation model"
+              value={selectedModel}
+              onChange={(event) => setSelectedModel(event.target.value)}
+              disabled={isGenerating || isLoadingModels}
+              style={{ width: '100%', minHeight: '44px' }}
+            >
+              <option value="">
+                {isLoadingModels ? 'Loading available models...' : 'Auto - any available model'}
+              </option>
+              {imageModels.map((model) => (
+                <option key={model.name} value={model.name}>
+                  {model.name} ({model.count} {model.count === 1 ? 'worker' : 'workers'})
+                </option>
+              ))}
+            </select>
+            <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              Free AI Horde community models; availability can change.
+            </span>
+          </label>
         </div>
+        {modelCatalogError && (
+          <p role="status" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '-0.5rem' }}>
+            Could not load the live model list: {modelCatalogError} Automatic model selection is still available.
+          </p>
+        )}
 
         {mode === 'single' ? (
           <form onSubmit={handleGenerateSingle}>
@@ -291,10 +355,34 @@ const AIImageGenerator = () => {
         ) : (
           <div>
             <label
+              htmlFor="image-batch-text"
+              style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}
+            >
+              PROMPTS (PASTE OR TYPE, ONE PROMPT PER LINE)
+            </label>
+            <textarea
+              id="image-batch-text"
+              className="textarea-glass"
+              value={batchPromptText}
+              onChange={(event) => {
+                const text = event.target.value;
+                const prompts = parseImagePrompts(text);
+                setBatchPromptText(text);
+                setBatchFileName('');
+                setBatchProgress({ completed: 0, total: prompts.length });
+                setError('');
+                setBatchFailure(null);
+                clearGeneratedImages();
+              }}
+              placeholder={'A tiny blue bird on a branch\nA red apple on a wooden table'}
+              disabled={isGenerating}
+              style={{ minHeight: '150px', resize: 'vertical', marginBottom: '0.75rem' }}
+            />
+            <label
               htmlFor="image-batch-file"
               style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}
             >
-              PROMPT FILE (.TXT, .TEXT, .MD)
+              OR UPLOAD PROMPTS (.TXT, .TEXT, .MD)
             </label>
             <input
               id="image-batch-file"
@@ -305,14 +393,14 @@ const AIImageGenerator = () => {
               style={{ display: 'block', width: '100%', color: 'var(--secondary)', marginBottom: '0.75rem' }}
             />
             <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.6 }}>
-              Put one prompt on each actual line in the file. Blank lines are ignored. Text wrapping
-              on screen does not split a prompt; only line breaks saved in the file do. Prompts run
-              one at a time, in file order, with no fixed batch-count limit.
+              Paste text directly or upload a file. Each actual line is one prompt; blank lines are
+              ignored, and visual wrapping does not split prompts. They run one at a time in order.
             </p>
-            {batchFileName && (
+            {(batchFileName || batchPromptText) && (
               <div style={{ margin: '1rem 0', color: 'var(--secondary)' }}>
                 <FileText size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
-                {batchFileName}: {batchPrompts.length} prompt{batchPrompts.length === 1 ? '' : 's'}
+                {batchFileName ? `${batchFileName}: ` : 'Pasted text: '}
+                {batchPrompts.length} prompt{batchPrompts.length === 1 ? '' : 's'}
                 {batchPrompts.length > 0 && (
                   <pre
                     style={{
