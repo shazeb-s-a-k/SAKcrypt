@@ -141,7 +141,7 @@ const features = [
     title: 'AI Image Generator',
     categoryId: 'ai',
     tag: 'IMAGE SYNTHESIS',
-    desc: 'Generate images in SAKrypt with the public FLUX.1 Schnell demo, including sequential prompt batches.',
+    desc: 'Generate images with free community-powered GPU workers, including sequential prompt batches.',
     icon: <ImageIcon />,
     path: '/image',
     color: '#06b6d4'

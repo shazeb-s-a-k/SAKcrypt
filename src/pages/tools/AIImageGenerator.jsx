@@ -1,45 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
 import { Archive, Download, FileText, Image as ImageIcon, LoaderCircle, Square } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Client } from '@gradio/client';
 import JSZip from 'jszip';
 import ToolHeader from '../../components/ToolHeader';
+import { generateHordeImage } from '../../utils/aiHorde';
 import { createImageFilename, parseImagePrompts } from '../../utils/imageBatch';
 
-const FLUX_SPACE_ID = 'black-forest-labs/FLUX.1-schnell';
-const FLUX_SPACE_URL = 'https://black-forest-labs-flux-1-schnell.hf.space';
 const MAX_PROMPT_LENGTH = 1000;
 
-async function generateImage(client, prompt) {
-  const result = await client.predict('/infer', [
-    prompt,
-    0,
-    true,
-    1024,
-    1024,
-    4
-  ]);
-  const imageData = result.data[0];
-  if (!imageData || typeof imageData !== 'object' || !('url' in imageData) || typeof imageData.url !== 'string') {
-    throw new Error('The image service returned an invalid response. Please try again.');
-  }
+function getGenerationStatus(status, stopRequested = false) {
+  if (status.phase === 'retrieving') return 'Image complete. Downloading the result...';
 
-  const imageResponse = await fetch(new URL(imageData.url, `${FLUX_SPACE_URL}/`), {
-    signal: AbortSignal.timeout(120000)
-  });
-  if (!imageResponse.ok) {
-    throw new Error('Could not download the generated image from the public demo. Please try again.');
-  }
+  const queue = Number.isFinite(status.queuePosition) && status.queuePosition > 0
+    ? ` Approximate overall queue position: ${status.queuePosition}.`
+    : '';
+  const wait = Number.isFinite(status.waitSeconds) && status.waitSeconds > 0
+    ? ` Horde-wide estimate: about ${Math.ceil(status.waitSeconds / 60)} min.`
+    : '';
+  const prefix = stopRequested ? 'Will stop after this image. ' : '';
+  const workerStatus = status.processing > 0
+    ? 'A volunteer GPU worker is generating your image.'
+    : 'Waiting for a volunteer GPU worker.';
 
-  const blob = await imageResponse.blob();
-  if (!blob.type.startsWith('image/')) {
-    throw new Error('The image service returned an invalid response. Please try again.');
-  }
-  return blob;
+  return `${prefix}${workerStatus}${queue}${wait}`;
 }
 
 function getErrorMessage(error) {
-  return error instanceof Error ? error.message : 'The public image demo failed. Please try again later.';
+  return error instanceof Error ? error.message : 'The free image service failed. Please try again later.';
 }
 
 function downloadBlob(blob, filename) {
@@ -65,12 +52,10 @@ const AIImageGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [serviceStatus, setServiceStatus] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
-  const clientRef = useRef(null);
   const imageUrlsRef = useRef([]);
   const cancelBatchRef = useRef(false);
 
   useEffect(() => () => {
-    clientRef.current?.close();
     imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
   }, []);
 
@@ -78,19 +63,6 @@ const AIImageGenerator = () => {
     imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     imageUrlsRef.current = [];
     setGeneratedImages([]);
-  };
-
-  const createClient = async () => {
-    setServiceStatus('Connecting to the public image demo...');
-    const client = await Client.connect(FLUX_SPACE_ID, {
-      status_callback: (status) => {
-        if (status.status === 'sleeping' || status.status === 'building') {
-          setServiceStatus('Waking the public image demo. Please wait...');
-        }
-      }
-    });
-    clientRef.current = client;
-    return client;
   };
 
   const saveGeneratedImage = (blob, imagePrompt, sequence, total) => {
@@ -113,21 +85,18 @@ const AIImageGenerator = () => {
     setIsGenerating(true);
     setError('');
     setBatchFailure(null);
-    setServiceStatus('Connecting to the public image demo...');
+    setServiceStatus('Submitting to the AI Horde community queue...');
 
-    let client;
     try {
-      client = await createClient();
-      setServiceStatus('Generating your image...');
-      const blob = await generateImage(client, trimmedPrompt);
+      const blob = await generateHordeImage(trimmedPrompt, {
+        onStatus: (status) => setServiceStatus(getGenerationStatus(status))
+      });
       setGeneratedImages([saveGeneratedImage(blob, trimmedPrompt, 1, 1)]);
       setServiceStatus('');
     } catch (generationError) {
       setError(getErrorMessage(generationError));
       setServiceStatus('');
     } finally {
-      client?.close();
-      if (clientRef.current === client) clientRef.current = null;
       setIsGenerating(false);
     }
   };
@@ -168,20 +137,21 @@ const AIImageGenerator = () => {
     setBatchProgress({ completed: 0, total: batchPrompts.length });
     cancelBatchRef.current = false;
 
-    let client;
     let completedCount = 0;
     try {
-      client = await createClient();
-
       for (let index = 0; index < batchPrompts.length; index += 1) {
         if (cancelBatchRef.current) break;
 
         const currentNumber = index + 1;
         const currentPrompt = batchPrompts[index];
-        setServiceStatus(`Generating image ${currentNumber} of ${batchPrompts.length}...`);
+        setServiceStatus(`Submitting image ${currentNumber} of ${batchPrompts.length} to volunteer workers...`);
 
         try {
-          const blob = await generateImage(client, currentPrompt);
+          const blob = await generateHordeImage(currentPrompt, {
+            onStatus: (status) => setServiceStatus(
+              `Image ${currentNumber} of ${batchPrompts.length}: ${getGenerationStatus(status, cancelBatchRef.current)}`
+            )
+          });
           const image = saveGeneratedImage(blob, currentPrompt, currentNumber, batchPrompts.length);
           setGeneratedImages((currentImages) => [...currentImages, image]);
           completedCount = currentNumber;
@@ -203,8 +173,6 @@ const AIImageGenerator = () => {
       setError(getErrorMessage(generationError));
       setServiceStatus('');
     } finally {
-      client?.close();
-      if (clientRef.current === client) clientRef.current = null;
       setIsGenerating(false);
     }
   };
@@ -241,7 +209,7 @@ const AIImageGenerator = () => {
     >
       <ToolHeader
         title="AI Image Generator"
-        subtitle="Generate and view FLUX.1 Schnell images here"
+        subtitle="Generate images with free community-powered GPU workers"
       />
 
       <div className="glass-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -534,12 +502,13 @@ const AIImageGenerator = () => {
         )}
 
         <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.6, margin: '1.5rem 0 0' }}>
-          This uses Black Forest Labs&apos; public Hugging Face demo, so no account, API key, or
-          payment setup is needed in this app. Prompts are sent to that third-party demo. It is
-          shared infrastructure and may queue, limit, or stop accepting requests; no availability
-          guarantee is provided. Batch processing runs sequentially and stops at the first failed
-          image to avoid repeatedly calling a failing service. Large batches can take a long time
-          and use substantial browser memory. Do not include sensitive information.
+          Images are generated by AI Horde&apos;s community-run volunteer GPU network; no account,
+          personal API key, or payment is required. Anonymous requests have lower queue priority,
+          may be limited during high load, and are shared with LAION by the provider. Prompts are
+          sent to AI Horde, so do not include sensitive information. Queue times depend on available
+          volunteers and can take several minutes; availability is not guaranteed. Batch processing
+          runs sequentially and stops at the first failed image. Large batches can take a long time
+          and use substantial browser memory.
         </p>
       </div>
     </motion.div>
