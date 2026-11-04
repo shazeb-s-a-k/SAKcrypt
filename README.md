@@ -47,9 +47,13 @@ npm run dev
 
 AI Horde is the default provider and uses its documented anonymous API with the public anonymous access key. Its model selector loads currently available models from the community worker catalog, omitting model names explicitly labeled NSFW; choose a specific model or let the service select any compatible model. The same selection applies to single and mass generation. Anonymous requests are lower priority and are shared with LAION by the provider.
 
-Pollinations Classic is an alternative no-key provider with one fixed model and JPEG output up to 768×768. Its free tier is limited per client IP to at least one request every 45 seconds, adds a Pollinations logo, and may return HTTP 402 with a retry delay. Mass generation spaces requests to respect that interval. Both providers are best-effort public services and prompts are sent to the selected provider; do not include sensitive information.
+Pollinations Classic is an alternative no-key provider with one fixed model and JPEG output up to 768px per side. Its free tier is limited per client IP to at least one request every 45 seconds, adds a Pollinations logo, and may return HTTP 402 with a retry delay. Mass generation spaces requests to respect that interval. Both providers are best-effort public services and prompts are sent to the selected provider; do not include sensitive information.
 
 Choose an aspect ratio in the image generator for square (1:1), landscape (16:9 or 4:3), or portrait (9:16 or 3:4) output. Each provider uses dimensions suited to its service limits while preserving the selected ratio.
+
+The HD resolution uses up to 1024px per side on AI Horde (subject to the selected model and worker) and up to Pollinations' 768px limit. Rate-limited and temporary provider errors are retried up to two times with a visible countdown; provider `Retry-After` delays are observed. Automatic waits are capped at five minutes, after which the provider's requested delay is shown and the user can retry later. Mass generation remains sequential; stopping takes effect after the current AI Horde image, or during a Pollinations cooldown/retry. AI Horde polling retries reuse the existing generation job rather than submitting a duplicate.
+
+No additional dependable, documented no-key hosted generator was found. Hugging Face Inference Providers require authentication ([official guide](https://huggingface.co/docs/inference-providers/en/index)), while public community Spaces can sleep or exhaust their shared GPU capacity. The app avoids undocumented website endpoints and account-session scraping.
 
 AI Horde is community-run rather than a production API with an availability guarantee. Generation can queue for several minutes, anonymous requests may be limited during high load, and availability depends on volunteer workers. The app respects provider queues and limits; it does not rotate identities or attempt to bypass them.
 

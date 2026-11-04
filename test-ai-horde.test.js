@@ -61,16 +61,21 @@ test('submits an anonymous SFW request and returns its queued WebP result', asyn
 });
 
 test('maps supported aspect ratios to exact provider-compatible dimensions', () => {
-  assert.deepEqual(getImageDimensions('1:1', 'aihorde'), { width: 512, height: 512 });
-  assert.deepEqual(getImageDimensions('16:9', 'aihorde'), { width: 1024, height: 576 });
-  assert.deepEqual(getImageDimensions('9:16', 'aihorde'), { width: 576, height: 1024 });
-  assert.deepEqual(getImageDimensions('4:3', 'aihorde'), { width: 768, height: 576 });
-  assert.deepEqual(getImageDimensions('3:4', 'aihorde'), { width: 576, height: 768 });
-  assert.deepEqual(getImageDimensions('1:1', 'pollinations'), { width: 768, height: 768 });
-  assert.deepEqual(getImageDimensions('16:9', 'pollinations'), { width: 768, height: 432 });
-  assert.deepEqual(getImageDimensions('9:16', 'pollinations'), { width: 432, height: 768 });
-  assert.deepEqual(getImageDimensions('4:3', 'pollinations'), { width: 768, height: 576 });
-  assert.deepEqual(getImageDimensions('3:4', 'pollinations'), { width: 576, height: 768 });
+  assert.deepEqual(getImageDimensions('1:1', 'aihorde', 'standard'), { width: 512, height: 512 });
+  assert.deepEqual(getImageDimensions('16:9', 'aihorde', 'standard'), { width: 1024, height: 576 });
+  assert.deepEqual(getImageDimensions('9:16', 'aihorde', 'standard'), { width: 576, height: 1024 });
+  assert.deepEqual(getImageDimensions('4:3', 'aihorde', 'standard'), { width: 768, height: 576 });
+  assert.deepEqual(getImageDimensions('3:4', 'aihorde', 'standard'), { width: 576, height: 768 });
+  assert.deepEqual(getImageDimensions('1:1', 'aihorde', 'hd'), { width: 1024, height: 1024 });
+  assert.deepEqual(getImageDimensions('16:9', 'aihorde', 'hd'), { width: 1024, height: 576 });
+  assert.deepEqual(getImageDimensions('9:16', 'aihorde', 'hd'), { width: 576, height: 1024 });
+  assert.deepEqual(getImageDimensions('4:3', 'aihorde', 'hd'), { width: 1024, height: 768 });
+  assert.deepEqual(getImageDimensions('3:4', 'aihorde', 'hd'), { width: 768, height: 1024 });
+  assert.deepEqual(getImageDimensions('1:1', 'pollinations', 'hd'), { width: 768, height: 768 });
+  assert.deepEqual(getImageDimensions('16:9', 'pollinations', 'hd'), { width: 768, height: 432 });
+  assert.deepEqual(getImageDimensions('9:16', 'pollinations', 'hd'), { width: 432, height: 768 });
+  assert.deepEqual(getImageDimensions('4:3', 'pollinations', 'hd'), { width: 768, height: 576 });
+  assert.deepEqual(getImageDimensions('3:4', 'pollinations', 'hd'), { width: 576, height: 768 });
   assert.throws(() => getImageDimensions('2:1', 'aihorde'), /supported image aspect ratio/);
 });
 
@@ -120,6 +125,31 @@ test('restricts generation to the selected community model when requested', asyn
   );
 });
 
+test('submits the selected HD dimensions to AI Horde', async () => {
+  let submittedRequest;
+  const fetchImpl = async (url, options = {}) => {
+    if (options.method === 'POST') {
+      submittedRequest = JSON.parse(options.body);
+      return jsonResponse({ id: 'request-hd' }, 202);
+    }
+    if (url.endsWith('/check/request-hd')) return jsonResponse({ done: true });
+    if (url.endsWith('/status/request-hd')) {
+      return jsonResponse({ generations: [{ img: btoa('hd result') }] });
+    }
+    throw new Error(`Unexpected request: ${url}`);
+  };
+
+  await generateHordeImage('A square image', {
+    fetchImpl,
+    sleep: async () => {},
+    resolution: 'hd'
+  });
+  assert.deepEqual(
+    { width: submittedRequest.params.width, height: submittedRequest.params.height },
+    { width: 1024, height: 1024 }
+  );
+});
+
 test('generates a safe Pollinations Classic image without a user API key', async () => {
   const image = await generatePollinationsImage('A fox in a snowy forest', {
     fetchImpl: async (url) => {
@@ -132,33 +162,141 @@ test('generates a safe Pollinations Classic image without a user API key', async
       assert.equal(requestUrl.searchParams.has('key'), false);
       return new Response(new Blob(['jpeg image'], { type: 'image/jpeg' }));
     },
-    aspectRatio: '9:16'
+    aspectRatio: '9:16',
+    resolution: 'hd'
   });
 
   assert.equal(image.type, 'image/jpeg');
   assert.equal(image.size, 'jpeg image'.length);
 });
 
-test('explains Pollinations free-tier cooldowns from provider responses', async () => {
-  await assert.rejects(
-    generatePollinationsImage('A fox', {
-      fetchImpl: async () => new Response(
-        JSON.stringify({ message: 'Please wait' }),
-        { status: 402, headers: { 'Content-Type': 'application/json', 'Retry-After': '67' } }
-      ),
-      aspectRatio: '9:16'
-    }),
-    /Pollinations' free per-IP limit.*67 seconds/
-  );
+test('honors Retry-After and retries Pollinations rate limits with a countdown', async () => {
+  const statuses = [];
+  let requests = 0;
+  const image = await generatePollinationsImage('A fox', {
+    fetchImpl: async () => {
+      requests += 1;
+      if (requests === 1) {
+        return new Response(
+          JSON.stringify({ message: 'Please wait' }),
+          { status: 402, headers: { 'Content-Type': 'application/json', 'Retry-After': '67' } }
+        );
+      }
+      return new Response(new Blob(['retried image'], { type: 'image/jpeg' }));
+    },
+    aspectRatio: '9:16',
+    onStatus: (status) => statuses.push(status),
+    sleep: async () => {}
+  });
+  assert.equal(image.type, 'image/jpeg');
+  assert.equal(requests, 2);
+  assert.equal(statuses.length, 67);
+  assert.equal(statuses[0].phase, 'retrying');
+  assert.equal(statuses[0].waitSeconds, 67);
 });
 
-test('explains provider rate limiting without retrying or changing identities', async () => {
+test('allows a mass-generation retry countdown to be cancelled', async () => {
+  let shouldStop = false;
+  const statuses = [];
+  let requests = 0;
+  const resultPromise = generatePollinationsImage('A fox', {
+    fetchImpl: async () => {
+      requests += 1;
+      return new Response(
+        JSON.stringify({ message: 'Please wait' }),
+        { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '10' } }
+      );
+    },
+    shouldStop: () => shouldStop,
+    onStatus: (status) => {
+      statuses.push(status);
+      shouldStop = true;
+    },
+    sleep: async () => {}
+  });
+  assert.equal(await resultPromise, null);
+  assert.equal(requests, 1);
+  assert.equal(statuses[0].phase, 'retrying');
+});
+
+test('does not leave a single generation waiting through an excessive provider delay', async () => {
+  let requests = 0;
   await assert.rejects(
-    generateHordeImage('A landscape', {
-      fetchImpl: async () => jsonResponse({ message: 'Too many requests' }, 429)
+    generatePollinationsImage('A fox', {
+      fetchImpl: async () => {
+        requests += 1;
+        return new Response(
+          JSON.stringify({ message: 'Please wait' }),
+          { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '301' } }
+        );
+      },
+      sleep: async () => {}
     }),
-    /rate limiting requests.*Too many requests/
+    /longer than five minutes/
   );
+  assert.equal(requests, 1);
+});
+
+test('retries a rejected Horde submission after rate limiting', async () => {
+  let submissions = 0;
+  const image = await generateHordeImage('A landscape', {
+    fetchImpl: async (url, options = {}) => {
+      if (options.method === 'POST') {
+        submissions += 1;
+        if (submissions === 1) {
+          return new Response(JSON.stringify({ message: 'Too many requests' }), {
+            status: 429,
+            headers: { 'Content-Type': 'application/json', 'Retry-After': '1' }
+          });
+        }
+        return jsonResponse({ id: 'request-retried' }, 202);
+      }
+      if (url.endsWith('/check/request-retried')) return jsonResponse({ done: true });
+      if (url.endsWith('/status/request-retried')) {
+        return jsonResponse({ generations: [{ img: btoa('retried result') }] });
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    },
+    sleep: async () => {}
+  });
+  assert.equal(submissions, 2);
+  assert.equal(image.type, 'image/webp');
+});
+
+test('retries Horde status polling without creating a duplicate generation job', async () => {
+  let submissions = 0;
+  let checks = 0;
+  const statuses = [];
+  const image = await generateHordeImage('A landscape', {
+    fetchImpl: async (url, options = {}) => {
+      if (options.method === 'POST') {
+        submissions += 1;
+        return jsonResponse({ id: 'request-poll-retry' }, 202);
+      }
+      if (url.endsWith('/check/request-poll-retry')) {
+        checks += 1;
+        if (checks === 1) {
+          return new Response(JSON.stringify({ message: 'Temporarily unavailable' }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json', 'Retry-After': '1' }
+          });
+        }
+        return jsonResponse({ done: true });
+      }
+      if (url.endsWith('/status/request-poll-retry')) {
+        return jsonResponse({ generations: [{ img: btoa('poll result') }] });
+      }
+      throw new Error(`Unexpected request: ${url}`);
+    },
+    sleep: async () => {},
+    onStatus: (status) => statuses.push(status),
+    pollIntervalMs: 1
+  });
+
+  assert.equal(submissions, 1);
+  assert.equal(checks, 2);
+  assert.equal(statuses.some((status) => status.phase === 'retrying'), true);
+  assert.equal(image.type, 'image/webp');
 });
 
 test('reports when no available worker can serve the request', async () => {

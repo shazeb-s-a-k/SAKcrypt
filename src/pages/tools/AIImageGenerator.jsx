@@ -16,6 +16,9 @@ const POLLINATIONS_INTERVAL_MS = 45000;
 
 function getGenerationStatus(status, stopRequested = false) {
   if (status.phase === 'retrieving') return 'Image complete. Downloading the result...';
+  if (status.phase === 'retrying') {
+    return `Temporary provider limit or connection issue. Retry ${status.attempt}/${status.maxAttempts} in ${status.waitSeconds}s.`;
+  }
 
   const queue = Number.isFinite(status.queuePosition) && status.queuePosition > 0
     ? ` Approximate overall queue position: ${status.queuePosition}.`
@@ -50,6 +53,7 @@ const AIImageGenerator = () => {
   const [mode, setMode] = useState('single');
   const [selectedProvider, setSelectedProvider] = useState('aihorde');
   const [aspectRatio, setAspectRatio] = useState('1:1');
+  const [resolution, setResolution] = useState('hd');
   const [prompt, setPrompt] = useState('');
   const [batchFileName, setBatchFileName] = useState('');
   const [batchPromptText, setBatchPromptText] = useState('');
@@ -120,12 +124,18 @@ const AIImageGenerator = () => {
 
       lastPollinationsRequestRef.current = Date.now();
       onStatus('Generating with Pollinations Classic...');
-      return generatePollinationsImage(imagePrompt, { aspectRatio });
+      return generatePollinationsImage(imagePrompt, {
+        aspectRatio,
+        resolution,
+        onStatus,
+        shouldStop
+      });
     }
 
     return generateHordeImage(imagePrompt, {
       model: selectedModel,
       aspectRatio,
+      resolution,
       onStatus
     });
   };
@@ -382,9 +392,30 @@ const AIImageGenerator = () => {
             </select>
             <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
               {(() => {
-                const { width, height } = getImageDimensions(aspectRatio, selectedProvider);
+                const { width, height } = getImageDimensions(aspectRatio, selectedProvider, resolution);
                 return `${width} × ${height} output`;
               })()}
+            </span>
+          </label>
+          <label style={{ flex: '1 1 160px', maxWidth: '240px' }}>
+            <span style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+              RESOLUTION
+            </span>
+            <select
+              className="input-glass"
+              aria-label="Image resolution"
+              value={resolution}
+              onChange={(event) => setResolution(event.target.value)}
+              disabled={isGenerating}
+              style={{ width: '100%', minHeight: '44px' }}
+            >
+              <option value="standard">Standard</option>
+              <option value="hd">HD (provider maximum)</option>
+            </select>
+            <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              {selectedProvider === 'aihorde'
+                ? 'HD can use up to 1024px per side; worker support varies.'
+                : 'Pollinations Classic is capped at 768px per side.'}
             </span>
           </label>
         </div>

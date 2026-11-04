@@ -6,74 +6,171 @@ const DEFAULT_POLL_INTERVAL_MS = 3000;
 
 const IMAGE_DIMENSIONS = {
   '1:1': {
-    aihorde: { width: 512, height: 512 },
-    pollinations: { width: 768, height: 768 }
+    aihorde: {
+      standard: { width: 512, height: 512 },
+      hd: { width: 1024, height: 1024 }
+    },
+    pollinations: {
+      standard: { width: 512, height: 512 },
+      hd: { width: 768, height: 768 }
+    }
   },
   '16:9': {
-    aihorde: { width: 1024, height: 576 },
-    pollinations: { width: 768, height: 432 }
+    aihorde: {
+      standard: { width: 1024, height: 576 },
+      hd: { width: 1024, height: 576 }
+    },
+    pollinations: {
+      standard: { width: 512, height: 288 },
+      hd: { width: 768, height: 432 }
+    }
   },
   '9:16': {
-    aihorde: { width: 576, height: 1024 },
-    pollinations: { width: 432, height: 768 }
+    aihorde: {
+      standard: { width: 576, height: 1024 },
+      hd: { width: 576, height: 1024 }
+    },
+    pollinations: {
+      standard: { width: 288, height: 512 },
+      hd: { width: 432, height: 768 }
+    }
   },
   '4:3': {
-    aihorde: { width: 768, height: 576 },
-    pollinations: { width: 768, height: 576 }
+    aihorde: {
+      standard: { width: 768, height: 576 },
+      hd: { width: 1024, height: 768 }
+    },
+    pollinations: {
+      standard: { width: 512, height: 384 },
+      hd: { width: 768, height: 576 }
+    }
   },
   '3:4': {
-    aihorde: { width: 576, height: 768 },
-    pollinations: { width: 576, height: 768 }
+    aihorde: {
+      standard: { width: 576, height: 768 },
+      hd: { width: 768, height: 1024 }
+    },
+    pollinations: {
+      standard: { width: 384, height: 512 },
+      hd: { width: 576, height: 768 }
+    }
   }
 };
 
-export function getImageDimensions(aspectRatio, provider) {
-  const dimensions = IMAGE_DIMENSIONS[aspectRatio]?.[provider];
+const MAX_RETRIES = 2;
+const MAX_AUTOMATIC_RETRY_WAIT_SECONDS = 300;
+
+export function getImageDimensions(aspectRatio, provider, resolution = 'standard') {
+  const dimensions = IMAGE_DIMENSIONS[aspectRatio]?.[provider]?.[resolution];
   if (!dimensions) {
-    throw new Error('Choose a supported image aspect ratio and provider.');
+    throw new Error('Choose a supported image aspect ratio, provider, and resolution.');
   }
   return dimensions;
+}
+
+function getRetryAfterSeconds(headers) {
+  const retryAfter = headers.get('Retry-After');
+  if (!retryAfter) return null;
+
+  const seconds = Number(retryAfter);
+  if (Number.isFinite(seconds)) return Math.max(1, Math.ceil(seconds));
+
+  const retryAt = Date.parse(retryAfter);
+  return Number.isNaN(retryAt) ? null : Math.max(1, Math.ceil((retryAt - Date.now()) / 1000));
+}
+
+async function waitBeforeRetry(seconds, attempt, onStatus, sleep, shouldStop) {
+  for (let secondsLeft = seconds; secondsLeft > 0; secondsLeft -= 1) {
+    if (shouldStop()) return false;
+    onStatus({
+      phase: 'retrying',
+      attempt: attempt + 1,
+      maxAttempts: MAX_RETRIES + 1,
+      waitSeconds: secondsLeft
+    });
+    await sleep(1000);
+  }
+  return !shouldStop();
+}
+
+async function withRetries(operation, {
+  onStatus = () => {},
+  sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  shouldStop = () => false,
+  defaultRetryDelaySeconds = 5,
+  isRetryable = (error) => error.retryable || error instanceof TypeError
+} = {}) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt >= MAX_RETRIES || !isRetryable(error)) throw error;
+
+      const delay = error.retryAfterSeconds || defaultRetryDelaySeconds * (2 ** attempt);
+      if (delay > MAX_AUTOMATIC_RETRY_WAIT_SECONDS) {
+        throw new Error(
+          `${error.message} Automatic retry paused because the provider requested a wait longer than five minutes.`
+        );
+      }
+      if (!await waitBeforeRetry(delay, attempt, onStatus, sleep, shouldStop)) return null;
+    }
+  }
 }
 
 export async function generatePollinationsImage(prompt, {
   fetchImpl = fetch,
   signal,
-  aspectRatio = '1:1'
+  aspectRatio = '1:1',
+  resolution = 'standard',
+  onStatus = () => {},
+  sleep,
+  shouldStop
 } = {}) {
   const url = new URL(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`);
-  const { width, height } = getImageDimensions(aspectRatio, 'pollinations');
+  const { width, height } = getImageDimensions(aspectRatio, 'pollinations', resolution);
   url.searchParams.set('width', String(width));
   url.searchParams.set('height', String(height));
   url.searchParams.set('safe', 'true');
+  if (shouldStop?.()) return null;
 
-  const response = await fetchImpl(url, { signal });
-  if (!response.ok) {
-    let detail = '';
-    try {
-      const error = await response.json();
-      if (typeof error.message === 'string') detail = ` ${error.message}`;
-      else if (typeof error.error === 'string') detail = ` ${error.error}`;
-    } catch {
-      detail = '';
+  return withRetries(async () => {
+    const response = await fetchImpl(url, { signal });
+    if (!response.ok) {
+      let detail = '';
+      try {
+        const error = await response.json();
+        if (typeof error.message === 'string') detail = ` ${error.message}`;
+        else if (typeof error.error === 'string') detail = ` ${error.error}`;
+      } catch {
+        detail = '';
+      }
+
+      const rateLimited = response.status === 402 || response.status === 429;
+      const transient = [500, 502, 503, 504].includes(response.status);
+      const retryAfterSeconds = getRetryAfterSeconds(response.headers)
+        || (rateLimited ? 45 : null);
+      const error = new Error(rateLimited
+        ? `Pollinations' free per-IP limit has been reached. Wait at least ${retryAfterSeconds} seconds before retrying.${detail}`
+        : `Pollinations could not generate this image (${response.status}).${detail}`);
+      error.retryable = rateLimited || transient;
+      error.retryAfterSeconds = retryAfterSeconds;
+      throw error;
     }
 
-    if (response.status === 402 || response.status === 429) {
-      const retryAfter = response.headers.get('Retry-After');
-      const waitSeconds = retryAfter && Number.isFinite(Number(retryAfter))
-        ? Math.max(1, Math.ceil(Number(retryAfter)))
-        : 45;
-      throw new Error(
-        `Pollinations' free per-IP limit has been reached. Wait at least ${waitSeconds} seconds before retrying.${detail}`
-      );
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) {
+      throw new Error('Pollinations returned an invalid image response.');
     }
-    throw new Error(`Pollinations could not generate this image (${response.status}).${detail}`);
-  }
-
-  const blob = await response.blob();
-  if (!blob.type.startsWith('image/')) {
-    throw new Error('Pollinations returned an invalid image response.');
-  }
-  return blob;
+    return blob;
+  }, {
+    onStatus,
+    sleep,
+    shouldStop,
+    defaultRetryDelaySeconds: 5,
+    isRetryable: (error) => (
+      error.retryable || (error instanceof TypeError && error.name !== 'AbortError')
+    )
+  });
 }
 
 export async function fetchAvailableImageModels({ fetchImpl = fetch, signal } = {}) {
@@ -116,11 +213,20 @@ async function readResponse(response) {
 
   if (!response.ok) {
     const detail = typeof data.message === 'string' ? ` ${data.message}` : '';
+    const retryAfterSeconds = getRetryAfterSeconds(response.headers);
     if (response.status === 429) {
-      throw new Error(`The free image service is rate limiting requests. Please wait before trying again.${detail}`);
+      const error = new Error(`The free image service is rate limiting requests.${detail}`);
+      error.status = response.status;
+      error.retryable = true;
+      error.retryAfterSeconds = retryAfterSeconds;
+      throw error;
     }
-    if (response.status === 503) {
-      throw new Error(`The free image service is temporarily unavailable.${detail}`);
+    if ([500, 502, 503, 504].includes(response.status)) {
+      const error = new Error(`The free image service is temporarily unavailable.${detail}`);
+      error.status = response.status;
+      error.retryable = true;
+      error.retryAfterSeconds = retryAfterSeconds;
+      throw error;
     }
     throw new Error(`The free image service returned an error (${response.status}).${detail}`);
   }
@@ -161,7 +267,12 @@ async function downloadImage(imageData, fetchImpl, signal) {
 
   const response = await fetchImpl(decoded, { signal });
   if (!response.ok) {
-    throw new Error(`Could not download the generated image (${response.status}).`);
+    const error = new Error(`Could not download the generated image (${response.status}).`);
+    if (response.status === 429 || response.status === 503) {
+      error.retryable = true;
+      error.retryAfterSeconds = getRetryAfterSeconds(response.headers);
+    }
+    throw error;
   }
 
   const blob = await response.blob();
@@ -176,36 +287,46 @@ export async function generateHordeImage(prompt, {
   sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
   now = Date.now,
   onStatus = () => {},
+  shouldStop = () => false,
   signal,
   model,
   aspectRatio = '1:1',
+  resolution = 'standard',
   timeoutMs = DEFAULT_TIMEOUT_MS,
   pollIntervalMs = DEFAULT_POLL_INTERVAL_MS
 } = {}) {
-  const submissionResponse = await fetchImpl(`${AI_HORDE_API}/generate/async`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: ANONYMOUS_API_KEY,
-      'Client-Agent': CLIENT_AGENT
-    },
-    body: JSON.stringify({
-      prompt,
-      params: {
-        ...getImageDimensions(aspectRatio, 'aihorde'),
-        steps: 20,
-        n: 1
+  const submission = await withRetries(async () => {
+    const response = await fetchImpl(`${AI_HORDE_API}/generate/async`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: ANONYMOUS_API_KEY,
+        'Client-Agent': CLIENT_AGENT
       },
-      nsfw: false,
-      censor_nsfw: true,
-      slow_workers: true,
-      validated_backends: true,
-      models: model ? [model] : undefined,
-      r2: false
-    }),
-    signal
+      body: JSON.stringify({
+        prompt,
+        params: {
+          ...getImageDimensions(aspectRatio, 'aihorde', resolution),
+          steps: 20,
+          n: 1
+        },
+        nsfw: false,
+        censor_nsfw: true,
+        slow_workers: true,
+        validated_backends: true,
+        models: model ? [model] : undefined,
+        r2: false
+      }),
+      signal
+    });
+    return readResponse(response);
+  }, {
+    onStatus,
+    sleep,
+    shouldStop,
+    isRetryable: (error) => error.retryable && error.status === 429
   });
-  const submission = await readResponse(submissionResponse);
+  if (!submission) return null;
   if (typeof submission.id !== 'string' || submission.id.length === 0) {
     throw new Error('The image service did not return a generation ID.');
   }
@@ -219,11 +340,14 @@ export async function generateHordeImage(prompt, {
     }
 
     await wait(Math.min(pollIntervalMs, remaining), sleep);
-    const checkResponse = await fetchImpl(`${AI_HORDE_API}/generate/check/${submission.id}`, {
-      headers: { 'Client-Agent': CLIENT_AGENT },
-      signal
-    });
-    const check = await readResponse(checkResponse);
+    const check = await withRetries(async () => {
+      const response = await fetchImpl(`${AI_HORDE_API}/generate/check/${submission.id}`, {
+        headers: { 'Client-Agent': CLIENT_AGENT },
+        signal
+      });
+      return readResponse(response);
+    }, { onStatus, sleep, shouldStop });
+    if (!check) return null;
 
     if (check.faulted) {
       throw new Error('The image service could not complete this request. Please try again later.');
@@ -243,11 +367,14 @@ export async function generateHordeImage(prompt, {
   }
 
   onStatus({ phase: 'retrieving' });
-  const resultResponse = await fetchImpl(`${AI_HORDE_API}/generate/status/${submission.id}`, {
-    headers: { 'Client-Agent': CLIENT_AGENT },
-    signal
-  });
-  const result = await readResponse(resultResponse);
+  const result = await withRetries(async () => {
+    const response = await fetchImpl(`${AI_HORDE_API}/generate/status/${submission.id}`, {
+      headers: { 'Client-Agent': CLIENT_AGENT },
+      signal
+    });
+    return readResponse(response);
+  }, { onStatus, sleep, shouldStop });
+  if (!result) return null;
   if (result.faulted) {
     throw new Error('The image service could not complete this request. Please try again later.');
   }
@@ -255,5 +382,8 @@ export async function generateHordeImage(prompt, {
     throw new Error('The image service completed the request without returning an image.');
   }
 
-  return downloadImage(result.generations[0].img, fetchImpl, signal);
+  return withRetries(
+    () => downloadImage(result.generations[0].img, fetchImpl, signal),
+    { onStatus, sleep, shouldStop }
+  );
 }
