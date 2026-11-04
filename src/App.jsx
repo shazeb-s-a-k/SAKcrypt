@@ -7,6 +7,7 @@ import RegexTester from './pages/tools/RegexTester';
 import UUIDGenerator from './pages/tools/UUIDGenerator';
 import QRCodeGenerator from './pages/tools/QRCodeGenerator';
 import SonicTransfer from './pages/tools/SonicTransfer';
+import AIImageGenerator from './pages/tools/AIImageGenerator';
 import APIKeyTester from './pages/tools/APIKeyTester';
 import HashEngine from './pages/tools/HashEngine';
 import JWTInspector from './pages/tools/JWTInspector';
@@ -106,6 +107,9 @@ const TopBar = () => {
         </Link>
         <Link to="/qrcode" className={`nav-link ${isActive('/qrcode')}`} title="QR Code">
           <QrCode className="icon-sm" /> QR Code
+        </Link>
+        <Link to="/image" className={`nav-link ${isActive('/image')}`} title="AI Image Generator">
+          <ImageIcon className="icon-sm" /> Image AI
         </Link>
         <Link to="/vault" className={`nav-link ${isActive('/vault')}`} title="Cyber Vault">
           <Key className="icon-sm" /> Vault
@@ -308,6 +312,7 @@ const AnimatedRoutes = () => {
         <Route path="/phantom" element={<PageWrapper><PhantomText /></PageWrapper>} />
         <Route path="/sonic" element={<PageWrapper><SonicTransfer /></PageWrapper>} />
         <Route path="/qrcode" element={<PageWrapper><QRCodeGenerator /></PageWrapper>} />
+        <Route path="/image" element={<PageWrapper><AIImageGenerator /></PageWrapper>} />
         <Route path="/vault" element={<PageWrapper><CyberVault /></PageWrapper>} />
         <Route path="/regex" element={<PageWrapper><RegexTester /></PageWrapper>} />
         <Route path="/uuid" element={<PageWrapper><UUIDGenerator /></PageWrapper>} />

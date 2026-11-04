@@ -12,6 +12,7 @@
   "dependencies": {
     "@faker-js/faker": "^10.6.0",
     "@google/generative-ai": "^0.24.1",
+    "@gradio/client": "^2.7.2",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "bcryptjs": "^3.0.3",
@@ -24,6 +25,7 @@
     "ip-subnet-calculator": "^2.0.1",
     "jose": "^6.2.12",
     "js-yaml": "^5.4.3",
+    "jszip": "^3.10.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^1.44.0",
     "node-forge": "^1.4.0",

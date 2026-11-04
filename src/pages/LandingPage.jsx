@@ -80,7 +80,7 @@ const CATEGORIES = [
   }
 ];
 
-// All 72 tools mapped with precision
+// All 73 tools mapped with precision
 const features = [
   // --- 01: A.I & NEURAL INTELLIGENCE ---
   {
@@ -136,6 +136,15 @@ const features = [
     icon: <Bot />,
     path: '/llm-chat',
     color: '#10b981'
+  },
+  {
+    title: 'AI Image Generator',
+    categoryId: 'ai',
+    tag: 'IMAGE SYNTHESIS',
+    desc: 'Generate images in SAKrypt with the public FLUX.1 Schnell demo, including sequential prompt batches.',
+    icon: <ImageIcon />,
+    path: '/image',
+    color: '#06b6d4'
   },
   {
     title: 'AI Persona Gen',
