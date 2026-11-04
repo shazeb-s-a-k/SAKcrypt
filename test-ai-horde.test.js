@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { fetchAvailableImageModels, generateHordeImage } from './src/utils/aiHorde.js';
+import {
+  fetchAvailableImageModels,
+  generateHordeImage,
+  generatePollinationsImage
+} from './src/utils/aiHorde.js';
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -90,6 +94,36 @@ test('restricts generation to the selected community model when requested', asyn
     model: 'Juggernaut XL'
   });
   assert.deepEqual(submittedRequest.models, ['Juggernaut XL']);
+});
+
+test('generates a safe Pollinations Classic image without a user API key', async () => {
+  const image = await generatePollinationsImage('A fox in a snowy forest', {
+    fetchImpl: async (url) => {
+      const requestUrl = new URL(url);
+      assert.equal(requestUrl.hostname, 'image.pollinations.ai');
+      assert.equal(requestUrl.pathname, '/prompt/A%20fox%20in%20a%20snowy%20forest');
+      assert.equal(requestUrl.searchParams.get('width'), '768');
+      assert.equal(requestUrl.searchParams.get('height'), '768');
+      assert.equal(requestUrl.searchParams.get('safe'), 'true');
+      assert.equal(requestUrl.searchParams.has('key'), false);
+      return new Response(new Blob(['jpeg image'], { type: 'image/jpeg' }));
+    }
+  });
+
+  assert.equal(image.type, 'image/jpeg');
+  assert.equal(image.size, 'jpeg image'.length);
+});
+
+test('explains Pollinations free-tier cooldowns from provider responses', async () => {
+  await assert.rejects(
+    generatePollinationsImage('A fox', {
+      fetchImpl: async () => new Response(
+        JSON.stringify({ message: 'Please wait' }),
+        { status: 402, headers: { 'Content-Type': 'application/json', 'Retry-After': '67' } }
+      )
+    }),
+    /Pollinations' free per-IP limit.*67 seconds/
+  );
 });
 
 test('explains provider rate limiting without retrying or changing identities', async () => {

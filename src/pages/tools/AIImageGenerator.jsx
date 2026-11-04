@@ -3,10 +3,15 @@ import { Archive, Download, FileText, Image as ImageIcon, LoaderCircle, Square }
 import { motion } from 'framer-motion';
 import JSZip from 'jszip';
 import ToolHeader from '../../components/ToolHeader';
-import { fetchAvailableImageModels, generateHordeImage } from '../../utils/aiHorde';
+import {
+  fetchAvailableImageModels,
+  generateHordeImage,
+  generatePollinationsImage
+} from '../../utils/aiHorde';
 import { createImageFilename, parseImagePrompts } from '../../utils/imageBatch';
 
 const MAX_PROMPT_LENGTH = 1000;
+const POLLINATIONS_INTERVAL_MS = 45000;
 
 function getGenerationStatus(status, stopRequested = false) {
   if (status.phase === 'retrieving') return 'Image complete. Downloading the result...';
@@ -42,6 +47,7 @@ function downloadBlob(blob, filename) {
 
 const AIImageGenerator = () => {
   const [mode, setMode] = useState('single');
+  const [selectedProvider, setSelectedProvider] = useState('aihorde');
   const [prompt, setPrompt] = useState('');
   const [batchFileName, setBatchFileName] = useState('');
   const [batchPromptText, setBatchPromptText] = useState('');
@@ -58,6 +64,7 @@ const AIImageGenerator = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const imageUrlsRef = useRef([]);
   const cancelBatchRef = useRef(false);
+  const lastPollinationsRequestRef = useRef(0);
   const batchPrompts = useMemo(() => parseImagePrompts(batchPromptText), [batchPromptText]);
 
   useEffect(() => {
@@ -96,6 +103,30 @@ const AIImageGenerator = () => {
     };
   };
 
+  const generateWithSelectedProvider = async (imagePrompt, onStatus, shouldStop = () => false) => {
+    if (selectedProvider === 'pollinations') {
+      const remaining = lastPollinationsRequestRef.current + POLLINATIONS_INTERVAL_MS - Date.now();
+      if (remaining > 0) {
+        const deadline = Date.now() + remaining;
+        while (Date.now() < deadline) {
+          if (shouldStop()) return null;
+          const secondsLeft = Math.ceil((deadline - Date.now()) / 1000);
+          onStatus(`Pollinations free tier: waiting ${secondsLeft}s before the next request (45-second per-IP limit).`);
+          await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        }
+      }
+
+      lastPollinationsRequestRef.current = Date.now();
+      onStatus('Generating with Pollinations Classic...');
+      return generatePollinationsImage(imagePrompt);
+    }
+
+    return generateHordeImage(imagePrompt, {
+      model: selectedModel,
+      onStatus
+    });
+  };
+
   const handleGenerateSingle = async (event) => {
     event.preventDefault();
     const trimmedPrompt = prompt.trim();
@@ -105,14 +136,18 @@ const AIImageGenerator = () => {
     setIsGenerating(true);
     setError('');
     setBatchFailure(null);
-    setServiceStatus('Submitting to the AI Horde community queue...');
+    setServiceStatus(
+      selectedProvider === 'pollinations'
+        ? 'Generating with Pollinations Classic...'
+        : 'Submitting to the AI Horde community queue...'
+    );
 
     try {
-      const blob = await generateHordeImage(trimmedPrompt, {
-        model: selectedModel,
-        onStatus: (status) => setServiceStatus(getGenerationStatus(status))
-      });
-      setGeneratedImages([saveGeneratedImage(blob, trimmedPrompt, 1, 1)]);
+      const blob = await generateWithSelectedProvider(
+        trimmedPrompt,
+        (status) => setServiceStatus(typeof status === 'string' ? status : getGenerationStatus(status))
+      );
+      if (blob) setGeneratedImages([saveGeneratedImage(blob, trimmedPrompt, 1, 1)]);
       setServiceStatus('');
     } catch (generationError) {
       setError(getErrorMessage(generationError));
@@ -169,12 +204,14 @@ const AIImageGenerator = () => {
         setServiceStatus(`Submitting image ${currentNumber} of ${batchPrompts.length} to volunteer workers...`);
 
         try {
-          const blob = await generateHordeImage(currentPrompt, {
-            model: selectedModel,
-            onStatus: (status) => setServiceStatus(
-              `Image ${currentNumber} of ${batchPrompts.length}: ${getGenerationStatus(status, cancelBatchRef.current)}`
-            )
-          });
+          const blob = await generateWithSelectedProvider(
+            currentPrompt,
+            (status) => setServiceStatus(typeof status === 'string'
+              ? `Image ${currentNumber} of ${batchPrompts.length}: ${status}`
+              : `Image ${currentNumber} of ${batchPrompts.length}: ${getGenerationStatus(status, cancelBatchRef.current)}`),
+            () => cancelBatchRef.current
+          );
+          if (!blob) break;
           const image = saveGeneratedImage(blob, currentPrompt, currentNumber, batchPrompts.length);
           setGeneratedImages((currentImages) => [...currentImages, image]);
           completedCount = currentNumber;
@@ -274,31 +311,56 @@ const AIImageGenerator = () => {
           </div>
           <label style={{ flex: '1 1 240px', maxWidth: '360px' }}>
             <span style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-              FREE GENERATION MODEL
+              IMAGE PROVIDER
             </span>
             <select
               className="input-glass"
-              aria-label="Free generation model"
-              value={selectedModel}
-              onChange={(event) => setSelectedModel(event.target.value)}
-              disabled={isGenerating || isLoadingModels}
+              aria-label="Image provider"
+              value={selectedProvider}
+              onChange={(event) => setSelectedProvider(event.target.value)}
+              disabled={isGenerating}
               style={{ width: '100%', minHeight: '44px' }}
             >
-              <option value="">
+              <option value="aihorde">AI Horde - volunteer GPUs</option>
+              <option value="pollinations">Pollinations Classic - fast, rate-limited</option>
+            </select>
+            <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+              Both providers are free to use without a personal API key.
+            </span>
+          </label>
+          <label style={{ flex: '1 1 240px', maxWidth: '360px' }}>
+            <span style={{ display: 'block', marginBottom: '0.4rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+              {selectedProvider === 'aihorde' ? 'FREE GENERATION MODEL' : 'GENERATION MODEL'}
+            </span>
+            <select
+              className="input-glass"
+              aria-label="Generation model"
+              value={selectedProvider === 'aihorde' ? selectedModel : 'pollinations-classic'}
+              onChange={(event) => setSelectedModel(event.target.value)}
+              disabled={isGenerating || (selectedProvider === 'aihorde' ? isLoadingModels : true)}
+              style={{ width: '100%', minHeight: '44px' }}
+            >
+              {selectedProvider === 'aihorde' ? (
+                <option value="">
                 {isLoadingModels ? 'Loading available models...' : 'Auto - any available model'}
-              </option>
-              {imageModels.map((model) => (
+                </option>
+              ) : (
+                <option value="pollinations-classic">Pollinations Classic (fixed model)</option>
+              )}
+              {selectedProvider === 'aihorde' && imageModels.map((model) => (
                 <option key={model.name} value={model.name}>
                   {model.name} ({model.count} {model.count === 1 ? 'worker' : 'workers'})
                 </option>
               ))}
             </select>
             <span style={{ display: 'block', marginTop: '0.35rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-              Free AI Horde community models; availability can change.
+              {selectedProvider === 'aihorde'
+                ? 'Free community models with active workers; availability changes.'
+                : 'Single free model; Pollinations adds a small logo to images.'}
             </span>
           </label>
         </div>
-        {modelCatalogError && (
+        {selectedProvider === 'aihorde' && modelCatalogError && (
           <p role="status" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '-0.5rem' }}>
             Could not load the live model list: {modelCatalogError} Automatic model selection is still available.
           </p>
@@ -590,13 +652,13 @@ const AIImageGenerator = () => {
         )}
 
         <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.6, margin: '1.5rem 0 0' }}>
-          Images are generated by AI Horde&apos;s community-run volunteer GPU network; no account,
-          personal API key, or payment is required. Anonymous requests have lower queue priority,
-          may be limited during high load, and are shared with LAION by the provider. Prompts are
-          sent to AI Horde, so do not include sensitive information. Queue times depend on available
-          volunteers and can take several minutes; availability is not guaranteed. Batch processing
-          runs sequentially and stops at the first failed image. Large batches can take a long time
-          and use substantial browser memory.
+          AI Horde uses a community-run volunteer GPU network; anonymous requests have lower queue
+          priority and are shared with LAION. Pollinations Classic is usually faster but allows only
+          one free image request per IP every 45 seconds and adds its logo. Both are best-effort
+          services, and prompts are sent to the selected provider; do not include sensitive
+          information. Batch jobs run sequentially and stop on provider errors. Pollinations batches
+          automatically wait between requests; large batches may still take time and use substantial
+          browser memory.
         </p>
       </div>
     </motion.div>

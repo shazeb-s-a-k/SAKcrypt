@@ -141,7 +141,7 @@ const features = [
     title: 'AI Image Generator',
     categoryId: 'ai',
     tag: 'IMAGE SYNTHESIS',
-    desc: 'Choose from free community image models, paste or upload prompt batches, and generate images in sequence.',
+    desc: 'Choose free AI Horde or Pollinations, select from active community models, and generate prompt batches.',
     icon: <ImageIcon />,
     path: '/image',
     color: '#06b6d4'

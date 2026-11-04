@@ -20,7 +20,7 @@ It features an array of powerful tools, including encoding secret payloads into 
 - **QR Code Engine**: Generate custom, high-res QR codes instantly with customizable foregrounds and backgrounds.
 - **Regex Sandbox**: A live playground to test, debug, and execute Regular Expressions on the fly.
 - **UUID Generator**: Instantly generate universally unique identifiers (v4).
-- **AI Image Generator**: Choose from the AI Horde community's currently available free image models and generate images directly in the app; no personal API key or sign-in is required.
+- **AI Image Generator**: Choose the AI Horde volunteer network or Pollinations Classic, select available Horde models, and generate images in the app without a personal API key.
 - **Mass Generate**: Upload a text file with one prompt per line, generate images sequentially, and download the results together as an ordered ZIP archive.
 
 ## 💎 Design & Animations
@@ -45,9 +45,11 @@ npm run dev
 
 ### AI Image Generator notes
 
-The image generator uses AI Horde's documented anonymous API with its public anonymous access key. The model selector loads currently available models from the community worker catalog, omitting model names explicitly labeled NSFW; choose a specific model or let the service select any compatible model. The same selection applies to single and mass generation. It submits one image-generation request at a time to the community's volunteer GPU network. No personal API key, sign-in, or payment setup is required. Anonymous requests are lower priority and are shared with LAION by the provider. Prompts are sent to AI Horde, so do not include sensitive information.
+AI Horde is the default provider and uses its documented anonymous API with the public anonymous access key. Its model selector loads currently available models from the community worker catalog, omitting model names explicitly labeled NSFW; choose a specific model or let the service select any compatible model. The same selection applies to single and mass generation. Anonymous requests are lower priority and are shared with LAION by the provider.
 
-This is a community-run service rather than a production API with an availability guarantee. Generation can queue for several minutes, anonymous requests may be limited during high load, and availability depends on volunteer workers. The app respects the provider's queue and limits; it does not rotate identities or attempt to bypass them.
+Pollinations Classic is an alternative no-key provider with one fixed model and 768×768 JPEG output. Its free tier is limited per client IP to at least one request every 45 seconds, adds a Pollinations logo, and may return HTTP 402 with a retry delay. Mass generation spaces requests to respect that interval. Both providers are best-effort public services and prompts are sent to the selected provider; do not include sensitive information.
+
+AI Horde is community-run rather than a production API with an availability guarantee. Generation can queue for several minutes, anonymous requests may be limited during high load, and availability depends on volunteer workers. The app respects provider queues and limits; it does not rotate identities or attempt to bypass them.
 
 The **Mass Generate** mode accepts pasted text as well as `.txt`, `.text`, and `.md` files, treating each actual line as one prompt and ignoring blank lines. It generates images sequentially in file order with no hard prompt-count cap. Filenames use a sanitized prompt prefix and a zero-padded sequence number (for example, `Image_of_Bird_001.webp`). Download the batch as one ZIP. If generation fails, already completed images remain downloadable; the ZIP also contains a note identifying the failed prompt. Very large batches may take a long time and consume substantial browser memory.
 

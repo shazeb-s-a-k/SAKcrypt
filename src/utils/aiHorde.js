@@ -4,6 +4,42 @@ const CLIENT_AGENT = 'SAKrypt:2.1.0:https://github.com/shazeb-s-a-k/SAKrypt';
 const DEFAULT_TIMEOUT_MS = 9 * 60 * 1000;
 const DEFAULT_POLL_INTERVAL_MS = 3000;
 
+export async function generatePollinationsImage(prompt, { fetchImpl = fetch, signal } = {}) {
+  const url = new URL(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`);
+  url.searchParams.set('width', '768');
+  url.searchParams.set('height', '768');
+  url.searchParams.set('safe', 'true');
+
+  const response = await fetchImpl(url, { signal });
+  if (!response.ok) {
+    let detail = '';
+    try {
+      const error = await response.json();
+      if (typeof error.message === 'string') detail = ` ${error.message}`;
+      else if (typeof error.error === 'string') detail = ` ${error.error}`;
+    } catch {
+      detail = '';
+    }
+
+    if (response.status === 402 || response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After');
+      const waitSeconds = retryAfter && Number.isFinite(Number(retryAfter))
+        ? Math.max(1, Math.ceil(Number(retryAfter)))
+        : 45;
+      throw new Error(
+        `Pollinations' free per-IP limit has been reached. Wait at least ${waitSeconds} seconds before retrying.${detail}`
+      );
+    }
+    throw new Error(`Pollinations could not generate this image (${response.status}).${detail}`);
+  }
+
+  const blob = await response.blob();
+  if (!blob.type.startsWith('image/')) {
+    throw new Error('Pollinations returned an invalid image response.');
+  }
+  return blob;
+}
+
 export async function fetchAvailableImageModels({ fetchImpl = fetch, signal } = {}) {
   const response = await fetchImpl(`${AI_HORDE_API}/status/models?type=image`, {
     headers: { 'Client-Agent': CLIENT_AGENT },
