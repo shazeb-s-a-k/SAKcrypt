@@ -105,7 +105,14 @@ test('uses Gemini 3.8 Interactions API without returning the server key to the b
     return {
       ok: true,
       status: 200,
-      json: async () => ({ output_text: 'Use JSON Formatter.' }),
+      json: async () => ({
+        object: 'interaction',
+        status: 'completed',
+        steps: [{
+          type: 'model_output',
+          content: [{ type: 'text', text: 'Use JSON Formatter.' }]
+        }]
+      }),
       headers: { get: () => null }
     };
   };
@@ -127,6 +134,39 @@ test('uses Gemini 3.8 Interactions API without returning the server key to the b
     assert.match(requestBody.system_instruction, /You are S\.A\.K AI/);
     assert.match(requestBody.input, /User: Hello/);
     assert.match(requestBody.input, /User: Recommend a useful tool\./);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = previousKey;
+  }
+});
+
+test('joins text from model output steps and ignores non-text content', async () => {
+  const previousKey = process.env.GEMINI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  process.env.GEMINI_API_KEY = 'server-side-test-key';
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    headers: { get: () => null },
+    json: async () => ({
+      status: 'completed',
+      steps: [
+        { type: 'user_input', content: [{ type: 'text', text: 'Do not return this.' }] },
+        { type: 'model_output', content: [
+          { type: 'text', text: 'First part ' },
+          { type: 'image', data: 'not text' }
+        ] },
+        { type: 'model_output', content: [{ type: 'text', text: 'and second part.' }] }
+      ]
+    })
+  });
+  try {
+    const response = createResponse();
+    await handler(createRequest(), response);
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.body.answer, 'First part and second part.');
   } finally {
     globalThis.fetch = previousFetch;
     if (previousKey === undefined) delete process.env.GEMINI_API_KEY;

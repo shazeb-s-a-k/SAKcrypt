@@ -47,6 +47,20 @@ const parseBody = body => {
   }
 };
 
+const getInteractionText = data => {
+  const outputText = typeof data?.output_text === 'string' ? data.output_text.trim() : '';
+  if (outputText) return outputText;
+
+  if (!Array.isArray(data?.steps)) return '';
+  return data.steps
+    .filter(step => step?.type === 'model_output' && Array.isArray(step.content))
+    .flatMap(step => step.content
+      .filter(part => part?.type === 'text' && typeof part.text === 'string')
+      .map(part => part.text))
+    .join('')
+    .trim();
+};
+
 const getClientIp = req => {
   const forwardedFor = req.headers?.['x-forwarded-for'];
   return typeof forwardedFor === 'string' ? forwardedFor.split(',')[0].trim() : '';
@@ -187,7 +201,7 @@ export default async function handler(req, res) {
       }
 
       if (upstream.ok) {
-        const answer = (typeof data.output_text === 'string' ? data.output_text : '').trim();
+        const answer = getInteractionText(data);
         if (answer) {
           return res.status(200).json({
             answer,
