@@ -1,4 +1,4 @@
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3.8-flash';
 const MAX_PROMPT_LENGTH = 220 * 1024;
 const MAX_CATALOG_LENGTH = 40000;
 const MAX_HISTORY_MESSAGES = 10;
@@ -105,10 +105,14 @@ export default async function handler(req, res) {
   if (cooldownResponse) return cooldownResponse;
 
   const systemInstruction = `${SYSTEM_INSTRUCTION}\n\nAvailable website tools (use only these routes when recommending a tool):\n${catalog}`;
+  const conversation = [
+    ...history.map(message => `${message.role === 'assistant' ? 'Assistant' : 'User'}: ${message.content}`),
+    `User: ${prompt}`
+  ].join('\n\n');
   let upstream;
   try {
     upstream = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      'https://generativelanguage.googleapis.com/v1beta/interactions',
       {
         method: 'POST',
         headers: {
@@ -116,15 +120,11 @@ export default async function handler(req, res) {
           'x-goog-api-key': apiKey
         },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          contents: [
-            ...history.map(message => ({
-              role: message.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: message.content }]
-            })),
-            { role: 'user', parts: [{ text: prompt }] }
-          ],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 1400 }
+          model: GEMINI_MODEL,
+          input: conversation,
+          system_instruction: systemInstruction,
+          store: false,
+          generation_config: { max_output_tokens: 1400 }
         })
       }
     );
@@ -147,9 +147,7 @@ export default async function handler(req, res) {
     return sendError(res, status, detail, upstream.status === 429 ? 10 : undefined);
   }
 
-  const answer = data.candidates?.[0]?.content?.parts
-    ?.map(part => typeof part.text === 'string' ? part.text : '')
-    .join('')
+  const answer = (typeof data.output_text === 'string' ? data.output_text : '')
     .trim();
   if (!answer) return sendError(res, 502, 'Gemini returned an empty response.');
 

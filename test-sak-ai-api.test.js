@@ -69,7 +69,7 @@ test('rejects cross-origin calls before contacting Gemini', async () => {
   }
 });
 
-test('proxies Gemini requests without returning the server key to the browser', async () => {
+test('uses Gemini 3.8 Interactions API without returning the server key to the browser', async () => {
   const previousKey = process.env.GEMINI_API_KEY;
   const previousFetch = globalThis.fetch;
   const secret = 'server-side-test-key';
@@ -82,9 +82,7 @@ test('proxies Gemini requests without returning the server key to the browser', 
     return {
       ok: true,
       status: 200,
-      json: async () => ({
-        candidates: [{ content: { parts: [{ text: 'Use JSON Formatter.' }] } }]
-      })
+      json: async () => ({ output_text: 'Use JSON Formatter.' })
     };
   };
   try {
@@ -93,10 +91,16 @@ test('proxies Gemini requests without returning the server key to the browser', 
 
     assert.equal(response.statusCode, 200);
     assert.equal(response.body.answer, 'Use JSON Formatter.');
+    assert.equal(upstreamUrl, 'https://generativelanguage.googleapis.com/v1beta/interactions');
     assert.equal(upstreamRequest.headers['x-goog-api-key'], secret);
     assert.equal(upstreamUrl.includes(secret), false);
     assert.equal(JSON.stringify(response.body).includes(secret), false);
-    assert.equal(JSON.parse(upstreamRequest.body).contents.at(-1).parts[0].text, 'Recommend a useful tool.');
+    const requestBody = JSON.parse(upstreamRequest.body);
+    assert.equal(requestBody.model, 'gemini-3.8-flash');
+    assert.equal(requestBody.store, false);
+    assert.match(requestBody.system_instruction, /You are S\.A\.K AI/);
+    assert.match(requestBody.input, /User: Hello/);
+    assert.match(requestBody.input, /User: Recommend a useful tool\./);
   } finally {
     globalThis.fetch = previousFetch;
     if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
