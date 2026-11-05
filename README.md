@@ -22,7 +22,7 @@ It features an array of powerful tools, including encoding secret payloads into 
 - **UUID Generator**: Instantly generate universally unique identifiers (v4).
 - **AI Image Generator**: Choose AI Horde, Pollinations Classic, or the hosted Cloudflare SDXL model; generate images in-app with selectable models, aspect ratios, and resolutions.
 - **Mass Generate**: Upload a text file with one prompt per line, generate images sequentially, and download the results together as an ordered ZIP archive.
-- **S.A.K AI**: Ask the home-page assistant to find tools across the suite or run supported local actions. Connect Gemini, OpenAI, or Groq for model-powered answers; without a key, local actions and tool discovery still work.
+- **S.A.K AI**: Ask the home-page assistant to find tools across the suite, run supported local actions, or get Gemini-powered answers through a server-side API route. Visitors never enter or receive the owner's Gemini key.
 - **Organized tool catalog**: Browse the 73 tools in six categories, search by name or capability, and switch between a full grid and horizontal rows.
 - Categories are ordered by use case: A.I & Neural Intelligence, Stealth & Covert Systems, Cyber Security & Encryption, Web & Network Protocols, Code & Data Transformers, then System Utilities & Generators. Tools within each category are curated by usefulness.
 - **Local file drafts**: Open text files up to 200 KB, optionally include a selected file in a prompt, save generated drafts, or explicitly confirm before replacing a selected file.
@@ -31,7 +31,9 @@ It features an array of powerful tools, including encoding secret payloads into 
 
 The assistant can search and link to all catalog tools. Its current built-in local actions are Phantom Text (stealth encoding), JSON formatting, Base64 and URL conversion, UUID generation, SHA hashing, and basic text operations. Those actions run in the browser without an AI provider. Other tools can be found and opened from chat but are not executed through chat yet; tools that require custom settings or user review still need to be operated directly.
 
-AI requests go directly from the browser to the selected provider. Provider keys use the same browser-local storage as the AI Chat sandbox; prompts and any file the user explicitly includes are sent to that provider. Tool results are produced by registered local actions, not by model claims.
+S.A.K AI sends Gemini requests through `/api/assistant`. Set `GEMINI_API_KEY` in the Vercel project environment variables for Preview and Production, then redeploy. Keep it as a server-only variable: do not prefix it with `VITE_`, commit it, or put it in browser storage. Vercel encrypts environment-variable values at rest, while the serverless function reads the value only to authenticate its Gemini request. Requests, including any file the user explicitly includes, are sent to Google Gemini. A short per-client cooldown is included; configure Vercel Firewall rate limits and provider quotas for stronger public endpoint abuse protection. The offline tool guide and registered local actions work without the Gemini endpoint.
+
+If a Gemini key is ever pasted into chat, source control, or another public place, revoke it and create a replacement before adding the new value to Vercel.
 
 File access requires a user action. The assistant can read a selected text file up to 200 KB; file contents are not included in prompts unless **Include in next prompt** is checked. Saving a draft uses the browser's save dialog or a download. Replacing an opened file requires browser write permission and a separate confirmation; browsers without the File System Access API can still open files and save drafts as downloads.
 

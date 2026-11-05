@@ -2578,3 +2578,706 @@ textarea::placeholder, .textarea-glass::placeholder {
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.75rem;
 }
+
+/* S.A.K AI home assistant */
+.sak-ai-panel {
+  position: relative;
+  isolation: isolate;
+  width: min(1120px, calc(100% - 48px));
+  margin: 0 auto clamp(3rem, 6vw, 5rem);
+  overflow: hidden;
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  border-radius: 26px;
+  background:
+    radial-gradient(ellipse at 82% 0%, rgba(20, 184, 166, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(15, 20, 34, 0.98), rgba(7, 10, 18, 0.98));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.34), 0 0 65px rgba(94, 106, 210, 0.09);
+  animation: sak-ai-arrive 650ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.sak-ai-panel::before {
+  position: absolute;
+  z-index: -1;
+  inset: -1px;
+  background: linear-gradient(115deg, rgba(129, 140, 248, 0.1), transparent 36%, rgba(45, 212, 191, 0.07));
+  content: "";
+  pointer-events: none;
+}
+
+.sak-ai-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.5rem, 4vw, 3rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(ellipse at 12% 0%, rgba(94, 106, 210, 0.2), transparent 58%);
+}
+
+.sak-ai-title-group {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+.sak-ai-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(129, 140, 248, 0.5);
+  border-radius: 18px;
+  color: #d3dcff;
+  background: linear-gradient(145deg, rgba(94, 106, 210, 0.34), rgba(45, 212, 191, 0.1));
+  box-shadow: 0 0 32px rgba(94, 106, 210, 0.2), inset 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.sak-ai-eyebrow,
+.sak-ai-recommendations-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #aebafa;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.sak-ai-online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.9);
+  animation: sak-ai-pulse 2.2s ease-in-out infinite;
+}
+
+.sak-ai-heading h2 {
+  margin: 0.25rem 0 0.15rem;
+  color: #fff;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  letter-spacing: -0.045em;
+}
+
+.sak-ai-heading p {
+  margin: 0;
+  color: #a5adbf;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.sak-ai-settings-button,
+.sak-ai-file-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #cbd1e0;
+  background: rgba(255, 255, 255, 0.045);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 650;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.sak-ai-settings-button:hover,
+.sak-ai-file-actions button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(129, 140, 248, 0.55);
+  color: #fff;
+  background: rgba(94, 106, 210, 0.16);
+}
+
+.sak-ai-settings-button:focus-visible,
+.sak-ai-file-actions button:focus-visible,
+.sak-ai-prompt-suggestions button:focus-visible,
+.sak-ai-send:focus-visible,
+.sak-ai-copy-result:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 3px;
+}
+
+.sak-ai-settings {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) 2fr;
+  align-items: end;
+  gap: 1rem 1.5rem;
+  padding: 1.2rem clamp(1.5rem, 4vw, 3rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(4, 7, 13, 0.48);
+}
+
+.sak-ai-settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #b7bfd0;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.sak-ai-settings select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  color: #eef0f6;
+  background: #10131d;
+}
+
+.sak-ai-settings p {
+  margin: 0 0 0.25rem;
+  color: #969eb0;
+  font-size: 0.81rem;
+  line-height: 1.55;
+}
+
+.sak-ai-body {
+  padding: clamp(1.1rem, 3vw, 2rem) clamp(1.2rem, 4vw, 3rem) 1.5rem;
+}
+
+.sak-ai-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 220px;
+  max-height: 440px;
+  overflow-y: auto;
+  padding: 0.15rem 0.4rem 1rem 0;
+  scrollbar-color: rgba(129, 140, 248, 0.38) transparent;
+  scrollbar-width: thin;
+}
+
+.sak-ai-welcome {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: clamp(1rem, 2vw, 1.4rem);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  border-radius: 18px;
+  color: #bdc8ff;
+  background: linear-gradient(120deg, rgba(94, 106, 210, 0.13), rgba(18, 24, 39, 0.54));
+}
+
+.sak-ai-welcome > svg {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: #9daeff;
+}
+
+.sak-ai-welcome strong {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.sak-ai-welcome p {
+  margin: 0.35rem 0 0;
+  color: #b1b8c8;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.sak-ai-prompt-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.sak-ai-prompt-suggestions button {
+  min-height: 38px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(155, 169, 255, 0.2);
+  border-radius: 999px;
+  color: #d5dcff;
+  background: rgba(6, 10, 20, 0.45);
+  cursor: pointer;
+  font-size: 0.78rem;
+  text-align: left;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.sak-ai-prompt-suggestions button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(155, 169, 255, 0.52);
+  background: rgba(94, 106, 210, 0.2);
+}
+
+.sak-ai-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  animation: sak-ai-message-in 250ms ease-out both;
+}
+
+.sak-ai-message.user {
+  justify-content: flex-end;
+}
+
+.sak-ai-message-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(129, 140, 248, 0.24);
+  border-radius: 11px;
+  color: #b8c4ff;
+  background: rgba(94, 106, 210, 0.13);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.sak-ai-message.user .sak-ai-message-icon {
+  order: 2;
+  border-color: rgba(45, 212, 191, 0.2);
+  color: #7ee7d8;
+  background: rgba(13, 148, 136, 0.1);
+}
+
+.sak-ai-message-content {
+  min-width: 0;
+  max-width: min(88%, 820px);
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px 16px 16px;
+  color: #d1d6e2;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.91rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.sak-ai-message.user .sak-ai-message-content {
+  border-color: rgba(45, 212, 191, 0.16);
+  border-radius: 16px 4px 16px 16px;
+  color: #e2fbf6;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.16), rgba(94, 106, 210, 0.12));
+}
+
+.sak-ai-message-content p {
+  margin: 0 0 0.6rem;
+}
+
+.sak-ai-message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.sak-ai-message-content a {
+  color: #aebaff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sak-ai-message-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.sak-ai-message-content code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+}
+
+.sak-ai-tool-result {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.85rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(129, 140, 248, 0.28);
+  border-radius: 13px;
+  background: rgba(94, 106, 210, 0.09);
+}
+
+.sak-ai-tool-result-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  color: #d4dcff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.sak-ai-tool-result-heading span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sak-ai-tool-result-heading a {
+  flex: 0 0 auto;
+  color: #b7c3ff;
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.sak-ai-tool-result-note {
+  margin: 0;
+  color: #b0b7c7;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.sak-ai-tool-output {
+  width: 100%;
+  min-height: 54px;
+  height: auto;
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  color: #eff1f7;
+  background: rgba(0, 0, 0, 0.36);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  resize: vertical;
+  overflow-wrap: anywhere;
+}
+
+.sak-ai-tool-output:focus {
+  border-color: rgba(129, 140, 248, 0.65);
+  outline: 2px solid rgba(129, 140, 248, 0.2);
+}
+
+.sak-ai-tool-result.phantom-result .sak-ai-tool-output {
+  color: transparent;
+  caret-color: #9daeff;
+}
+
+.sak-ai-copy-result,
+.sak-ai-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 40px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(129, 140, 248, 0.45);
+  border-radius: 10px;
+  color: #f3f4ff;
+  background: linear-gradient(135deg, rgba(94, 106, 210, 0.62), rgba(79, 70, 229, 0.56));
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.sak-ai-copy-result {
+  justify-self: start;
+}
+
+.sak-ai-copy-result:hover,
+.sak-ai-send:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(94, 106, 210, 0.85), rgba(79, 70, 229, 0.78));
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.2);
+}
+
+.sak-ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: #b7bfd0;
+  font-size: 0.84rem;
+}
+
+.sak-ai-loading span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #aeb9f9;
+  box-shadow: 0 0 10px rgba(174, 185, 249, 0.65);
+  animation: sak-ai-pulse 850ms ease-in-out infinite alternate;
+}
+
+.sak-ai-recommendations {
+  margin: 0.85rem 0 1rem;
+}
+
+.sak-ai-recommendations-title {
+  margin-bottom: 0.65rem;
+  color: #aebaff;
+  letter-spacing: 0.06em;
+}
+
+.sak-ai-tool-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.sak-ai-tool-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 100%;
+  padding: 0.58rem 0.78rem;
+  border: 1px solid rgba(129, 140, 248, 0.24);
+  border-radius: 10px;
+  color: #e0e5ff;
+  background: rgba(94, 106, 210, 0.09);
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.sak-ai-tool-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(129, 140, 248, 0.58);
+  background: rgba(94, 106, 210, 0.18);
+}
+
+.sak-ai-file {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0.5rem 0 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 11px;
+  color: #d0d5e0;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 0.8rem;
+}
+
+.sak-ai-file > span {
+  min-width: 0;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sak-ai-file label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  color: #adb5c5;
+}
+
+.sak-ai-file input {
+  accent-color: var(--accent);
+}
+
+.sak-ai-file button {
+  padding: 0.3rem 0.45rem;
+  border: 0;
+  color: #aeb4c2;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.sak-ai-error {
+  margin: 0.55rem 0;
+  color: #fca5a5;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.sak-ai-composer {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(3, 6, 12, 0.62);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.035);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.sak-ai-composer:focus-within {
+  border-color: rgba(129, 140, 248, 0.62);
+  box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.12), 0 0 32px rgba(94, 106, 210, 0.1);
+}
+
+.sak-ai-composer textarea {
+  display: block;
+  width: 100%;
+  min-height: 92px;
+  height: auto;
+  padding: 1rem 1.1rem;
+  border: 0;
+  border-radius: 0;
+  color: #f2f3f8;
+  background: transparent;
+  box-shadow: none;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.sak-ai-composer textarea:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+.sak-ai-composer textarea::placeholder {
+  color: #777f91;
+}
+
+.sak-ai-composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.65rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sak-ai-file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.sak-ai-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sak-ai-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0.85rem 0 0;
+  color: #9199aa;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.sak-ai-privacy svg {
+  flex: 0 0 auto;
+  color: #34d399;
+}
+
+@keyframes sak-ai-arrive {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sak-ai-message-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sak-ai-pulse {
+  from { opacity: 0.6; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.08); }
+}
+
+@media (max-width: 768px) {
+  .sak-ai-panel {
+    width: 100%;
+    border-radius: 20px;
+  }
+
+  .sak-ai-heading {
+    align-items: flex-start;
+    padding: 1.2rem;
+  }
+
+  .sak-ai-title-group {
+    gap: 0.75rem;
+  }
+
+  .sak-ai-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .sak-ai-settings-button {
+    flex: 0 0 auto;
+    font-size: 0;
+  }
+
+  .sak-ai-settings-button svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .sak-ai-settings {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    padding: 1rem 1.2rem;
+  }
+
+  .sak-ai-body {
+    padding: 1rem 1.2rem 1.2rem;
+  }
+
+  .sak-ai-conversation {
+    min-height: 150px;
+    max-height: 360px;
+  }
+
+  .sak-ai-message-content {
+    max-width: calc(100% - 44px);
+    font-size: 0.87rem;
+  }
+
+  .sak-ai-prompt-suggestions button {
+    max-width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .sak-ai-heading {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 1rem;
+  }
+
+  .sak-ai-heading p {
+    max-width: 34ch;
+    font-size: 0.8rem;
+  }
+
+  .sak-ai-eyebrow {
+    font-size: 0.62rem;
+  }
+
+  .sak-ai-body {
+    padding: 0.85rem 0.9rem 1rem;
+  }
+
+  .sak-ai-settings {
+    padding: 0.9rem;
+  }
+
+  .sak-ai-composer-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sak-ai-file-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  }
+
+  .sak-ai-send {
+    width: 100%;
+  }
+
+  .sak-ai-prompt-suggestions button {
+    width: 100%;
+    border-radius: 12px;
+  }
+}
