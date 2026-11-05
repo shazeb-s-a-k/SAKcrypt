@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { useSupport } from '../components/SupportProvider';
 import SAKAI from '../components/SAKAI';
+import { ADDITIONAL_TOOLS } from '../utils/additionalTools';
 
 // Curated tool families, ordered by the tasks visitors most often start with.
 const CATEGORIES = [
@@ -66,7 +67,7 @@ const CATEGORIES = [
     code: '05 // SYNTAX',
     badge: 'CONVERSION PIPELINES',
     color: '#f59e0b',
-    desc: 'Bidirectional JSON/YAML/CSV/XML format translators, HTML to JSX, Base64 & SQL builders',
+    desc: 'Text, spreadsheet, markup, image-format, file and data converters for everyday work',
     icon: ArrowLeftRight
   },
   {
@@ -76,7 +77,7 @@ const CATEGORIES = [
     code: '06 // UTILITY',
     badge: 'CORE GENERATORS',
     color: '#ec4899',
-    desc: 'Cryptographic UUIDs, regex sandboxes, mock data synthesizers, QR systems & dev visualizers',
+    desc: 'Text, date, number, color, file, data and developer helpers for common everyday tasks',
     icon: Cpu
   }
 ];
@@ -103,7 +104,10 @@ const TOOL_PRIORITY = {
     'JSON to CSV', 'YAML to JSON', 'JSON to YAML', 'Base64 Converter',
     'HTML to JSX Converter', 'Markdown to HTML', 'XML Formatter', 'SQL Formatter',
     'Base Converter', 'Base64 File Encoder', 'Visual SQL Builder', 'Docker Compose Gen',
-    'CSV to JSON', 'Curl Command Gen'
+    'CSV to JSON', 'Curl Command Gen', 'XML to JSON', 'JSON to XML',
+    'Image Format Converter', 'Image Resizer', 'Image Compressor',
+    'HTML Formatter', 'CSS Formatter', 'JavaScript Beautifier',
+    'JSON Minifier', 'SVG to PNG Converter'
   ],
   utilities: [
     'UUID Generator', 'QR Code Engine', 'WiFi QR Generator', 'Regex Sandbox',
@@ -111,7 +115,17 @@ const TOOL_PRIORITY = {
     'Fake Data Generator', 'Random String Gen', 'Color Palette Gen',
     'Lorem Ipsum Generator', 'Markdown Previewer', 'Markdown Table Gen',
     'Chmod Calculator', 'SVG Placeholder Gen', 'ASCII Art Generator', 'Code to Image',
-    'Github Readme Gen'
+    'Github Readme Gen', 'Text Case Converter', 'Word & Character Counter',
+    'URL Slug Generator', 'Line Sorter', 'Duplicate Line Remover', 'Find & Replace Text',
+    'Roman Numeral Converter', 'Unit Converter', 'Timestamp Converter',
+    'Percentage Calculator', 'Aspect Ratio Calculator', 'Color Format Converter',
+    'MIME Type Lookup', 'Random Number Generator', 'Bulk UUID Generator',
+    'Date Difference Calculator', 'Email Address Validator', 'Text Reverser',
+    'Text to Binary', 'Binary to Text', 'Text to Hex', 'Hex to Text',
+    'CSV to JSON', 'Image Format Converter', 'Image Resizer', 'Image Compressor',
+    'JSON Path Query', 'JSON Schema Generator', 'JSON to XML', 'XML to JSON',
+    'Unix Timestamp Converter', 'Time Zone Converter', 'IPv4 Decimal Converter',
+    'HTML Entity Encoder', 'HTML Entity Decoder', 'Regex Replace Tester'
   ]
 };
 
@@ -124,7 +138,7 @@ const sortToolsByUsefulness = (tools, categoryId) => {
   return [...tools].sort((a, b) => rank(a.title) - rank(b.title));
 };
 
-// All 73 tools mapped with precision
+// Existing tools, ordered by usefulness within each category.
 const features = [
   // --- 01: A.I & NEURAL INTELLIGENCE ---
   {
@@ -606,12 +620,11 @@ const features = [
   {
     title: 'CSV to JSON',
     categoryId: 'transformers',
-    tag: 'SOON',
-    desc: 'Convert CSV spreadsheets back to nested JSON structures.',
+    tag: 'LOCAL',
+    desc: 'Convert CSV spreadsheet rows into JSON objects with quoted-field support.',
     icon: <FileType2 />,
-    path: '#',
-    color: '#94a3b8',
-    comingSoon: true
+    path: '/tools/csv-to-json',
+    color: '#10b981'
   },
   {
     title: 'Curl Command Gen',
@@ -798,6 +811,27 @@ const features = [
     comingSoon: true
   }
 ];
+
+const getAdditionalToolIcon = tool => {
+  if (tool.id.startsWith('image-') || tool.id === 'svg-to-png') return <ImageIcon />;
+  if (/date|time|timestamp/i.test(tool.title)) return <Calendar />;
+  if (/color|gradient/i.test(tool.title)) return <Palette />;
+  if (/calculator|converter/i.test(tool.title) && tool.categoryId === 'utilities') return <Calculator />;
+  if (/text|word|line|character/i.test(tool.title)) return <Type />;
+  if (tool.categoryId === 'transformers' && /json|yaml|xml|html|css|javascript|svg/i.test(tool.title)) return <Code2 />;
+  return tool.categoryId === 'transformers' ? <ArrowLeftRight /> : <Wand2 />;
+};
+
+features.push(...ADDITIONAL_TOOLS.filter(tool => tool.id !== 'csv-to-json').map(tool => ({
+  title: tool.title,
+  categoryId: tool.categoryId,
+  tag: tool.tag,
+  desc: tool.desc,
+  icon: getAdditionalToolIcon(tool),
+  path: tool.path,
+  color: tool.categoryId === 'transformers' ? '#38bdf8' : '#a78bfa',
+  keywords: tool.keywords
+})));
 
 // Reusable Tool Card Component
 // Note: Per user request, the Tool Title is at the top, and its glowing Icon is directly below it!
@@ -1009,7 +1043,8 @@ const LandingPage = () => {
       feat.title.toLowerCase().includes(q) || 
       feat.desc.toLowerCase().includes(q) ||
       (feat.tag && feat.tag.toLowerCase().includes(q)) ||
-      feat.categoryId.toLowerCase().includes(q)
+      feat.categoryId.toLowerCase().includes(q) ||
+      (feat.keywords && feat.keywords.toLowerCase().includes(q))
     );
   });
 
@@ -1068,9 +1103,8 @@ const LandingPage = () => {
           Welcome to SAKrypt Suite
         </h1>
 
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.15rem', maxWidth: '640px', margin: '0 auto 1.8rem auto', lineHeight: 1.6 }}>
-          A professional, hyper-secure collection of cryptography, AI sandboxes, and developer utilities. 
-          Operate in absolute stealth.
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.15rem', maxWidth: '680px', margin: '0 auto 1.8rem auto', lineHeight: 1.6 }}>
+          An all-in-one workspace for everyday conversions, text, images, dates, colors, and developer tools — with S.A.K AI to help you find what you need.
         </p>
 
         {/* Futuristic Cyber HUD */}
@@ -1088,8 +1122,8 @@ const LandingPage = () => {
             <span style={{ color: '#06b6d4' }}>{features.length} TOOLS</span>
           </div>
           <div className="hud-pill">
-            <span>SECURITY:</span>
-            <span style={{ color: '#a855f7' }}>CLIENT-SIDE ISOLATED</span>
+            <span>LOCAL TOOLS:</span>
+            <span style={{ color: '#a855f7' }}>RUN IN YOUR BROWSER</span>
           </div>
         </div>
 

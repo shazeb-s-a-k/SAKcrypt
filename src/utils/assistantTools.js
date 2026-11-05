@@ -1,4 +1,5 @@
 import { encodeMorse } from './morse.js';
+import { ADDITIONAL_TOOLS, runAdditionalTool } from './additionalTools.js';
 
 const toolDefinitions = [
   {
@@ -94,22 +95,81 @@ const extractUnquotedText = prompt => {
 
 export async function runAssistantTool(prompt, selectedText = '') {
   const tool = toolDefinitions.find(definition => definition.matches.test(prompt));
-  if (!tool) return null;
+  const normalizedPrompt = prompt.toLowerCase().replace(/[-_]/g, ' ');
+  const additionalTool = tool ? null : ADDITIONAL_TOOLS.find(definition => {
+    if (definition.inputMode === 'image') return false;
+    const namedRequest = normalizedPrompt.includes(definition.title.toLowerCase())
+      || normalizedPrompt.includes(definition.id.replaceAll('-', ' '));
+    return definition.assistantMatch?.test(prompt) || namedRequest;
+  });
+  if (!tool && !additionalTool) return null;
 
-  const jsonSource = tool.name === 'JSON Formatter' ? prompt.match(/\{[\s\S]*\}|\[[\s\S]*\]/)?.[0] : '';
-  const text = jsonSource || extractQuotedText(prompt) || extractUnquotedText(prompt) || selectedText;
-  if (tool.name !== 'UUID Generator' && !text) {
+  const jsonSource = tool?.name === 'JSON Formatter' ? prompt.match(/\{[\s\S]*\}|\[[\s\S]*\]/)?.[0] : '';
+  let text = jsonSource || extractQuotedText(prompt) || extractUnquotedText(prompt) || selectedText;
+  if (!text && additionalTool?.id === 'roman-numeral-converter') {
+    text = prompt.match(/\b[MDCLXVI]{1,15}\b/i)?.[0] || '';
+  }
+  if (!text && ['unit-converter', 'roman-numeral-converter', 'timestamp-converter'].includes(additionalTool?.id)) {
+    text = prompt.match(/-?\d+(?:\.\d+)?/)?.[0] || '';
+  }
+  if (!text && additionalTool?.id === 'percentage-calculator') {
+    const values = prompt.match(/-?\d+(?:\.\d+)?/g) || [];
+    if (values.length >= 2) text = `${values[0]},${values[1]}`;
+  }
+  const toolName = tool?.name || additionalTool.title;
+  const toolPath = tool?.path || additionalTool.path;
+  const additionalToolNeedsInput = additionalTool?.requiresInput !== false;
+  if ((toolName !== 'UUID Generator' && additionalToolNeedsInput) && !text) {
     return {
-      tool: tool.name,
-      path: tool.path,
+      tool: toolName,
+      path: toolPath,
       needsInput: true,
-      message: `What text should I use for ${tool.name}? Put it in quotes, for example: "${tool.name === 'Phantom Text' ? 'Create a stealth copyable text using Phantom Text for "Hello"' : 'encode this text "Hello"'}".`
+      message: `What text should I use for ${toolName}? Put it in quotes, for example: "${toolName === 'Phantom Text' ? 'Create a stealth copyable text using Phantom Text for "Hello"' : 'convert this text "Hello"'}".`
+    };
+  }
+
+  if (additionalTool) {
+    const options = Object.fromEntries(
+      additionalTool.fields.map(field => [field.name, field.defaultValue ?? ''])
+    );
+    if (additionalTool.id === 'text-case-converter') {
+      options.mode = /\buppercase\b/i.test(prompt) ? 'upper'
+        : /\blowercase\b/i.test(prompt) ? 'lower'
+          : /\bsentence case\b/i.test(prompt) ? 'sentence' : 'title';
+    }
+    if (additionalTool.id === 'unicode-escape-converter' && /\b(?:decode|unescape)\b/i.test(prompt)) options.mode = 'decode';
+    if (additionalTool.id === 'json-string-escape' && /\b(?:decode|unescape)\b/i.test(prompt)) options.mode = 'unescape';
+    if (additionalTool.id === 'roman-numeral-converter' && /\b(?:roman|numeral)\b[\s\S]*\b(?:number|integer)\b/i.test(prompt)) options.direction = 'toNumber';
+    if (additionalTool.id === 'timestamp-converter' && /\b(?:unix|timestamp)\b/i.test(prompt)) options.direction = 'toTimestamp';
+    if (additionalTool.id === 'url-component-converter' && /\bdecode\b/i.test(prompt)) options.direction = 'decode';
+    if (additionalTool.id === 'base64-url-safe-converter' && /\bdecode\b/i.test(prompt)) options.direction = 'decode';
+    if (additionalTool.id === 'unit-converter') {
+      const unit = prompt.match(/\b(km|kilometers?)\b[\s\S]*\b(miles?)\b/i) ? 'kmToMi'
+        : prompt.match(/\b(miles?)\b[\s\S]*\b(km|kilometers?)\b/i) ? 'miToKm'
+          : prompt.match(/\b(m|meters?)\b[\s\S]*\b(ft|feet)\b/i) ? 'mToFt'
+            : prompt.match(/\b(ft|feet)\b[\s\S]*\b(m|meters?)\b/i) ? 'ftToM'
+          : prompt.match(/\b(kg|kilograms?)\b[\s\S]*\b(pounds?|lbs?)\b/i) ? 'kgToLb'
+            : prompt.match(/\b(pounds?|lbs?)\b[\s\S]*\b(kg|kilograms?)\b/i) ? 'lbToKg'
+              : prompt.match(/\b(l|liters?)\b[\s\S]*\b(gallons?)\b/i) ? 'lToGal'
+                : prompt.match(/\b(gallons?)\b[\s\S]*\b(l|liters?)\b/i) ? 'galToL'
+                  : prompt.match(/\b(celsius|c)\b[\s\S]*\b(fahrenheit|f)\b/i) ? 'cToF'
+                    : prompt.match(/\b(fahrenheit|f)\b[\s\S]*\b(celsius|c)\b/i) ? 'fToC' : options.unit;
+      options.unit = unit;
+    }
+    if (additionalTool.id === 'percentage-calculator') {
+      if (/\bwhat\s+percent|\bwhat\s+percentage/i.test(prompt)) options.mode = 'of';
+      else if (/\bchange\b|\bincrease\b|\bdecrease\b/i.test(prompt)) options.mode = 'change';
+    }
+    return {
+      tool: toolName,
+      path: toolPath,
+      output: await runAdditionalTool(additionalTool.id, text, options)
     };
   }
 
   return {
-    tool: tool.name,
-    path: tool.path,
+    tool: toolName,
+    path: toolPath,
     output: await tool.run(text, prompt)
   };
 }

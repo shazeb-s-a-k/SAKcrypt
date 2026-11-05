@@ -44,7 +44,7 @@ test('does not need a browser API key and clearly reports missing server configu
     await handler(createRequest(), response);
 
     assert.equal(response.statusCode, 503);
-    assert.match(response.body.error, /GEMINI_API_KEY/);
+    assert.match(response.body.error, /S\.A\.K AI is not available/i);
     assert.equal(response.headers['Cache-Control'], 'no-store');
   } finally {
     if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
@@ -61,11 +61,7 @@ test('reports configuration status without exposing the API key', async () => {
     await handler(createRequest({ method: 'GET' }), response);
 
     assert.equal(response.statusCode, 200);
-    assert.deepEqual(response.body, {
-      configured: true,
-      model: 'gemini-3.8-flash',
-      fallbackModel: 'gemini-3.6-flash'
-    });
+    assert.deepEqual(response.body, { configured: true });
     assert.equal(JSON.stringify(response.body).includes(secret), false);
   } finally {
     if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
@@ -122,8 +118,8 @@ test('uses Gemini 3.8 Interactions API without returning the server key to the b
 
     assert.equal(response.statusCode, 200);
     assert.equal(response.body.answer, 'Use JSON Formatter.');
-    assert.equal(response.body.model, 'gemini-3.8-flash');
-    assert.equal(response.body.fallback, false);
+    assert.deepEqual(response.body, { answer: 'Use JSON Formatter.' });
+    assert.doesNotMatch(JSON.stringify(response.body), /gemini|model|provider/i);
     assert.equal(upstreamUrl, 'https://generativelanguage.googleapis.com/v1beta/interactions');
     assert.equal(upstreamRequest.headers['x-goog-api-key'], secret);
     assert.equal(upstreamUrl.includes(secret), false);
@@ -207,11 +203,7 @@ test('retries overloaded Gemini 3.8 then falls back to the available production 
       'gemini-3.8-flash',
       'gemini-3.6-flash'
     ]);
-    assert.deepEqual(response.body, {
-      answer: 'Here is my answer.',
-      model: 'gemini-3.6-flash',
-      fallback: true
-    });
+    assert.deepEqual(response.body, { answer: 'Here is my answer.' });
   } finally {
     globalThis.fetch = previousFetch;
     if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
@@ -219,7 +211,7 @@ test('retries overloaded Gemini 3.8 then falls back to the available production 
   }
 });
 
-test('returns a clear retry response when all supported models are overloaded', async () => {
+test('returns a concise retry response when all supported models are unavailable', async () => {
   const previousKey = process.env.GEMINI_API_KEY;
   const previousFetch = globalThis.fetch;
   process.env.GEMINI_API_KEY = 'server-side-test-key';
@@ -239,7 +231,8 @@ test('returns a clear retry response when all supported models are overloaded', 
 
     assert.equal(response.statusCode, 503);
     assert.equal(requestedModels.length, 3);
-    assert.match(response.body.error, /gemini-3\.8-flash or gemini-3\.6-flash/);
+    assert.match(response.body.error, /S\.A\.K AI could not complete that request/);
+    assert.doesNotMatch(response.body.error, /gemini|model|provider/i);
     assert.equal(response.headers['Retry-After'], '10');
   } finally {
     globalThis.fetch = previousFetch;
@@ -267,7 +260,7 @@ test('does not retry model fallbacks for invalid API credentials', async () => {
     await handler(createRequest(), response);
 
     assert.equal(response.statusCode, 403);
-    assert.equal(response.body.error, 'API key is invalid.');
+    assert.equal(response.body.error, 'S.A.K AI is temporarily unavailable. Please try again later.');
     assert.equal(attempts, 1);
   } finally {
     globalThis.fetch = previousFetch;

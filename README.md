@@ -4,7 +4,7 @@
 ![React](https://img.shields.io/badge/React-18-blue)
 ![Vite](https://img.shields.io/badge/Vite-Fast-facc15)
 
-**SAKrypt Suite** is a high-end, hyper-secure collection of cryptography and developer utilities designed for absolute stealth. 
+**SAKrypt Suite** is an all-in-one collection of browser-based converters, creative utilities, cryptography, and developer tools.
 
 It features an array of powerful tools, including encoding secret payloads into invisible zero-width characters (Phantom Text) and transmitting data over-the-air using high-frequency sound waves (Sonic Transfer).
 
@@ -22,16 +22,17 @@ It features an array of powerful tools, including encoding secret payloads into 
 - **UUID Generator**: Instantly generate universally unique identifiers (v4).
 - **AI Image Generator**: Choose AI Horde, Pollinations Classic, or the hosted Cloudflare SDXL model; generate images in-app with selectable models, aspect ratios, and resolutions.
 - **Mass Generate**: Upload a text file with one prompt per line, generate images sequentially, and download the results together as an ordered ZIP archive.
-- **S.A.K AI**: Ask the home-page assistant to find tools across the suite, run supported local actions, or get Gemini-powered answers through a server-side API route. Visitors never enter or receive the owner's Gemini key.
-- **Organized tool catalog**: Browse the 73 tools in six categories, search by name or capability, and switch between a full grid and horizontal rows.
+- **S.A.K AI**: Ask the home-page assistant to find tools across the suite, run supported local actions, or get answers through a server-side API route. Visitors never enter or receive the owner's API key.
+- **Expanded tool catalog**: Browse the suite in six categories, search by name or capability, and switch between a full grid and horizontal rows.
+- **98 additional local tools**: Convert common text, data, code, dates, colors, and image formats in the browser, including JPG/JPEG, PNG, and WebP conversion, image resizing/compression, CSV/TSV, JSON/XML, Unicode, timestamps, and unit conversion.
 - Categories are ordered by use case: A.I & Neural Intelligence, Stealth & Covert Systems, Cyber Security & Encryption, Web & Network Protocols, Code & Data Transformers, then System Utilities & Generators. Tools within each category are curated by usefulness.
 - **Local file drafts**: Open text files up to 200 KB, optionally include a selected file in a prompt, save generated drafts, or explicitly confirm before replacing a selected file.
 
 ### S.A.K AI privacy and file access
 
-The assistant can search and link to all catalog tools. Its current built-in local actions are Phantom Text (stealth encoding), JSON formatting, Base64 and URL conversion, UUID generation, SHA hashing, and basic text operations. Those actions run in the browser without an AI provider. Other tools can be found and opened from chat but are not executed through chat yet; tools that require custom settings or user review still need to be operated directly.
+The assistant can search and link to all catalog tools, execute registered text/data actions locally, and help with selected text files. Image conversion and tools with custom options are opened in their own pages and run in the browser.
 
-S.A.K AI sends Gemini 3.8 Flash requests through Google's Interactions API at `/api/assistant`. On transient overload/rate-limit/server errors, it retries Gemini 3.8 once and then automatically falls back to the production-available Gemini 3.6 Flash model; the assistant identifies when it used the fallback. The endpoint opts out of provider-side conversation storage (`store: false`) and passes bounded conversation history with each request. Set `GEMINI_API_KEY` in the Vercel project environment variables for Preview and Production, then redeploy. Keep it as a server-only variable: do not prefix it with `VITE_`, commit it, or put it in browser storage. Vercel encrypts environment-variable values at rest, while the serverless function reads the value only to authenticate its Gemini request. Requests, including any file the user explicitly includes, are sent to Google Gemini. A short per-client cooldown is included; configure Vercel Firewall rate limits and provider quotas for stronger public endpoint abuse protection. The offline tool guide and registered local actions work without the Gemini endpoint.
+S.A.K AI uses Google's Interactions API at `/api/assistant`, with a retry and backup model for temporary service errors. The endpoint opts out of provider-side conversation storage (`store: false`) and passes bounded conversation history with each request. Set `GEMINI_API_KEY` in the Vercel project environment variables for Preview and Production, then redeploy. Keep it as a server-only variable: do not prefix it with `VITE_`, commit it, or put it in browser storage. Requests, including any file the user explicitly includes, are sent to Google. A short per-client cooldown is included; configure Vercel Firewall rate limits and provider quotas for stronger public endpoint abuse protection. The offline tool guide and registered local actions work without the assistant endpoint.
 
 For local development, put `GEMINI_API_KEY=your-key` in the ignored `.env.local` file and restart `npm run dev` from this repository directory. The Vercel environment variable is not automatically available to a local Vite server. The assistant status badge reports whether the current server route is available and configured.
 

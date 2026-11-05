@@ -21,10 +21,12 @@ const scoreTools = (query, tools) => {
     const description = tool.desc.toLowerCase();
     const tag = (tool.tag || '').toLowerCase();
     const category = tool.categoryId.toLowerCase();
+    const keywords = (tool.keywords || '').toLowerCase();
     const score = meaningfulWords.reduce((total, word) => {
       const weight = hasSpecificTerms && genericWords.has(word) ? 1 : 5;
       if (title.includes(word)) return total + weight;
       if (tag.includes(word)) return total + (weight - 1);
+      if (keywords.includes(word)) return total + (weight - 1);
       if (category.includes(word)) return total + (weight - 2);
       if (description.includes(word)) return total + (hasSpecificTerms && genericWords.has(word) ? 0 : 1);
       return total;
@@ -43,7 +45,8 @@ const isSupportedTextFile = file => file.type.startsWith('text/')
 const getCatalogContext = (tools, categories) => tools.map(tool => {
   const category = categories.find(item => item.id === tool.categoryId);
   const route = tool.comingSoon ? 'Coming soon; not available yet.' : `Route: ${tool.path}`;
-  return `- ${tool.title} [${category?.name || tool.categoryId}] (${tool.tag || 'READY'}): ${tool.desc} ${route}`;
+  const keywords = tool.keywords ? ` Keywords: ${tool.keywords}.` : '';
+  return `- ${tool.title} [${category?.name || tool.categoryId}] (${tool.tag || 'READY'}): ${tool.desc}${keywords} ${route}`;
 }).join('\n');
 
 const requestAssistantReply = async ({ prompt, messages, catalog }) => {
@@ -62,11 +65,7 @@ const requestAssistantReply = async ({ prompt, messages, catalog }) => {
   const { data } = await readAssistantResponse(response);
   if (!response.ok) throw new Error(data.error || `Assistant request failed (${response.status}).`);
   if (!data.answer) throw new Error('The assistant returned an empty response.');
-  return {
-    answer: data.answer,
-    model: data.model,
-    fallback: data.fallback === true
-  };
+  return { answer: data.answer };
 };
 
 const readAssistantResponse = async response => {
@@ -89,7 +88,7 @@ const readAssistantResponse = async response => {
 };
 
 const SAKAI = ({ tools, categories }) => {
-  const [provider, setProvider] = useState('gemini');
+  const [provider, setProvider] = useState('online');
   const [showSettings, setShowSettings] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -197,7 +196,7 @@ const SAKAI = ({ tools, categories }) => {
           role: 'assistant',
           content: toolResult.needsInput
             ? toolResult.message
-            : `Ran **${toolResult.tool}** locally in your browser. ${toolResult.tool === 'Phantom Text' ? 'This is invisible Morse encoding, not encryption.' : ''}`,
+            : `**${toolResult.tool}** result is ready.`,
           toolResult: toolResult.needsInput ? null : toolResult
         }]);
       } else if (provider === 'offline') {
@@ -212,10 +211,7 @@ const SAKAI = ({ tools, categories }) => {
           messages: priorMessages,
           catalog
         });
-        const content = reply.fallback
-          ? `*Gemini 3.8 Flash is busy, so I answered with Gemini 3.6 Flash instead.*\n\n${reply.answer}`
-          : reply.answer;
-        setMessages(previous => [...previous, { role: 'assistant', content }]);
+        setMessages(previous => [...previous, { role: 'assistant', content: reply.answer }]);
       }
       requestAnimationFrame(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
     } catch (error) {
@@ -293,7 +289,7 @@ const SAKAI = ({ tools, categories }) => {
           <div>
             <div className={`sak-ai-eyebrow sak-ai-status-${apiStatus}`}>
               <span className="sak-ai-online-dot" />
-              S.A.K AI · GEMINI 3.8
+              S.A.K AI
               <span className="sak-ai-status-label">
                 {apiStatus === 'checking' ? 'CHECKING' : apiStatus === 'ready' ? 'READY' : apiStatus === 'missing-key' ? 'SETUP NEEDED' : 'API UNAVAILABLE'}
               </span>
@@ -317,18 +313,18 @@ const SAKAI = ({ tools, categories }) => {
           <label>
             <span>Assistant</span>
             <select value={provider} onChange={event => { setProvider(event.target.value); setAssistantError(''); }}>
-              <option value="gemini">S.A.K AI · Gemini</option>
+              <option value="online">S.A.K AI</option>
               <option value="offline">Offline tool guide</option>
             </select>
           </label>
           <p>
             {apiStatus === 'ready'
-              ? 'Gemini 3.8 is configured. If it is overloaded, S.A.K AI automatically retries and falls back to Gemini 3.6 Flash. The API key stays server-side.'
+              ? 'S.A.K AI is connected and ready to help you use the suite.'
               : apiStatus === 'missing-key'
-                ? 'GEMINI_API_KEY is missing from this deployment. Add it to the correct Vercel environment and redeploy.'
+                ? 'S.A.K AI is not available right now. Please try again later.'
                 : apiStatus === 'unavailable'
-                  ? 'The assistant API is not responding. Check that the latest deployment includes /api/assistant.'
-                  : 'Checking the server connection. The API key is never sent to or stored in your browser.'}
+                  ? 'S.A.K AI is not responding right now. Please try again shortly.'
+                  : 'Checking that S.A.K AI is ready.'}
           </p>
         </div>
       )}
@@ -382,7 +378,7 @@ const SAKAI = ({ tools, categories }) => {
                     </div>
                     {message.toolResult.tool === 'Phantom Text' && (
                       <p className="sak-ai-tool-result-note">
-                        The output is intentionally invisible. It contains {message.toolResult.output.length} zero-width characters; copy it to use it.
+                        The output is invisible. Copy the result to use it.
                       </p>
                     )}
                     <textarea

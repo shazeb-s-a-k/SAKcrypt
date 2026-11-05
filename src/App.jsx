@@ -71,6 +71,7 @@ const AES256GCMEncryptor = React.lazy(() => import('./pages/tools/AES256GCMEncry
 const DockerComposeGen = React.lazy(() => import('./pages/tools/DockerComposeGen'));
 const SQLQueryBuilder = React.lazy(() => import('./pages/tools/SQLQueryBuilder'));
 const APIKeyLaboratory = React.lazy(() => import('./pages/tools/APIKeyLaboratory'));
+const AdditionalToolPage = React.lazy(() => import('./pages/AdditionalToolPage'));
 import LandingPage from './pages/LandingPage';
 import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Server, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, FileArchive, Table, Code2, Bot, Stethoscope, Home, LayoutGrid, Sparkles } from 'lucide-react';
 import Logo from './components/Logo';
@@ -408,6 +409,7 @@ const AnimatedRoutes = () => {
         <Route path="/aes-gcm" element={<PageWrapper><AES256GCMEncryptor /></PageWrapper>} />
         <Route path="/docker-compose" element={<PageWrapper><DockerComposeGen /></PageWrapper>} />
         <Route path="/sql-builder" element={<PageWrapper><SQLQueryBuilder /></PageWrapper>} />
+        <Route path="/tools/:toolId" element={<PageWrapper><AdditionalToolPage /></PageWrapper>} />
           </Routes>
         </React.Suspense>
       </RouteErrorBoundary>
