@@ -50,6 +50,23 @@ test('does not need a browser API key and clearly reports missing server configu
   }
 });
 
+test('reports configuration status without exposing the API key', async () => {
+  const previousKey = process.env.GEMINI_API_KEY;
+  const secret = 'server-only-health-test-key';
+  process.env.GEMINI_API_KEY = secret;
+  try {
+    const response = createResponse();
+    await handler(createRequest({ method: 'GET' }), response);
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.body, { configured: true, model: 'gemini-3.8-flash' });
+    assert.equal(JSON.stringify(response.body).includes(secret), false);
+  } finally {
+    if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = previousKey;
+  }
+});
+
 test('rejects cross-origin calls before contacting Gemini', async () => {
   const previousKey = process.env.GEMINI_API_KEY;
   const previousFetch = globalThis.fetch;

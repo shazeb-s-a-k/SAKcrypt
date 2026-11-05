@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import {
@@ -59,15 +59,29 @@ const requestAssistantReply = async ({ prompt, messages, catalog }) => {
       catalog
     })
   });
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    throw new Error('The assistant server returned an unreadable response.');
-  }
+  const { data } = await readAssistantResponse(response);
   if (!response.ok) throw new Error(data.error || `Assistant request failed (${response.status}).`);
   if (!data.answer) throw new Error('The assistant returned an empty response.');
   return data.answer;
+};
+
+const readAssistantResponse = async response => {
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    const preview = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180);
+    if (!contentType.toLowerCase().includes('json')) {
+      throw new Error(
+        `Assistant API returned a non-JSON response (HTTP ${response.status}${contentType ? `, ${contentType}` : ''}). `
+        + `${preview || 'The response was empty.'} Check that the latest Vercel deployment includes /api/assistant.`
+      );
+    }
+    throw new Error(`Assistant API returned invalid JSON (HTTP ${response.status}).`);
+  }
+  return { data };
 };
 
 const SAKAI = ({ tools, categories }) => {
@@ -82,10 +96,25 @@ const SAKAI = ({ tools, categories }) => {
   const [includeFile, setIncludeFile] = useState(false);
   const [fileError, setFileError] = useState('');
   const [assistantError, setAssistantError] = useState('');
+  const [apiStatus, setApiStatus] = useState('checking');
   const [copiedToolOutput, setCopiedToolOutput] = useState(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const catalog = useMemo(() => getCatalogContext(tools, categories), [tools, categories]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/assistant', { signal: controller.signal })
+      .then(async response => {
+        const { data } = await readAssistantResponse(response);
+        if (!response.ok) throw new Error(data.error || `Assistant status check failed (${response.status}).`);
+        setApiStatus(data.configured ? 'ready' : 'missing-key');
+      })
+      .catch(error => {
+        if (error.name !== 'AbortError') setApiStatus('unavailable');
+      });
+    return () => controller.abort();
+  }, []);
 
   const openFile = async () => {
     setFileError('');
@@ -255,7 +284,13 @@ const SAKAI = ({ tools, categories }) => {
         <div className="sak-ai-title-group">
           <div className="sak-ai-avatar"><Bot size={23} /></div>
           <div>
-            <div className="sak-ai-eyebrow"><span className="sak-ai-online-dot" /> MAIN ASSISTANT</div>
+            <div className={`sak-ai-eyebrow sak-ai-status-${apiStatus}`}>
+              <span className="sak-ai-online-dot" />
+              S.A.K AI · GEMINI 3.8
+              <span className="sak-ai-status-label">
+                {apiStatus === 'checking' ? 'CHECKING' : apiStatus === 'ready' ? 'READY' : apiStatus === 'missing-key' ? 'SETUP NEEDED' : 'API UNAVAILABLE'}
+              </span>
+            </div>
             <h2 id="sak-ai-title">S.A.K AI</h2>
             <p>Find tools across the suite and run common tasks right here.</p>
           </div>
@@ -279,7 +314,15 @@ const SAKAI = ({ tools, categories }) => {
               <option value="offline">Offline tool guide</option>
             </select>
           </label>
-          <p>Gemini requests use the S.A.K secure server connection. The API key is never sent to or stored in your browser.</p>
+          <p>
+            {apiStatus === 'ready'
+              ? 'Gemini 3.8 is configured for this deployment. The API key stays server-side.'
+              : apiStatus === 'missing-key'
+                ? 'GEMINI_API_KEY is missing from this deployment. Add it to the correct Vercel environment and redeploy.'
+                : apiStatus === 'unavailable'
+                  ? 'The assistant API is not responding. Check that the latest deployment includes /api/assistant.'
+                  : 'Checking the server connection. The API key is never sent to or stored in your browser.'}
+          </p>
         </div>
       )}
 
