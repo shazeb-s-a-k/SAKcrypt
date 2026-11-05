@@ -62,7 +62,11 @@ const requestAssistantReply = async ({ prompt, messages, catalog }) => {
   const { data } = await readAssistantResponse(response);
   if (!response.ok) throw new Error(data.error || `Assistant request failed (${response.status}).`);
   if (!data.answer) throw new Error('The assistant returned an empty response.');
-  return data.answer;
+  return {
+    answer: data.answer,
+    model: data.model,
+    fallback: data.fallback === true
+  };
 };
 
 const readAssistantResponse = async response => {
@@ -203,12 +207,15 @@ const SAKAI = ({ tools, categories }) => {
           : 'I could not find a close tool match. Try describing the task in a few words, or browse the categories below.';
         setMessages(previous => [...previous, { role: 'assistant', content: answer }]);
       } else {
-        const answer = await requestAssistantReply({
+        const reply = await requestAssistantReply({
           prompt: providerPrompt,
           messages: priorMessages,
           catalog
         });
-        setMessages(previous => [...previous, { role: 'assistant', content: answer }]);
+        const content = reply.fallback
+          ? `*Gemini 3.8 Flash is busy, so I answered with Gemini 3.6 Flash instead.*\n\n${reply.answer}`
+          : reply.answer;
+        setMessages(previous => [...previous, { role: 'assistant', content }]);
       }
       requestAnimationFrame(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
     } catch (error) {
@@ -316,7 +323,7 @@ const SAKAI = ({ tools, categories }) => {
           </label>
           <p>
             {apiStatus === 'ready'
-              ? 'Gemini 3.8 is configured for this deployment. The API key stays server-side.'
+              ? 'Gemini 3.8 is configured. If it is overloaded, S.A.K AI automatically retries and falls back to Gemini 3.6 Flash. The API key stays server-side.'
               : apiStatus === 'missing-key'
                 ? 'GEMINI_API_KEY is missing from this deployment. Add it to the correct Vercel environment and redeploy.'
                 : apiStatus === 'unavailable'
