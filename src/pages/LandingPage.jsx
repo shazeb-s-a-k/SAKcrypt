@@ -107,7 +107,10 @@ const TOOL_PRIORITY = {
     'CSV to JSON', 'Curl Command Gen', 'XML to JSON', 'JSON to XML',
     'Image Format Converter', 'Image Resizer', 'Image Compressor',
     'HTML Formatter', 'CSS Formatter', 'JavaScript Beautifier',
-    'JSON Minifier', 'SVG to PNG Converter'
+    'JSON Minifier', 'SVG to PNG Converter', 'CSV Row Filter', 'CSV Row Sorter',
+    'CSV Deduplicator', 'CSV Transposer', 'Markdown Table to CSV', 'JSON Flattener',
+    'JSON to SQL INSERT', 'JSON to Go Struct', 'CSS px/rem Converter',
+    'CSS clamp() Generator', 'CSS Grid Generator', 'HTTP Fetch Snippet Generator'
   ],
   utilities: [
     'UUID Generator', 'QR Code Engine', 'WiFi QR Generator', 'Regex Sandbox',
@@ -125,7 +128,12 @@ const TOOL_PRIORITY = {
     'CSV to JSON', 'Image Format Converter', 'Image Resizer', 'Image Compressor',
     'JSON Path Query', 'JSON Schema Generator', 'JSON to XML', 'XML to JSON',
     'Unix Timestamp Converter', 'Time Zone Converter', 'IPv4 Decimal Converter',
-    'HTML Entity Encoder', 'HTML Entity Decoder', 'Regex Replace Tester'
+    'HTML Entity Encoder', 'HTML Entity Decoder', 'Regex Replace Tester',
+    'Markdown TOC Generator', 'URL Query Builder', 'UTM Link Builder', 'URL Extractor',
+    'Regex Literal Escaper', 'JSON Pointer Query', 'SQL IN Clause Generator',
+    'Markdown Link Extractor', 'HTML Boilerplate Generator', 'HTML Meta Inspector',
+    'robots.txt Generator', 'XML Sitemap Generator', '.gitignore Generator',
+    '.env.example Generator'
   ]
 };
 

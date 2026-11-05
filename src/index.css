@@ -3352,6 +3352,7 @@ textarea::placeholder, .textarea-glass::placeholder {
 }
 
 .additional-tool-source textarea,
+.additional-tool-fields textarea,
 .additional-tool-fields input,
 .additional-tool-fields select,
 .additional-tool-output {
@@ -3366,6 +3367,7 @@ textarea::placeholder, .textarea-glass::placeholder {
 }
 
 .additional-tool-source textarea,
+.additional-tool-fields textarea,
 .additional-tool-output {
   min-height: 210px;
   padding: 0.85rem 0.95rem;
@@ -3374,6 +3376,7 @@ textarea::placeholder, .textarea-glass::placeholder {
 }
 
 .additional-tool-source textarea:focus,
+.additional-tool-fields textarea:focus,
 .additional-tool-fields input:focus,
 .additional-tool-fields select:focus,
 .additional-tool-output:focus {
@@ -3391,6 +3394,13 @@ textarea::placeholder, .textarea-glass::placeholder {
 .additional-tool-fields select {
   height: 42px;
   padding: 0 0.7rem;
+  font-family: inherit;
+}
+
+.additional-tool-fields textarea {
+  min-height: 100px;
+  padding: 0.65rem 0.7rem;
+  resize: vertical;
   font-family: inherit;
 }
 

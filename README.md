@@ -24,7 +24,8 @@ It features an array of powerful tools, including encoding secret payloads into 
 - **Mass Generate**: Upload a text file with one prompt per line, generate images sequentially, and download the results together as an ordered ZIP archive.
 - **S.A.K AI**: Ask the home-page assistant to find tools across the suite, run supported local actions, or get answers through a server-side API route. Visitors never enter or receive the owner's API key.
 - **Expanded tool catalog**: Browse the suite in six categories, search by name or capability, and switch between a full grid and horizontal rows.
-- **98 additional local tools**: Convert common text, data, code, dates, colors, and image formats in the browser, including JPG/JPEG, PNG, and WebP conversion, image resizing/compression, CSV/TSV, JSON/XML, Unicode, timestamps, and unit conversion.
+- **124 additional local tools**: Convert common text, data, code, dates, colors, and image formats in the browser, including JPG/JPEG, PNG, and WebP conversion, image resizing/compression, CSV/TSV, JSON/XML, Unicode, timestamps, and unit conversion.
+- **New workflow tools**: Filter, sort, transpose, and deduplicate CSV data; create Markdown tables of contents; flatten and query JSON; generate SQL and Go snippets; build tracked URLs and API fetch examples; and create responsive CSS, HTML, sitemap, robots.txt, `.gitignore`, and secret-free `.env.example` templates.
 - Categories are ordered by use case: A.I & Neural Intelligence, Stealth & Covert Systems, Cyber Security & Encryption, Web & Network Protocols, Code & Data Transformers, then System Utilities & Generators. Tools within each category are curated by usefulness.
 - **Local file drafts**: Open text files up to 200 KB, optionally include a selected file in a prompt, save generated drafts, or explicitly confirm before replacing a selected file.
 

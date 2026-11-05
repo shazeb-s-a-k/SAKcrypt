@@ -9,6 +9,12 @@ const getInitialFields = tool => Object.fromEntries(
 );
 
 const getTextFilename = id => {
+  const filenames = {
+    'gitignore-generator': '.gitignore',
+    'env-example-generator': '.env.example',
+    'robots-txt-generator': 'robots.txt'
+  };
+  if (filenames[id]) return filenames[id];
   const extensions = {
     'json-to-xml': 'xml',
     'json-to-yaml-document': 'yaml',
@@ -19,7 +25,22 @@ const getTextFilename = id => {
     'html-to-plain-text': 'txt',
     'svg-data-url-converter': 'txt',
     'text-to-data-url': 'txt',
-    'json-object-to-typescript': 'ts'
+    'json-object-to-typescript': 'ts',
+    'csv-transposer': 'csv',
+    'csv-deduplicator': 'csv',
+    'csv-row-sorter': 'csv',
+    'csv-row-filter': 'csv',
+    'markdown-toc-generator': 'md',
+    'markdown-table-to-csv': 'csv',
+    'json-flattener': 'json',
+    'json-pointer-query': 'json',
+    'json-to-sql-insert': 'sql',
+    'json-to-go-struct': 'go',
+    'sql-in-clause-generator': 'sql',
+    'css-px-rem-converter': 'css',
+    'css-clamp-generator': 'css',
+    'css-grid-generator': 'css',
+    'http-fetch-snippet-generator': 'js'
   };
   if (extensions[id]) return `${id}.${extensions[id]}`;
   if (/(json|query|header)/i.test(id)) return `${id}.json`;
@@ -122,7 +143,7 @@ const AdditionalToolContent = ({ toolId }) => {
               }}
             />
           </label>
-        ) : (
+        ) : tool.requiresInput !== false ? (
           <label className="additional-tool-source">
             <span>{tool.inputLabel}</span>
             <textarea
@@ -135,7 +156,7 @@ const AdditionalToolContent = ({ toolId }) => {
               rows={9}
             />
           </label>
-        )}
+        ) : null}
 
         {tool.fields.length > 0 && (
           <div className="additional-tool-fields">
@@ -149,6 +170,14 @@ const AdditionalToolContent = ({ toolId }) => {
                   >
                     {field.options.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
                   </select>
+                ) : field.type === 'textarea' ? (
+                  <textarea
+                    value={options[field.name] ?? ''}
+                    onChange={event => setOptions(previous => ({ ...previous, [field.name]: event.target.value }))}
+                    placeholder={field.placeholder || ''}
+                    rows={field.rows || 4}
+                    spellCheck="false"
+                  />
                 ) : (
                   <input
                     type={field.type || 'text'}

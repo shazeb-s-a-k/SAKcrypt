@@ -83,6 +83,11 @@ const toolDefinitions = [
   }
 ];
 
+const jsonToolIds = new Set([
+  'json-flattener', 'json-pointer-query', 'json-to-sql-insert', 'json-to-go-struct',
+  'json-schema-generator', 'jsonpath-query'
+]);
+
 const extractQuotedText = prompt => {
   const match = prompt.match(/["“]([\s\S]*?)["”]|'([^']*)'/);
   return match ? match[1] ?? match[2] : '';
@@ -91,6 +96,35 @@ const extractQuotedText = prompt => {
 const extractUnquotedText = prompt => {
   const match = prompt.match(/\b(?:text|message|content)\s*(?:is|:)\s*(.+?)\s*$/i);
   return match?.[1]?.replace(/[.!?]\s*$/, '').trim() || '';
+};
+
+const extractJsonInput = prompt => {
+  const fenced = prompt.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) return fenced[1].trim();
+
+  for (let start = 0; start < prompt.length; start += 1) {
+    if (prompt[start] !== '{' && prompt[start] !== '[') continue;
+    const stack = [];
+    let inString = false;
+    let escaped = false;
+    for (let index = start; index < prompt.length; index += 1) {
+      const character = prompt[index];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (character === '\\') escaped = true;
+        else if (character === '"') inString = false;
+        continue;
+      }
+      if (character === '"') inString = true;
+      else if (character === '{' || character === '[') stack.push(character);
+      else if (character === '}' || character === ']') {
+        const opening = stack.pop();
+        if ((opening === '{' && character !== '}') || (opening === '[' && character !== ']')) break;
+        if (!stack.length) return prompt.slice(start, index + 1);
+      }
+    }
+  }
+  return '';
 };
 
 export async function runAssistantTool(prompt, selectedText = '') {
@@ -104,8 +138,13 @@ export async function runAssistantTool(prompt, selectedText = '') {
   });
   if (!tool && !additionalTool) return null;
 
-  const jsonSource = tool?.name === 'JSON Formatter' ? prompt.match(/\{[\s\S]*\}|\[[\s\S]*\]/)?.[0] : '';
-  let text = jsonSource || extractQuotedText(prompt) || extractUnquotedText(prompt) || selectedText;
+  const jsonSource = tool?.name === 'JSON Formatter' || jsonToolIds.has(additionalTool?.id)
+    ? extractJsonInput(prompt)
+    : '';
+  const quotedText = tool?.name === 'JSON Formatter' || jsonToolIds.has(additionalTool?.id)
+    ? ''
+    : extractQuotedText(prompt);
+  let text = jsonSource || quotedText || extractUnquotedText(prompt) || selectedText;
   if (!text && additionalTool?.id === 'roman-numeral-converter') {
     text = prompt.match(/\b[MDCLXVI]{1,15}\b/i)?.[0] || '';
   }
@@ -143,6 +182,9 @@ export async function runAssistantTool(prompt, selectedText = '') {
     if (additionalTool.id === 'timestamp-converter' && /\b(?:unix|timestamp)\b/i.test(prompt)) options.direction = 'toTimestamp';
     if (additionalTool.id === 'url-component-converter' && /\bdecode\b/i.test(prompt)) options.direction = 'decode';
     if (additionalTool.id === 'base64-url-safe-converter' && /\bdecode\b/i.test(prompt)) options.direction = 'decode';
+    if (additionalTool.id === 'json-pointer-query') {
+      options.pointer = prompt.match(/\b(?:pointer|path)\s*(?:is|=|:)?\s*["']?(\/[^ \t\r\n"'`]+)/i)?.[1]?.replace(/[.,!?;:]$/, '') || '';
+    }
     if (additionalTool.id === 'unit-converter') {
       const unit = prompt.match(/\b(km|kilometers?)\b[\s\S]*\b(miles?)\b/i) ? 'kmToMi'
         : prompt.match(/\b(miles?)\b[\s\S]*\b(km|kilometers?)\b/i) ? 'miToKm'

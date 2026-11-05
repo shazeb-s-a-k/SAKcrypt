@@ -347,6 +347,58 @@ const imageTools = {
   'image-compressor': (file, options) => imageToBlob(file, options, 'compress')
 };
 
+const parseCsvTable = (text, toolName) => {
+  const [headers, ...rows] = parseCsv(text);
+  if (!headers?.length || !rows.length) throw new Error('Include a CSV header row and at least one data row.');
+  if (headers.some(header => !header.trim())) throw new Error('Every CSV column needs a header.');
+  if (new Set(headers.map(header => header.toLocaleLowerCase())).size !== headers.length) {
+    throw new Error('CSV column names must be unique.');
+  }
+  if (rows.some(row => row.length !== headers.length)) {
+    throw new Error(`${toolName} needs every row to have the same number of columns as the header.`);
+  }
+  return { headers, rows };
+};
+
+const markdownSlug = heading => heading
+  .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+  .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+  .replace(/`([^`]+)`/g, '$1')
+  .replace(/<[^>]*>/g, '')
+  .normalize('NFKD')
+  .replace(/\p{Diacritic}/gu, '')
+  .toLocaleLowerCase()
+  .trim()
+  .replace(/[^\p{Letter}\p{Number}\s-]/gu, '')
+  .replace(/\s+/g, '-')
+  .replace(/-+/g, '-');
+
+const sqlIdentifier = value => {
+  const parts = value.split('.');
+  if (parts.some(part => !/^[a-z_][\w$]*$/i.test(part))) {
+    throw new Error('Use a valid SQL table name (letters, numbers, underscores, and optional schema).');
+  }
+  return parts.map(part => `"${part.replaceAll('"', '""')}"`).join('.');
+};
+
+const sqlValue = value => {
+  if (value === null) return 'NULL';
+  if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new Error('SQL output does not support non-finite numbers.');
+    return String(value);
+  }
+  const text = value && typeof value === 'object' ? JSON.stringify(value) : String(value);
+  return `'${text.replaceAll("'", "''")}'`;
+};
+
+const toGoFieldName = (key, index) => {
+  const words = key.match(/[\p{Letter}\p{Number}]+/gu) || [];
+  const name = words.map(word => word[0].toLocaleUpperCase() + word.slice(1)).join('');
+  const safeName = name || `Field${index + 1}`;
+  return /^\p{Letter}/u.test(safeName) ? safeName : `Field${safeName}`;
+};
+
 const makeTool = (categoryId, id, title, description, run, options = {}) => ({
   categoryId,
   id,
@@ -848,7 +900,356 @@ export const ADDITIONAL_TOOLS = [
     return `${upper ? converted[0].toUpperCase() + converted.slice(1) : converted}${punctuation}`;
   })),
   makeTool('utilities', 'url-encode-full-url', 'Full URL Encoder', 'Encode a complete URL string for safe use as a parameter in another URL.', text => encodeURIComponent(text.trim())),
-  makeTool('utilities', 'text-to-csv-column', 'Text List to CSV Column', 'Convert each non-empty line into a safely escaped single-column CSV file.', text => text.split(/\r\n|\r|\n/).filter(Boolean).map(toCsvCell).join('\n'))
+  makeTool('utilities', 'text-to-csv-column', 'Text List to CSV Column', 'Convert each non-empty line into a safely escaped single-column CSV file.', text => text.split(/\r\n|\r|\n/).filter(Boolean).map(toCsvCell).join('\n')),
+  makeTool('transformers', 'csv-transposer', 'CSV Transposer', 'Flip rows and columns in a CSV table while preserving quoted values.', text => {
+    const rows = parseCsv(text);
+    if (!rows.length) throw new Error('Enter a CSV table to transpose.');
+    const width = Math.max(...rows.map(row => row.length));
+    return Array.from({ length: width }, (_, column) =>
+      rows.map(row => row[column] ?? '').map(toCsvCell).join(',')
+    ).join('\n');
+  }, { keywords: 'spreadsheet pivot rotate switch rows columns transpose' }),
+  makeTool('transformers', 'csv-deduplicator', 'CSV Deduplicator', 'Remove duplicate CSV data rows while keeping the header and first occurrence.', (text, options) => {
+    const { headers, rows } = parseCsvTable(text, 'CSV Deduplicator');
+    const keyIndex = options.column ? headers.indexOf(options.column) : -1;
+    if (options.column && keyIndex === -1) throw new Error('Choose a column name that exists in the CSV header.');
+    const seen = new Set();
+    const uniqueRows = rows.filter(row => {
+      const key = JSON.stringify((keyIndex === -1 ? row : [row[keyIndex]]).map(value =>
+        options.caseSensitive === 'yes' ? value : value.toLocaleLowerCase()
+      ));
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return [headers, ...uniqueRows].map(row => row.map(toCsvCell).join(',')).join('\n');
+  }, { fields: [{ name: 'column', label: 'Deduplicate by column (blank = full row)', type: 'text', defaultValue: '' }, { name: 'caseSensitive', label: 'Case sensitive', type: 'select', defaultValue: 'no', options: [['no', 'No'], ['yes', 'Yes']] }], keywords: 'spreadsheet remove repeated unique records rows' }),
+  makeTool('transformers', 'csv-row-sorter', 'CSV Row Sorter', 'Sort CSV data rows by any column without moving the header.', (text, options) => {
+    const { headers, rows } = parseCsvTable(text, 'CSV Row Sorter');
+    const column = headers.indexOf(options.column);
+    if (column === -1) throw new Error('Choose a column name that exists in the CSV header.');
+    if (options.mode === 'numeric' && rows.some(row => !row[column].trim() || !Number.isFinite(Number(row[column])))) {
+      throw new Error('Every value in the selected column must be a number for numeric sorting.');
+    }
+    const sorted = [...rows].sort((left, right) => {
+      const a = left[column];
+      const b = right[column];
+      if (options.mode === 'numeric') return Number(a) - Number(b);
+      return a.localeCompare(b, undefined, { numeric: true, sensitivity: options.caseSensitive === 'yes' ? 'variant' : 'base' });
+    });
+    if (options.direction === 'descending') sorted.reverse();
+    return [headers, ...sorted].map(row => row.map(toCsvCell).join(',')).join('\n');
+  }, { fields: [{ name: 'column', label: 'Sort by column', type: 'text', defaultValue: '' }, { name: 'mode', label: 'Sort type', type: 'select', defaultValue: 'text', options: [['text', 'Text'], ['numeric', 'Numeric']] }, { name: 'direction', label: 'Direction', type: 'select', defaultValue: 'ascending', options: [['ascending', 'Ascending'], ['descending', 'Descending']] }, { name: 'caseSensitive', label: 'Case sensitive', type: 'select', defaultValue: 'no', options: [['no', 'No'], ['yes', 'Yes']] }], keywords: 'spreadsheet order rows alphabetically numerically' }),
+  makeTool('transformers', 'csv-row-filter', 'CSV Row Filter', 'Keep only CSV rows that match a column value or text condition.', (text, options) => {
+    const { headers, rows } = parseCsvTable(text, 'CSV Row Filter');
+    const column = headers.indexOf(options.column);
+    if (column === -1) throw new Error('Choose a column name that exists in the CSV header.');
+    const query = options.value ?? '';
+    const matches = rows.filter(row => {
+      const value = row[column];
+      const candidate = options.caseSensitive === 'yes' ? value : value.toLocaleLowerCase();
+      const expected = options.caseSensitive === 'yes' ? query : query.toLocaleLowerCase();
+      if (options.operator === 'contains') return candidate.includes(expected);
+      if (options.operator === 'startsWith') return candidate.startsWith(expected);
+      if (options.operator === 'endsWith') return candidate.endsWith(expected);
+      if (options.operator === 'notEmpty') return value.trim() !== '';
+      return candidate === expected;
+    });
+    return [headers, ...matches].map(row => row.map(toCsvCell).join(',')).join('\n');
+  }, { fields: [{ name: 'column', label: 'Filter column', type: 'text', defaultValue: '' }, { name: 'operator', label: 'Condition', type: 'select', defaultValue: 'contains', options: [['equals', 'Equals'], ['contains', 'Contains'], ['startsWith', 'Starts with'], ['endsWith', 'Ends with'], ['notEmpty', 'Is not empty']] }, { name: 'value', label: 'Match value', type: 'text', defaultValue: '' }, { name: 'caseSensitive', label: 'Case sensitive', type: 'select', defaultValue: 'no', options: [['no', 'No'], ['yes', 'Yes']] }], keywords: 'spreadsheet search select query rows data' }),
+  makeTool('utilities', 'markdown-toc-generator', 'Markdown TOC Generator', 'Build a linked table of contents from Markdown headings, including stable duplicate-heading links.', (text, options) => {
+    const maxDepth = Number(options.depth) || 6;
+    const seen = new Map();
+    const headings = text.split(/\r\n|\r|\n/).flatMap(line => {
+      const match = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
+      if (!match || match[1].length > maxDepth) return [];
+      const title = match[2].replace(/\\([\\`*_[\]{}()#+.!<>|-])/g, '$1').trim();
+      const base = markdownSlug(title) || 'section';
+      const count = seen.get(base) || 0;
+      seen.set(base, count + 1);
+      return [{ depth: match[1].length, title, slug: count ? `${base}-${count}` : base }];
+    });
+    if (!headings.length) throw new Error('Add Markdown headings such as ## Getting Started.');
+    return headings.map(({ depth, title, slug }) => `${'  '.repeat(depth - 1)}- [${title}](#${slug})`).join('\n');
+  }, { fields: [{ name: 'depth', label: 'Include headings through level', type: 'select', defaultValue: '6', options: [['2', 'H1–H2'], ['3', 'H1–H3'], ['4', 'H1–H4'], ['6', 'H1–H6']] }], assistantMatch: /\b(?:table of contents|toc)\b/i, keywords: 'readme navigation anchors heading outline' }),
+  makeTool('utilities', 'markdown-link-extractor', 'Markdown Link Extractor', 'Extract Markdown links and image URLs into a clean, copyable list.', text => {
+    const links = [...text.matchAll(/!?\[([^\]]*)\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g)]
+      .map(([, label, target]) => `${label || 'Image'}\t${target.replace(/^<|>$/g, '')}`);
+    return links.length ? links.join('\n') : 'No inline Markdown links were found.';
+  }, { keywords: 'readme markdown href image link urls' }),
+  makeTool('transformers', 'markdown-table-to-csv', 'Markdown Table to CSV', 'Convert a Markdown pipe table into escaped CSV rows.', text => {
+    const splitRow = line => {
+      const cells = [];
+      let cell = '';
+      let escaped = false;
+      for (const character of line.trim().replace(/^\|/, '').replace(/\|$/, '')) {
+        if (escaped) {
+          cell += character;
+          escaped = false;
+        } else if (character === '\\') {
+          escaped = true;
+        } else if (character === '|') {
+          cells.push(cell.trim());
+          cell = '';
+        } else {
+          cell += character;
+        }
+      }
+      cells.push(cell.trim());
+      return cells;
+    };
+    const rows = text.split(/\r\n|\r|\n/).filter(line => line.includes('|')).map(splitRow);
+    if (rows.length < 2) throw new Error('Paste a Markdown table with a header and at least one row.');
+    const dataRows = rows.filter(row => !row.every(cell => /^:?-{3,}:?$/.test(cell)));
+    if (dataRows.some(row => row.length !== dataRows[0].length)) throw new Error('Every Markdown table row must have the same number of columns.');
+    return dataRows.map(row => row.map(toCsvCell).join(',')).join('\n');
+  }, { keywords: 'markdown github spreadsheet export pipe table' }),
+  makeTool('transformers', 'json-flattener', 'JSON Flattener', 'Flatten nested JSON objects and arrays into JSON Pointer paths with JSON-typed values.', text => {
+    const value = JSON.parse(text);
+    const flattened = {};
+    const visit = (item, path) => {
+      if (item && typeof item === 'object' && Object.keys(item).length) {
+        Object.entries(item).forEach(([key, child]) => {
+          const segment = String(key).replaceAll('~', '~0').replaceAll('/', '~1');
+          visit(child, `${path}/${segment}`);
+        });
+      } else {
+        flattened[path] = item;
+      }
+    };
+    visit(value, '');
+    return JSON.stringify(flattened, null, 2);
+  }, { keywords: 'nested object flatten normalize data paths' }),
+  makeTool('utilities', 'json-pointer-query', 'JSON Pointer Query', 'Look up a value in JSON using an RFC 6901 JSON Pointer.', (text, options) => {
+    const pointer = options.pointer ?? '';
+    if (pointer && !pointer.startsWith('/')) throw new Error('A JSON Pointer must be empty for the root or start with /.');
+    if (/~(?![01])/.test(pointer)) throw new Error('In JSON Pointers, ~ must be escaped as ~0 or ~1.');
+    const value = pointer.split('/').slice(1).map(part => part.replaceAll('~1', '/').replaceAll('~0', '~'))
+      .reduce((current, key) => {
+        if (Array.isArray(current)) {
+          if (!/^(0|[1-9]\d*)$/.test(key) || Number(key) >= current.length) throw new Error(`Array index "${key}" was not found.`);
+          return current[Number(key)];
+        }
+        if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) {
+          throw new Error(`JSON property "${key}" was not found.`);
+        }
+        return current[key];
+      }, JSON.parse(text));
+    return JSON.stringify(value, null, 2) ?? String(value);
+  }, { fields: [{ name: 'pointer', label: 'JSON Pointer (for example /users/0/name)', type: 'text', defaultValue: '' }], keywords: 'json query path lookup rfc6901' }),
+  makeTool('transformers', 'json-to-sql-insert', 'JSON to SQL INSERT', 'Generate escaped SQL INSERT statements from a JSON object or array of objects.', (text, options) => {
+    const data = JSON.parse(text);
+    const records = Array.isArray(data) ? data : [data];
+    if (!records.length || records.some(record => !record || typeof record !== 'object' || Array.isArray(record))) {
+      throw new Error('Enter a JSON object or an array of JSON objects.');
+    }
+    const columns = Object.keys(records[0]);
+    if (!columns.length || records.some(record => columns.length !== Object.keys(record).length || columns.some(key => !Object.hasOwn(record, key)))) {
+      throw new Error('Every JSON object must have the same non-empty set of properties.');
+    }
+    const table = sqlIdentifier(options.table || 'records');
+    const names = columns.map(column => `"${column.replaceAll('"', '""')}"`).join(', ');
+    return records.map(record =>
+      `INSERT INTO ${table} (${names}) VALUES (${columns.map(column => sqlValue(record[column])).join(', ')});`
+    ).join('\n');
+  }, { fields: [{ name: 'table', label: 'SQL table name', type: 'text', defaultValue: 'records' }], keywords: 'database insert query postgres mysql sqlite' }),
+  makeTool('transformers', 'json-to-go-struct', 'JSON to Go Struct', 'Generate a Go struct with JSON tags from a sample JSON object.', text => {
+    const data = JSON.parse(text);
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Enter a JSON object to create a Go struct.');
+    const goFields = entries => {
+      const usedNames = new Set();
+      return entries.map(([key, value], index) => {
+        const baseName = toGoFieldName(key, index);
+        let name = baseName;
+        let suffix = 2;
+        while (usedNames.has(name)) name = `${baseName}${suffix++}`;
+        usedNames.add(name);
+        return `\t${name} ${goType(value)} ${JSON.stringify(`json:"${key}"`)}`;
+      });
+    };
+    const goType = value => {
+      if (value === null) return 'any';
+      if (typeof value === 'string') return 'string';
+      if (typeof value === 'boolean') return 'bool';
+      if (typeof value === 'number') return Number.isInteger(value) ? 'int64' : 'float64';
+      if (Array.isArray(value)) {
+        const types = [...new Set(value.map(goType))];
+        return `[]${types.length === 1 ? types[0] : 'any'}`;
+      }
+      return `struct {\n${goFields(Object.entries(value)).map(field => `\t${field}`).join('\n')}\n\t}`;
+    };
+    const fields = goFields(Object.entries(data));
+    if (!fields.length) throw new Error('The JSON object needs at least one property.');
+    return `type Root struct {\n${fields.join('\n')}\n}`;
+  }, { keywords: 'golang golang struct json model code generation' }),
+  makeTool('transformers', 'sql-in-clause-generator', 'SQL IN Clause Generator', 'Build a safely quoted SQL IN list from a comma-separated or line-separated value list.', (text, options) => {
+    const values = options.delimiter === 'lines'
+      ? text.split(/\r\n|\r|\n/).filter(value => value.trim())
+      : parseCsv(text).flat();
+    if (!values.length || values.every(value => !value.trim())) throw new Error('Enter at least one non-empty value.');
+    const items = options.valueType === 'number' ? values.map(value => {
+      const number = Number(value.trim());
+      if (!Number.isFinite(number)) throw new Error(`"${value}" is not a valid number.`);
+      return String(number);
+    }) : values.map(sqlValue);
+    return `(${items.join(', ')})`;
+  }, { fields: [{ name: 'delimiter', label: 'Input format', type: 'select', defaultValue: 'csv', options: [['csv', 'CSV values'], ['lines', 'One value per line']] }, { name: 'valueType', label: 'Value type', type: 'select', defaultValue: 'text', options: [['text', 'Text (quoted safely)'], ['number', 'Numbers']] }], keywords: 'database query where select list values' }),
+  makeTool('utilities', 'url-query-builder', 'URL Query Builder', 'Add query parameters to an absolute HTTP or HTTPS URL from key=value lines.', (text, options) => {
+    let url;
+    try { url = new URL(options.url); } catch { throw new Error('Enter a valid absolute URL in the URL field.'); }
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Only HTTP and HTTPS URLs are supported.');
+    parseCsv(text).flat().forEach((pair, index) => {
+      if (!pair) return;
+      const separator = pair.indexOf('=');
+      if (separator <= 0) throw new Error(`Line ${index + 1}: use key=value.`);
+      url.searchParams.append(pair.slice(0, separator).trim(), pair.slice(separator + 1).trim());
+    });
+    return url.toString();
+  }, { fields: [{ name: 'url', label: 'Base URL', type: 'text', defaultValue: 'https://example.com/search' }], placeholder: 'q=browser tools\npage=1', assistantMatch: /\b(?:build|add|create)\b.{0,30}\b(?:query parameters?|search params?)\b/i, keywords: 'URL search params query string builder' }),
+  makeTool('utilities', 'utm-link-builder', 'UTM Link Builder', 'Add properly encoded campaign tracking parameters to an HTTP or HTTPS URL.', (text, options) => {
+    let url;
+    try { url = new URL(text.trim()); } catch { throw new Error('Enter a valid absolute campaign URL.'); }
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Only HTTP and HTTPS URLs are supported.');
+    [['utm_source', options.source], ['utm_medium', options.medium], ['utm_campaign', options.campaign], ['utm_term', options.term], ['utm_content', options.content]]
+      .forEach(([key, value]) => { if (value.trim()) url.searchParams.set(key, value.trim()); });
+    if (!options.source.trim() || !options.medium.trim() || !options.campaign.trim()) {
+      throw new Error('Campaign source, medium, and name are required.');
+    }
+    return url.toString();
+  }, { fields: [{ name: 'source', label: 'Campaign source (required)', type: 'text', defaultValue: '' }, { name: 'medium', label: 'Campaign medium (required)', type: 'text', defaultValue: '' }, { name: 'campaign', label: 'Campaign name (required)', type: 'text', defaultValue: '' }, { name: 'term', label: 'Campaign term (optional)', type: 'text', defaultValue: '' }, { name: 'content', label: 'Campaign content (optional)', type: 'text', defaultValue: '' }], placeholder: 'https://example.com/product', assistantMatch: /\butm\b|\bcampaign tracking\b/i, keywords: 'analytics marketing tracking campaign link' }),
+  makeTool('utilities', 'url-extractor', 'URL Extractor', 'Find unique HTTP and HTTPS links in text and normalize valid URLs.', text => {
+    const candidates = text.match(/https?:\/\/[^\s<>"']+/gi) || [];
+    const urls = [...new Set(candidates.map(candidate => {
+      const cleaned = candidate.replace(/[.,!?;:)}\]]+$/g, '');
+      try {
+        const url = new URL(cleaned);
+        return ['http:', 'https:'].includes(url.protocol) ? url.toString() : '';
+      } catch { return ''; }
+    }).filter(Boolean))];
+    return urls.length ? urls.join('\n') : 'No HTTP or HTTPS URLs were found.';
+  }, { keywords: 'find links extract web addresses from text' }),
+  makeTool('utilities', 'regex-literal-escaper', 'Regex Literal Escaper', 'Escape special characters so text can be safely searched as a literal regular expression.', text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), { keywords: 'regular expression escape quote literal metacharacters' }),
+  makeTool('transformers', 'css-px-rem-converter', 'CSS px/rem Converter', 'Convert CSS pixel lengths to rem units or rem units back to pixels.', (text, options) => {
+    const rootSize = Number(options.rootSize);
+    if (!Number.isFinite(rootSize) || rootSize <= 0 || rootSize > 1000) throw new Error('Root font size must be a positive number no greater than 1,000 px.');
+    const toRem = options.direction === 'toRem';
+    const sourceUnit = toRem ? 'px' : 'rem';
+    const targetUnit = toRem ? 'rem' : 'px';
+    const pattern = new RegExp(`(-?(?:\\d+\\.?\\d*|\\.\\d+))${sourceUnit}\\b`, 'gi');
+    let found = false;
+    const result = text.replace(pattern, (_match, number) => {
+      found = true;
+      const converted = toRem ? Number(number) / rootSize : Number(number) * rootSize;
+      return `${Number(converted.toFixed(5))}${targetUnit}`;
+    });
+    if (!found) throw new Error(`No CSS ${sourceUnit} values were found.`);
+    return result;
+  }, { fields: [{ name: 'direction', label: 'Conversion', type: 'select', defaultValue: 'toRem', options: [['toRem', 'px to rem'], ['toPx', 'rem to px']] }, { name: 'rootSize', label: 'Root font size (px)', type: 'number', defaultValue: '16' }], keywords: 'css responsive typography units convert' }),
+  makeTool('transformers', 'css-clamp-generator', 'CSS clamp() Generator', 'Create a fluid CSS clamp() value from minimum and maximum sizes and viewport widths.', (_text, options) => {
+    const min = Number(options.minimum);
+    const max = Number(options.maximum);
+    const minViewport = Number(options.minViewport);
+    const maxViewport = Number(options.maxViewport);
+    if (![min, max, minViewport, maxViewport].every(Number.isFinite) || min < 0 || max < min || minViewport < 1 || maxViewport <= minViewport) {
+      throw new Error('Use valid sizes, with a larger maximum size and maximum viewport width.');
+    }
+    const slope = (max - min) / (maxViewport - minViewport) * 100;
+    const intercept = min - slope * minViewport / 100;
+    return `clamp(${min}px, calc(${Number(intercept.toFixed(4))}px + ${Number(slope.toFixed(4))}vw), ${max}px)`;
+  }, { fields: [{ name: 'minimum', label: 'Minimum size (px)', type: 'number', defaultValue: '16' }, { name: 'maximum', label: 'Maximum size (px)', type: 'number', defaultValue: '40' }, { name: 'minViewport', label: 'Minimum viewport width (px)', type: 'number', defaultValue: '320' }, { name: 'maxViewport', label: 'Maximum viewport width (px)', type: 'number', defaultValue: '1200' }], keywords: 'fluid responsive typography spacing css function' }),
+  makeTool('transformers', 'css-grid-generator', 'CSS Grid Generator', 'Generate a CSS Grid layout with configurable columns, gap, and alignment.', (_text, options) => {
+    const columns = Number(options.columns);
+    const gap = Number(options.gap);
+    if (!Number.isInteger(columns) || columns < 1 || columns > 12) throw new Error('Choose a whole number of columns from 1 to 12.');
+    if (!Number.isFinite(gap) || gap < 0 || gap > 500) throw new Error('Grid gap must be between 0 and 500 pixels.');
+    return `.grid-container {\n  display: grid;\n  grid-template-columns: repeat(${columns}, minmax(0, 1fr));\n  gap: ${gap}px;\n  align-items: ${options.alignment};\n}`;
+  }, { requiresInput: false, fields: [{ name: 'columns', label: 'Columns (1–12)', type: 'number', defaultValue: '3' }, { name: 'gap', label: 'Gap (px)', type: 'number', defaultValue: '16' }, { name: 'alignment', label: 'Vertical alignment', type: 'select', defaultValue: 'start', options: [['start', 'Start'], ['center', 'Center'], ['end', 'End'], ['stretch', 'Stretch']] }], keywords: 'layout responsive frontend design' }),
+  makeTool('transformers', 'html-boilerplate-generator', 'HTML Boilerplate Generator', 'Create a responsive HTML5 page with safe, escaped title and description metadata.', (_text, options) => {
+    const title = encodeEntities(options.title.trim() || 'New Page');
+    const description = encodeEntities(options.description.trim());
+    const themeColor = options.themeColor.trim() || '#111827';
+    if (!/^#[\da-f]{6}$/i.test(themeColor)) throw new Error('Enter a 6-digit hex theme color such as #112233.');
+    return `<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <meta name="theme-color" content="${themeColor}">\n  <meta name="description" content="${description}">\n  <title>${title}</title>\n</head>\n<body>\n  <main>\n    <h1>${title}</h1>\n  </main>\n</body>\n</html>`;
+  }, { requiresInput: false, fields: [{ name: 'title', label: 'Page title', type: 'text', defaultValue: 'New Page' }, { name: 'description', label: 'Description', type: 'text', defaultValue: '' }, { name: 'themeColor', label: 'Theme color', type: 'text', defaultValue: '#111827' }], keywords: 'starter template responsive webpage skeleton' }),
+  makeTool('utilities', 'robots-txt-generator', 'robots.txt Generator', 'Create a robots.txt file with crawler rules and an optional sitemap URL.', (_text, options) => {
+    const userAgent = options.userAgent.trim() || '*';
+    if (/[\r\n]/.test(userAgent)) throw new Error('User-agent must be a single line.');
+    const rules = [];
+    const paths = (value, label) => value.split(/[\r\n,]/).map(path => path.trim()).filter(Boolean).map(path => {
+      if (!path.startsWith('/') || /[\r\n]/.test(path)) throw new Error(`${label} paths must start with /.`);
+      return path;
+    });
+    rules.push(`User-agent: ${userAgent}`);
+    paths(options.disallow, 'Disallow').forEach(path => rules.push(`Disallow: ${path}`));
+    paths(options.allow, 'Allow').forEach(path => rules.push(`Allow: ${path}`));
+    if (options.sitemap.trim()) {
+      let sitemap;
+      try { sitemap = new URL(options.sitemap.trim()); } catch { throw new Error('Enter an absolute sitemap URL.'); }
+      if (!['http:', 'https:'].includes(sitemap.protocol)) throw new Error('The sitemap URL must use HTTP or HTTPS.');
+      rules.push('', `Sitemap: ${sitemap.toString()}`);
+    }
+    return rules.join('\n') + '\n';
+  }, { requiresInput: false, fields: [{ name: 'userAgent', label: 'User-agent', type: 'text', defaultValue: '*' }, { name: 'disallow', label: 'Disallow paths (one per line)', type: 'textarea', rows: 3, defaultValue: '/private/' }, { name: 'allow', label: 'Allow paths (one per line)', type: 'textarea', rows: 3, defaultValue: '/' }, { name: 'sitemap', label: 'Sitemap URL (optional)', type: 'text', defaultValue: '' }], assistantMatch: /\brobots\.txt\b/i, keywords: 'SEO crawler search engine indexing website' }),
+  makeTool('utilities', 'xml-sitemap-generator', 'XML Sitemap Generator', 'Generate a basic XML sitemap from one absolute HTTP or HTTPS URL per line.', text => {
+    const urls = text.split(/\r\n|\r|\n/).map(line => line.trim()).filter(Boolean);
+    if (!urls.length) throw new Error('Enter at least one page URL.');
+    const normalized = urls.map(value => {
+      let url;
+      try { url = new URL(value); } catch { throw new Error(`Invalid absolute URL: ${value}`); }
+      if (!['http:', 'https:'].includes(url.protocol) || url.hash) throw new Error(`Use an HTTP or HTTPS page URL without a fragment: ${value}`);
+      return url.toString();
+    });
+    const unique = [...new Set(normalized)];
+    return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${unique.map(url => `  <url><loc>${encodeEntities(url)}</loc></url>`).join('\n')}\n</urlset>`;
+  }, { keywords: 'SEO search indexing website pages crawl' }),
+  makeTool('utilities', 'gitignore-generator', '.gitignore Generator', 'Create a starter .gitignore for common programming languages and development platforms.', (_text, options) => {
+    const templates = {
+      node: '# Node\nnode_modules/\ndist/\ncoverage/\n.env\n.env.*\n!.env.example\nnpm-debug.log*\n',
+      react: '# React / Vite\nnode_modules/\ndist/\ncoverage/\n.env\n.env.*\n!.env.example\n.vite/\n',
+      python: '# Python\n__pycache__/\n*.py[cod]\n.venv/\nvenv/\n.pytest_cache/\n.mypy_cache/\n.env\n',
+      java: '# Java\n*.class\n*.jar\n/target/\n.gradle/\nbuild/\n.idea/\n',
+      go: '# Go\n*.exe\n*.test\n/vendor/\n.env\n',
+      rust: '# Rust\n/target/\n',
+      macos: '# macOS\n.DS_Store\n.AppleDouble\n.LSOverride\n',
+      windows: '# Windows\nThumbs.db\nDesktop.ini\n$RECYCLE.BIN/\n*.lnk\n'
+    };
+    return templates[options.template] || templates.node;
+  }, { requiresInput: false, fields: [{ name: 'template', label: 'Project type', type: 'select', defaultValue: 'node', options: [['node', 'Node.js'], ['react', 'React / Vite'], ['python', 'Python'], ['java', 'Java'], ['go', 'Go'], ['rust', 'Rust'], ['macos', 'macOS'], ['windows', 'Windows']] }], assistantMatch: /\.gitignore\b/i, keywords: 'git source control ignore build artifacts' }),
+  makeTool('utilities', 'env-example-generator', '.env.example Generator', 'Create a safe .env.example containing variable names only; supplied values are discarded.', text => {
+    const names = [...new Set(text.split(/\r\n|\r|\n/).map(line => line.trim()).filter(Boolean).map(line => line.split('=', 1)[0].trim()))];
+    if (!names.length) throw new Error('Enter environment variable names, one per line.');
+    if (names.some(name => !/^[A-Za-z_][A-Za-z0-9_]*$/.test(name))) throw new Error('Variable names must use letters, numbers, and underscores, and cannot start with a number.');
+    return names.map(name => `${name}=`).join('\n');
+  }, { assistantMatch: /\.env\.example\b/i, keywords: 'environment variables template configuration secret scrub remove values' }),
+  makeTool('transformers', 'http-fetch-snippet-generator', 'HTTP Fetch Snippet Generator', 'Generate a safe JavaScript fetch() example from a URL, method, headers, and body.', (_text, options) => {
+    let url;
+    try { url = new URL(options.url.trim()); } catch { throw new Error('Enter a valid absolute HTTP or HTTPS URL.'); }
+    if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Only HTTP and HTTPS URLs are supported.');
+    let headers;
+    try { headers = JSON.parse(options.headers || '{}'); } catch { throw new Error('Headers must be a valid JSON object.'); }
+    if (!headers || typeof headers !== 'object' || Array.isArray(headers) || Object.values(headers).some(value => typeof value !== 'string')) {
+      throw new Error('Headers must be a JSON object with string values.');
+    }
+    const method = options.method;
+    if (options.body && ['GET', 'HEAD'].includes(method)) throw new Error(`${method} requests cannot include a request body.`);
+    const request = { method, headers };
+    if (options.body && !['GET', 'HEAD'].includes(method)) request.body = options.body;
+    return `const response = await fetch(${JSON.stringify(url.toString())}, ${JSON.stringify(request, null, 2)});\nconst data = await response.json();\nconsole.log(data);`;
+  }, { requiresInput: false, fields: [{ name: 'url', label: 'Request URL', type: 'text', defaultValue: 'https://api.example.com/items' }, { name: 'method', label: 'HTTP method', type: 'select', defaultValue: 'GET', options: [['GET', 'GET'], ['POST', 'POST'], ['PUT', 'PUT'], ['PATCH', 'PATCH'], ['DELETE', 'DELETE']] }, { name: 'headers', label: 'Headers (JSON object)', type: 'textarea', rows: 3, defaultValue: '{}' }, { name: 'body', label: 'Request body', type: 'textarea', rows: 4, defaultValue: '' }], keywords: 'API REST request fetch code snippet JavaScript client' }),
+  makeTool('utilities', 'html-meta-inspector', 'HTML Meta Inspector', 'Inspect pasted HTML and summarize its title, description, canonical URL, and social preview tags.', text => {
+    const document = new DOMParser().parseFromString(text, 'text/html');
+    const getMeta = selector => document.querySelector(selector)?.getAttribute('content')?.trim() || 'Not set';
+    const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href')?.trim() || 'Not set';
+    return [
+      `Title: ${document.title.trim() || 'Not set'}`,
+      `Description: ${getMeta('meta[name="description"]')}`,
+      `Canonical URL: ${canonical}`,
+      `Open Graph title: ${getMeta('meta[property="og:title"]')}`,
+      `Open Graph description: ${getMeta('meta[property="og:description"]')}`,
+      `Open Graph image: ${getMeta('meta[property="og:image"]')}`,
+      `Twitter card: ${getMeta('meta[name="twitter:card"]')}`
+    ].join('\n');
+  }, { keywords: 'SEO website preview social sharing open graph head tags' })
 ];
 
 export const getAdditionalTool = id => ADDITIONAL_TOOLS.find(tool => tool.id === id);
@@ -857,5 +1258,6 @@ export async function runAdditionalTool(id, input, options = {}) {
   const tool = getAdditionalTool(id);
   if (!tool) throw new Error('That tool is not available.');
   if (tool.inputMode !== 'image' && typeof input !== 'string') throw new Error('Enter text to process.');
-  return tool.run(input, options);
+  const defaults = Object.fromEntries(tool.fields.map(field => [field.name, field.defaultValue ?? '']));
+  return tool.run(input, { ...defaults, ...options });
 }
