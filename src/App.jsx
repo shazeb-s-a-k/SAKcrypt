@@ -1,78 +1,78 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import PhantomText from './pages/tools/PhantomText';
-import CyberVault from './pages/tools/CyberVault';
-import RegexTester from './pages/tools/RegexTester';
-import UUIDGenerator from './pages/tools/UUIDGenerator';
-import QRCodeGenerator from './pages/tools/QRCodeGenerator';
-import SonicTransfer from './pages/tools/SonicTransfer';
-import AIImageGenerator from './pages/tools/AIImageGenerator';
-import APIKeyTester from './pages/tools/APIKeyTester';
-import HashEngine from './pages/tools/HashEngine';
-import JWTInspector from './pages/tools/JWTInspector';
-import Base64Converter from './pages/tools/Base64Converter';
-import JSONFormatter from './pages/tools/JSONFormatter';
-import URLEncoder from './pages/tools/URLEncoder';
-import TextTools from './pages/tools/TextTools';
-import NumberBaseConverter from './pages/tools/NumberBaseConverter';
-import PasswordStrength from './pages/tools/PasswordStrength';
-import EXIFScrubber from './pages/tools/EXIFScrubber';
-import NetworkScanner from './pages/tools/NetworkScanner';
-import FileEncryptor from './pages/tools/FileEncryptor';
-import BcryptGenerator from './pages/tools/BcryptGenerator';
-import LoremIpsum from './pages/tools/LoremIpsum';
-import MarkdownPreviewer from './pages/tools/MarkdownPreviewer';
-import CronJobParser from './pages/tools/CronJobParser';
-import CSSMinifier from './pages/tools/CSSMinifier';
-import HTTPStatusCodes from './pages/tools/HTTPStatusCodes';
-import MetaTagGenerator from './pages/tools/MetaTagGenerator';
-import XMLFormatter from './pages/tools/XMLFormatter';
-import SQLFormatter from './pages/tools/SQLFormatter';
-import MarkdownToHTML from './pages/tools/MarkdownToHTML';
-import JWTGenerator from './pages/tools/JWTGenerator';
-import YAMLToJSON from './pages/tools/YAMLToJSON';
-import DNSLookup from './pages/tools/DNSLookup';
-import RandomStringGen from './pages/tools/RandomStringGen';
-import JSONToYAML from './pages/tools/JSONToYAML';
-import HMACGenerator from './pages/tools/HMACGenerator';
-import ColorPaletteGen from './pages/tools/ColorPaletteGen';
-import AIPromptOptimizer from './pages/tools/AIPromptOptimizer';
-import AICodeExplainer from './pages/tools/AICodeExplainer';
-import AIRegexGenerator from './pages/tools/AIRegexGenerator';
-import PortScanner from './pages/tools/PortScanner';
-import SSLChecker from './pages/tools/SSLChecker';
-import RSAKeyGenerator from './pages/tools/RSAKeyGenerator';
-import ChmodCalculator from './pages/tools/ChmodCalculator';
-import IPSubnetCalculator from './pages/tools/IPSubnetCalculator';
-import SVGPlaceholderGen from './pages/tools/SVGPlaceholderGen';
-import ASCIIArtGenerator from './pages/tools/ASCIIArtGenerator';
-import WiFiQRGenerator from './pages/tools/WiFiQRGenerator';
-import FakeDataGenerator from './pages/tools/FakeDataGenerator';
-import CRONJobGenerator from './pages/tools/CRONJobGenerator';
-import JWTDecoder from './pages/tools/JWTDecoder';
-import Base64FileEncoder from './pages/tools/Base64FileEncoder';
-import JSONToCSV from './pages/tools/JSONToCSV';
-import HTMLToJSXConverter from './pages/tools/HTMLToJSXConverter';
-import LLMChatSandbox from './pages/tools/LLMChatSandbox';
-import GlassmorphismGen from "./pages/tools/GlassmorphismGen";
-import BrowserFingerprint from "./pages/tools/BrowserFingerprint";
-import PayloadObfuscator from "./pages/tools/PayloadObfuscator";
-import ColorContrastChecker from "./pages/tools/ColorContrastChecker";
-import CodeToImage from "./pages/tools/CodeToImage";
-import AIPersonaGen from "./pages/tools/AIPersonaGen";
-import TextDiffViewer from "./pages/tools/TextDiffViewer";
-import CORSTester from "./pages/tools/CORSTester";
-import MarkdownTableGen from "./pages/tools/MarkdownTableGen";
-import KeypairGen from "./pages/tools/KeypairGen";
-import BIP39Generator from "./pages/tools/BIP39Generator";
-import GraphQLPlayground from "./pages/tools/GraphQLPlayground";
-import AES256GCMEncryptor from "./pages/tools/AES256GCMEncryptor";
-import DockerComposeGen from "./pages/tools/DockerComposeGen";
-import SQLQueryBuilder from "./pages/tools/SQLQueryBuilder";
-import APIKeyLaboratory from './pages/tools/APIKeyLaboratory';
+const PhantomText = React.lazy(() => import('./pages/tools/PhantomText'));
+const CyberVault = React.lazy(() => import('./pages/tools/CyberVault'));
+const RegexTester = React.lazy(() => import('./pages/tools/RegexTester'));
+const UUIDGenerator = React.lazy(() => import('./pages/tools/UUIDGenerator'));
+const QRCodeGenerator = React.lazy(() => import('./pages/tools/QRCodeGenerator'));
+const SonicTransfer = React.lazy(() => import('./pages/tools/SonicTransfer'));
+const AIImageGenerator = React.lazy(() => import('./pages/tools/AIImageGenerator'));
+const APIKeyTester = React.lazy(() => import('./pages/tools/APIKeyTester'));
+const HashEngine = React.lazy(() => import('./pages/tools/HashEngine'));
+const JWTInspector = React.lazy(() => import('./pages/tools/JWTInspector'));
+const Base64Converter = React.lazy(() => import('./pages/tools/Base64Converter'));
+const JSONFormatter = React.lazy(() => import('./pages/tools/JSONFormatter'));
+const URLEncoder = React.lazy(() => import('./pages/tools/URLEncoder'));
+const TextTools = React.lazy(() => import('./pages/tools/TextTools'));
+const NumberBaseConverter = React.lazy(() => import('./pages/tools/NumberBaseConverter'));
+const PasswordStrength = React.lazy(() => import('./pages/tools/PasswordStrength'));
+const EXIFScrubber = React.lazy(() => import('./pages/tools/EXIFScrubber'));
+const NetworkScanner = React.lazy(() => import('./pages/tools/NetworkScanner'));
+const FileEncryptor = React.lazy(() => import('./pages/tools/FileEncryptor'));
+const BcryptGenerator = React.lazy(() => import('./pages/tools/BcryptGenerator'));
+const LoremIpsum = React.lazy(() => import('./pages/tools/LoremIpsum'));
+const MarkdownPreviewer = React.lazy(() => import('./pages/tools/MarkdownPreviewer'));
+const CronJobParser = React.lazy(() => import('./pages/tools/CronJobParser'));
+const CSSMinifier = React.lazy(() => import('./pages/tools/CSSMinifier'));
+const HTTPStatusCodes = React.lazy(() => import('./pages/tools/HTTPStatusCodes'));
+const MetaTagGenerator = React.lazy(() => import('./pages/tools/MetaTagGenerator'));
+const XMLFormatter = React.lazy(() => import('./pages/tools/XMLFormatter'));
+const SQLFormatter = React.lazy(() => import('./pages/tools/SQLFormatter'));
+const MarkdownToHTML = React.lazy(() => import('./pages/tools/MarkdownToHTML'));
+const JWTGenerator = React.lazy(() => import('./pages/tools/JWTGenerator'));
+const YAMLToJSON = React.lazy(() => import('./pages/tools/YAMLToJSON'));
+const DNSLookup = React.lazy(() => import('./pages/tools/DNSLookup'));
+const RandomStringGen = React.lazy(() => import('./pages/tools/RandomStringGen'));
+const JSONToYAML = React.lazy(() => import('./pages/tools/JSONToYAML'));
+const HMACGenerator = React.lazy(() => import('./pages/tools/HMACGenerator'));
+const ColorPaletteGen = React.lazy(() => import('./pages/tools/ColorPaletteGen'));
+const AIPromptOptimizer = React.lazy(() => import('./pages/tools/AIPromptOptimizer'));
+const AICodeExplainer = React.lazy(() => import('./pages/tools/AICodeExplainer'));
+const AIRegexGenerator = React.lazy(() => import('./pages/tools/AIRegexGenerator'));
+const PortScanner = React.lazy(() => import('./pages/tools/PortScanner'));
+const SSLChecker = React.lazy(() => import('./pages/tools/SSLChecker'));
+const RSAKeyGenerator = React.lazy(() => import('./pages/tools/RSAKeyGenerator'));
+const ChmodCalculator = React.lazy(() => import('./pages/tools/ChmodCalculator'));
+const IPSubnetCalculator = React.lazy(() => import('./pages/tools/IPSubnetCalculator'));
+const SVGPlaceholderGen = React.lazy(() => import('./pages/tools/SVGPlaceholderGen'));
+const ASCIIArtGenerator = React.lazy(() => import('./pages/tools/ASCIIArtGenerator'));
+const WiFiQRGenerator = React.lazy(() => import('./pages/tools/WiFiQRGenerator'));
+const FakeDataGenerator = React.lazy(() => import('./pages/tools/FakeDataGenerator'));
+const CRONJobGenerator = React.lazy(() => import('./pages/tools/CRONJobGenerator'));
+const JWTDecoder = React.lazy(() => import('./pages/tools/JWTDecoder'));
+const Base64FileEncoder = React.lazy(() => import('./pages/tools/Base64FileEncoder'));
+const JSONToCSV = React.lazy(() => import('./pages/tools/JSONToCSV'));
+const HTMLToJSXConverter = React.lazy(() => import('./pages/tools/HTMLToJSXConverter'));
+const LLMChatSandbox = React.lazy(() => import('./pages/tools/LLMChatSandbox'));
+const GlassmorphismGen = React.lazy(() => import('./pages/tools/GlassmorphismGen'));
+const BrowserFingerprint = React.lazy(() => import('./pages/tools/BrowserFingerprint'));
+const PayloadObfuscator = React.lazy(() => import('./pages/tools/PayloadObfuscator'));
+const ColorContrastChecker = React.lazy(() => import('./pages/tools/ColorContrastChecker'));
+const CodeToImage = React.lazy(() => import('./pages/tools/CodeToImage'));
+const AIPersonaGen = React.lazy(() => import('./pages/tools/AIPersonaGen'));
+const TextDiffViewer = React.lazy(() => import('./pages/tools/TextDiffViewer'));
+const CORSTester = React.lazy(() => import('./pages/tools/CORSTester'));
+const MarkdownTableGen = React.lazy(() => import('./pages/tools/MarkdownTableGen'));
+const KeypairGen = React.lazy(() => import('./pages/tools/KeypairGen'));
+const BIP39Generator = React.lazy(() => import('./pages/tools/BIP39Generator'));
+const GraphQLPlayground = React.lazy(() => import('./pages/tools/GraphQLPlayground'));
+const AES256GCMEncryptor = React.lazy(() => import('./pages/tools/AES256GCMEncryptor'));
+const DockerComposeGen = React.lazy(() => import('./pages/tools/DockerComposeGen'));
+const SQLQueryBuilder = React.lazy(() => import('./pages/tools/SQLQueryBuilder'));
+const APIKeyLaboratory = React.lazy(() => import('./pages/tools/APIKeyLaboratory'));
 import LandingPage from './pages/LandingPage';
-import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Server, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, Tags, FileArchive, Table, Code2, Bot, Stethoscope } from 'lucide-react';
+import { Shield, Key, Regex, Hash, QrCode, Heart, Radio, KeyRound, Fingerprint, Code, FileCode, Braces, Link2, Type, Binary, ShieldAlert, ImageMinus, Network, FileLock, FileText, Clock, Minimize2, Database, ArrowLeftRight, Settings, FileJson, Globe, Shuffle, Palette, Fingerprint as HmacIcon, Wand2, HelpCircle, ShieldCheck, LockKeyhole, Server, Calculator, Image as ImageIcon, Wifi, Users, Baseline, Calendar, FileLock2, FileArchive, Table, Code2, Bot, Stethoscope, Home, LayoutGrid, Sparkles } from 'lucide-react';
 import Logo from './components/Logo';
 import { ToastProvider } from './components/ToastProvider';
 import { SupportProvider, useSupport } from './components/SupportProvider';
@@ -98,7 +98,13 @@ const TopBar = () => {
           <span>SAKrypt Suite</span>
         </div>
       </Link>
-      <div className="nav-links">
+      <div className="nav-primary-links">
+        <Link to="/" className={`nav-primary-link ${isActive('/')}`}><Home size={16} /> Home</Link>
+        <a href="/#browse-matrix" className="nav-primary-link"><LayoutGrid size={16} /> Browse tools</a>
+        <a href="/#sak-ai" className="nav-primary-link"><Bot size={16} /> S.A.K AI</a>
+        <Link to="/llm-chat" className={`nav-primary-link ${isActive('/llm-chat')}`}><Sparkles size={16} /> AI Chat</Link>
+      </div>
+      <div className="nav-links legacy-tool-nav">
         <Link to="/phantom" className={`nav-link ${isActive('/phantom')}`} title="Phantom Text (Stealth Morse)">
           <Shield className="icon-sm" /> Phantom
         </Link>
@@ -249,10 +255,10 @@ const TopBar = () => {
         <Link to="/fake-data" className={`nav-link ${isActive('/fake-data')}`} title="Fake Data Generator">
           <Users className="icon-sm" /> Fake Data
         </Link>
-        <Link to="/cron" className={`nav-link ${isActive('/cron')}`} title="CRON Generator">
+        <Link to="/cron-generator" className={`nav-link ${isActive('/cron-generator')}`} title="CRON Generator">
           <Calendar className="icon-sm" /> CRON Gen
         </Link>
-        <Link to="/jwt" className={`nav-link ${isActive('/jwt')}`} title="JWT Decoder">
+        <Link to="/jwt-decode" className={`nav-link ${isActive('/jwt-decode')}`} title="JWT Decoder">
           <FileLock2 className="icon-sm" /> JWT Decode
         </Link>
         <Link to="/base64file" className={`nav-link ${isActive('/base64file')}`} title="Base64 File Encoder">
@@ -302,12 +308,35 @@ const PageWrapper = ({ children }) => {
   );
 };
 
+class RouteErrorBoundary extends React.Component {
+  state = { error: null };
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="route-error" role="alert">
+          <p>Could not load this page: {this.state.error.message}</p>
+          <button type="button" onClick={() => window.location.reload()}>Reload page</button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <RouteErrorBoundary>
+        <React.Suspense fallback={<div className="route-loading" role="status">Loading tool...</div>}>
+          <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
         <Route path="/phantom" element={<PageWrapper><PhantomText /></PageWrapper>} />
         <Route path="/sonic" element={<PageWrapper><SonicTransfer /></PageWrapper>} />
@@ -357,8 +386,8 @@ const AnimatedRoutes = () => {
         <Route path="/ascii" element={<PageWrapper><ASCIIArtGenerator /></PageWrapper>} />
         <Route path="/wifi-qr" element={<PageWrapper><WiFiQRGenerator /></PageWrapper>} />
         <Route path="/fake-data" element={<PageWrapper><FakeDataGenerator /></PageWrapper>} />
-        <Route path="/cron" element={<PageWrapper><CRONJobGenerator /></PageWrapper>} />
-        <Route path="/jwt" element={<PageWrapper><JWTDecoder /></PageWrapper>} />
+        <Route path="/cron-generator" element={<PageWrapper><CRONJobGenerator /></PageWrapper>} />
+        <Route path="/jwt-decode" element={<PageWrapper><JWTDecoder /></PageWrapper>} />
         <Route path="/base64file" element={<PageWrapper><Base64FileEncoder /></PageWrapper>} />
         <Route path="/json2csv" element={<PageWrapper><JSONToCSV /></PageWrapper>} />
         <Route path="/html2jsx" element={<PageWrapper><HTMLToJSXConverter /></PageWrapper>} />
@@ -379,7 +408,9 @@ const AnimatedRoutes = () => {
         <Route path="/aes-gcm" element={<PageWrapper><AES256GCMEncryptor /></PageWrapper>} />
         <Route path="/docker-compose" element={<PageWrapper><DockerComposeGen /></PageWrapper>} />
         <Route path="/sql-builder" element={<PageWrapper><SQLQueryBuilder /></PageWrapper>} />
-      </Routes>
+          </Routes>
+        </React.Suspense>
+      </RouteErrorBoundary>
     </AnimatePresence>
   );
 };

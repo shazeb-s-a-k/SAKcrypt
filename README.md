@@ -22,10 +22,22 @@ It features an array of powerful tools, including encoding secret payloads into 
 - **UUID Generator**: Instantly generate universally unique identifiers (v4).
 - **AI Image Generator**: Choose AI Horde, Pollinations Classic, or the hosted Cloudflare SDXL model; generate images in-app with selectable models, aspect ratios, and resolutions.
 - **Mass Generate**: Upload a text file with one prompt per line, generate images sequentially, and download the results together as an ordered ZIP archive.
+- **S.A.K AI**: Ask the home-page assistant to find tools across the suite or run supported local actions. Connect Gemini, OpenAI, or Groq for model-powered answers; without a key, local actions and tool discovery still work.
+- **Organized tool catalog**: Browse the 73 tools in six categories, search by name or capability, and switch between a full grid and horizontal rows.
+- Categories are ordered by use case: A.I & Neural Intelligence, Stealth & Covert Systems, Cyber Security & Encryption, Web & Network Protocols, Code & Data Transformers, then System Utilities & Generators. Tools within each category are curated by usefulness.
+- **Local file drafts**: Open text files up to 200 KB, optionally include a selected file in a prompt, save generated drafts, or explicitly confirm before replacing a selected file.
+
+### S.A.K AI privacy and file access
+
+The assistant can search and link to all catalog tools. Its current built-in local actions are Phantom Text (stealth encoding), JSON formatting, Base64 and URL conversion, UUID generation, SHA hashing, and basic text operations. Those actions run in the browser without an AI provider. Other tools can be found and opened from chat but are not executed through chat yet; tools that require custom settings or user review still need to be operated directly.
+
+AI requests go directly from the browser to the selected provider. Provider keys use the same browser-local storage as the AI Chat sandbox; prompts and any file the user explicitly includes are sent to that provider. Tool results are produced by registered local actions, not by model claims.
+
+File access requires a user action. The assistant can read a selected text file up to 200 KB; file contents are not included in prompts unless **Include in next prompt** is checked. Saving a draft uses the browser's save dialog or a download. Replacing an opened file requires browser write permission and a separate confirmation; browsers without the File System Access API can still open files and save drafts as downloads.
 
 ## 💎 Design & Animations
 
-Built with a massive focus on user experience and aesthetics. It utilizes a **Vercel-inspired** clean dark theme, combined with buttery-smooth **Framer Motion** page transitions, a beautifully animated landing page, interactive top navigation, and micro-animations to impress everyone who uses it. Fully responsive for PC, Mac, Android, and iOS.
+Built with a massive focus on user experience and aesthetics. It utilizes a **Vercel-inspired** clean dark theme, combined with buttery-smooth **Framer Motion** page transitions, a beautifully animated landing page, interactive top navigation, and micro-animations to impress everyone who uses it. Tool pages are loaded on demand to keep the initial download lighter. Fully responsive for PC, Mac, Android, and iOS.
 
 ## 🚀 Quick Start (Local Deployment)
 

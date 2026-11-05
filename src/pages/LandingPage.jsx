@@ -9,14 +9,15 @@ import {
   Calendar, FileLock2, Tags, FileArchive, Table, Code2, Terminal, 
   BookTemplate, FileType2, Bot, Search, Stethoscope, Monitor, Eye, 
   ChevronLeft, ChevronRight, LayoutGrid, SlidersHorizontal, ArrowUpRight, 
-  Layers, X, Sparkles
+  Layers, X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import { useSupport } from '../components/SupportProvider';
+import SAKAI from '../components/SAKAI';
 
-// Curated high-tech categories
+// Curated tool families, ordered by the tasks visitors most often start with.
 const CATEGORIES = [
   {
     id: 'ai',
@@ -29,10 +30,20 @@ const CATEGORIES = [
     icon: Bot
   },
   {
+    id: 'stealth',
+    name: 'Stealth & Covert Systems',
+    shortName: 'Stealth',
+    code: '02 // COVERT',
+    badge: 'ZERO FOOTPRINT',
+    color: '#a855f7',
+    desc: 'Inaudible acoustic data transmission, zero-width steganography & privacy EXIF scrubbers',
+    icon: Shield
+  },
+  {
     id: 'encryption',
     name: 'Cyber Security & Encryption',
     shortName: 'Encryption',
-    code: '02 // CIPHERS',
+    code: '03 // CIPHERS',
     badge: 'DEFENSE PROTOCOLS',
     color: '#10b981',
     desc: 'Military-grade AES-256-GCM, RSA/EC keypairs, BIP39 seed wallets, JWTs & cryptographic ciphers',
@@ -42,21 +53,11 @@ const CATEGORIES = [
     id: 'web',
     name: 'Web & Network Protocols',
     shortName: 'Web & Net',
-    code: '03 // NETWORK',
+    code: '04 // NETWORK',
     badge: 'PROTOCOL STACK',
     color: '#3b82f6',
     desc: 'GraphQL playground, port & network scanners, DNS diagnostics, CORS & subnet engines',
     icon: Globe
-  },
-  {
-    id: 'stealth',
-    name: 'Stealth & Covert Systems',
-    shortName: 'Stealth',
-    code: '04 // COVERT',
-    badge: 'ZERO FOOTPRINT',
-    color: '#a855f7',
-    desc: 'Inaudible acoustic data transmission, zero-width steganography & privacy EXIF scrubbers',
-    icon: Shield
   },
   {
     id: 'transformers',
@@ -79,6 +80,49 @@ const CATEGORIES = [
     icon: Cpu
   }
 ];
+
+const TOOL_PRIORITY = {
+  ai: [
+    'LLM Chat Sandbox', 'AI Prompt Optimizer', 'AI Code Explainer', 'AI Regex Generator',
+    'AI Image Generator', 'AI Persona Gen', 'API Key Tester', 'API Key Laboratory'
+  ],
+  stealth: ['Phantom Text', 'EXIF Scrubber', 'Sonic Transfer'],
+  encryption: [
+    'Cyber Vault', 'Password Strength', 'File Encryptor', 'AES-256-GCM Encryptor',
+    'Hash Engine', 'Bcrypt Generator', 'JWT Inspector', 'JWT Decoder', 'JWT Generator',
+    'Keypair Generator', 'RSA Key Generator', 'HMAC Generator', 'BIP39 Seed Generator',
+    'SSL Checker', 'Device Fingerprint', 'Payload Obfuscator'
+  ],
+  web: [
+    'JSON Formatter', 'URL Encoder', 'DNS Lookup', 'IP Subnet Calculator',
+    'GraphQL Playground', 'HTTP Status Codes', 'CORS Tester', 'Port Scanner',
+    'Network Scanner', 'CSS Minifier', 'Meta Tag Generator', 'Color Contrast Checker',
+    'Glassmorphism Generator'
+  ],
+  transformers: [
+    'JSON to CSV', 'YAML to JSON', 'JSON to YAML', 'Base64 Converter',
+    'HTML to JSX Converter', 'Markdown to HTML', 'XML Formatter', 'SQL Formatter',
+    'Base Converter', 'Base64 File Encoder', 'Visual SQL Builder', 'Docker Compose Gen',
+    'CSV to JSON', 'Curl Command Gen'
+  ],
+  utilities: [
+    'UUID Generator', 'QR Code Engine', 'WiFi QR Generator', 'Regex Sandbox',
+    'Text Tools', 'Text Diff Viewer', 'CRON Job Generator', 'Cron Job Parser',
+    'Fake Data Generator', 'Random String Gen', 'Color Palette Gen',
+    'Lorem Ipsum Generator', 'Markdown Previewer', 'Markdown Table Gen',
+    'Chmod Calculator', 'SVG Placeholder Gen', 'ASCII Art Generator', 'Code to Image',
+    'Github Readme Gen'
+  ]
+};
+
+const sortToolsByUsefulness = (tools, categoryId) => {
+  const priorities = TOOL_PRIORITY[categoryId];
+  const rank = title => {
+    const index = priorities.indexOf(title);
+    return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+  };
+  return [...tools].sort((a, b) => rank(a.title) - rank(b.title));
+};
 
 // All 73 tools mapped with precision
 const features = [
@@ -262,7 +306,7 @@ const features = [
     tag: 'DECODE',
     desc: 'Decode and inspect JSON Web Token payloads offline without sharing secret.',
     icon: <FileLock2 />,
-    path: '/jwt',
+    path: '/jwt-decode',
     color: '#14b8a6'
   },
   {
@@ -605,7 +649,7 @@ const features = [
     tag: 'SCHEDULE',
     desc: 'Generate and explain complex CRON schedule expressions with human text.',
     icon: <Calendar />,
-    path: '/cron',
+    path: '/cron-generator',
     color: '#ec4899'
   },
   {
@@ -955,7 +999,7 @@ const LandingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
   const [sectionViewModes, setSectionViewModes] = useState({}); // { [catId]: 'carousel' | 'grid' }
-  const [globalViewMode, setGlobalViewMode] = useState('carousel'); // 'carousel' | 'grid'
+  const [globalViewMode, setGlobalViewMode] = useState('grid'); // 'carousel' | 'grid'
 
   // Filter tools based on search query
   const filteredFeatures = features.filter(feat => {
@@ -1041,7 +1085,7 @@ const LandingPage = () => {
           </div>
           <div className="hud-pill">
             <span>ARMED PROTOCOLS:</span>
-            <span style={{ color: '#06b6d4' }}>72 TOOLS</span>
+            <span style={{ color: '#06b6d4' }}>{features.length} TOOLS</span>
           </div>
           <div className="hud-pill">
             <span>SECURITY:</span>
@@ -1125,6 +1169,8 @@ const LandingPage = () => {
         )}
       </motion.div>
 
+      <SAKAI tools={features} categories={CATEGORIES} />
+
       {/* Category Quick Dock (Sticky Ribbon Navigation) */}
       <div className="category-dock-wrapper" id="browse-matrix">
         <div className="category-dock">
@@ -1182,7 +1228,10 @@ const LandingPage = () => {
       {/* Horizontal Category Shelves / Rows */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
         {visibleCategories.map(cat => {
-          const catTools = filteredFeatures.filter(f => f.categoryId === cat.id);
+          const catTools = sortToolsByUsefulness(
+            filteredFeatures.filter(f => f.categoryId === cat.id),
+            cat.id
+          );
           const viewMode = sectionViewModes[cat.id] || globalViewMode;
 
           return (
