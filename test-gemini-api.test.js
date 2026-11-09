@@ -170,3 +170,45 @@ test('reports missing server configuration without requesting a user key', async
     if (previousKey !== undefined) process.env.GEMINI_API_KEY = previousKey;
   }
 });
+
+test('enables Google Search grounding and returns only unique HTTPS grounding sources', async () => {
+  const previousKey = process.env.GEMINI_API_KEY;
+  const previousFetch = globalThis.fetch;
+  process.env.GEMINI_API_KEY = 'gemini-server-only-test-key';
+  let upstreamRequest;
+  globalThis.fetch = async (_url, options) => {
+    upstreamRequest = options;
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        candidates: [{
+          content: { parts: [{ text: 'Current result.' }] },
+          groundingMetadata: {
+            groundingChunks: [
+              { web: { title: 'Source one', uri: 'https://example.com/one' } },
+              { web: { title: 'Duplicate', uri: 'https://example.com/one' } },
+              { web: { title: 'Insecure', uri: 'http://example.com/two' } },
+              { web: { title: 'Invalid', uri: 'javascript:alert(1)' } }
+            ]
+          }
+        }]
+      })
+    };
+  };
+  try {
+    const response = createResponse();
+    await handler(createRequest({ body: { prompt: 'Latest news', googleSearch: true } }), response);
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(JSON.parse(upstreamRequest.body).tools, [{ google_search: {} }]);
+    assert.deepEqual(response.body, {
+      text: 'Current result.',
+      sources: [{ title: 'Source one', url: 'https://example.com/one' }]
+    });
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = previousKey;
+  }
+});

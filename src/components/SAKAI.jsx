@@ -6,6 +6,7 @@ import {
   Send, Settings2, ShieldCheck, Sparkles
 } from 'lucide-react';
 import { runAssistantTool } from '../utils/assistantTools';
+import { searchGeminiWeb } from '../utils/gemini';
 
 const scoreTools = (query, tools) => {
   const normalizedQuery = query.toLowerCase().replace(/([a-z])[-_]([a-z])/g, '$1$2');
@@ -42,19 +43,41 @@ const scoreTools = (query, tools) => {
 const isSupportedTextFile = file => file.type.startsWith('text/')
   || /\.(txt|md|json|html|css|js|jsx|ts|tsx|py)$/i.test(file.name);
 
+const isWebSearchRequest = prompt => /\b(?:search (?:the )?(?:web|internet|news)|web search|search online|look up(?: online| on the web)?|latest|recent news|current news|current events|today(?:'s)?|right now|weather|stock price|exchange rate|who is the current|when did .* happen|news about)\b/i.test(prompt);
+
+const isCurrentTimeRequest = prompt => /\b(?:current|local|exact|world)\s+time\b|\btime\s+(?:in|at|now)\b|\bwhat time is it\b/i.test(prompt);
+const MAX_ASSISTANT_CATALOG_LENGTH = 36000;
+
+const appendSources = (answer, sources) => {
+  if (!sources.length) return answer;
+  return `${answer}\n\n**Sources**\n${sources.map(source => `- [${source.title}](${source.url})`).join('\n')}`;
+};
+
 const getCatalogContext = (tools, categories, rankedTools) => {
   const rank = new Map(rankedTools.map((tool, index) => [tool.title, index]));
-  return [...tools].sort((left, right) => {
+  const sortedTools = [...tools].sort((left, right) => {
     const leftRank = rank.get(left.title) ?? Number.MAX_SAFE_INTEGER;
     const rightRank = rank.get(right.title) ?? Number.MAX_SAFE_INTEGER;
     return leftRank - rightRank;
-  }).map((tool, index) => {
+  });
+  const entries = sortedTools.map((tool, index) => {
     const category = categories.find(item => item.id === tool.categoryId);
     const route = tool.comingSoon ? 'Coming soon; not available yet.' : `Route: ${tool.path}`;
     const keywords = tool.keywords ? ` Keywords: ${tool.keywords}.` : '';
     const relevance = index < rankedTools.length ? ' [Ranked match]' : '';
+    if (index >= rankedTools.length) {
+      return `- ${tool.title} [${category?.name || tool.categoryId}] ${route}`;
+    }
     return `- ${tool.title}${relevance} [${category?.name || tool.categoryId}] (${tool.tag || 'READY'}): ${tool.desc}${keywords} ${route}`;
-  }).join('\n');
+  });
+  const catalog = entries.join('\n');
+  if (catalog.length <= MAX_ASSISTANT_CATALOG_LENGTH) return catalog;
+
+  const bestMatches = entries.slice(0, rankedTools.length).join('\n');
+  const toolIndex = sortedTools.map(tool =>
+    `- ${tool.title} ${tool.comingSoon ? 'Coming soon' : tool.path}`
+  ).join('\n');
+  return `Best matches:\n${bestMatches}\n\nAvailable tools and routes:\n${toolIndex}`;
 };
 
 const requestAssistantReply = async ({ prompt, messages, catalog }) => {
@@ -205,6 +228,18 @@ const SAKAI = ({ tools, categories }) => {
             ? toolResult.message
             : `**${toolResult.tool}** result is ready.`,
           toolResult: toolResult.needsInput ? null : toolResult
+        }]);
+      } else if (isWebSearchRequest(prompt) && !isCurrentTimeRequest(prompt)) {
+        const reply = await searchGeminiWeb({
+          prompt: providerPrompt,
+          history: priorMessages
+            .filter(message => message.role !== 'error')
+            .slice(-10)
+            .map(message => ({ role: message.role === 'assistant' ? 'model' : 'user', content: message.content }))
+        });
+        setMessages(previous => [...previous, {
+          role: 'assistant',
+          content: appendSources(reply.text, reply.sources)
         }]);
       } else if (provider === 'offline') {
         const matches = scoreTools(prompt, tools);

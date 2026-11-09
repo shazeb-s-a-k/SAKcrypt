@@ -138,6 +138,7 @@ export default async function handler(req, res) {
   if (Number.isFinite(temperature)) {
     generationConfig.temperature = Math.min(2, Math.max(0, temperature));
   }
+  const googleSearch = body.googleSearch === true;
 
   const cooldownResponse = applyClientCooldown(req, res);
   if (cooldownResponse) return cooldownResponse;
@@ -154,6 +155,7 @@ export default async function handler(req, res) {
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       body: JSON.stringify({
         ...(systemInstruction ? { systemInstruction: { parts: [{ text: systemInstruction }] } } : {}),
+        ...(googleSearch ? { tools: [{ google_search: {} }] } : {}),
         contents: messages.map(message => ({
           role: message.role,
           parts: [{ text: message.content }]
@@ -190,7 +192,22 @@ export default async function handler(req, res) {
   if (!text) {
     return sendError(res, 502, 'Gemini returned an empty response. Please try again.');
   }
-  return res.status(200).json({ text });
+  const sources = googleSearch
+    ? [...(data.candidates?.[0]?.groundingMetadata?.groundingChunks || []).reduce((uniqueSources, chunk) => {
+      const source = chunk?.web;
+      if (typeof source?.uri === 'string' && /^https:\/\//i.test(source.uri) && !uniqueSources.has(source.uri)) {
+        uniqueSources.set(source.uri, {
+          title: typeof source.title === 'string' ? source.title.slice(0, 200) : source.uri,
+          url: source.uri
+        });
+      }
+      return uniqueSources;
+    }, new Map()).values()].slice(0, 8)
+    : [];
+  return res.status(200).json({
+    text,
+    ...(googleSearch ? { sources } : {})
+  });
 }
 
 export const config = { maxDuration: 30 };

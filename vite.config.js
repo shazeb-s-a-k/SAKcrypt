@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import assistantHandler from './api/assistant.js'
 import geminiHandler from './api/gemini.js'
+import timeHandler from './api/time.js'
 
 const createApiMiddleware = handler => async (req, res, next) => {
   if (req.method === 'POST') {
@@ -60,6 +61,7 @@ const serverApiPlugin = {
 
     server.middlewares.use('/api/assistant', createApiMiddleware(assistantHandler));
     server.middlewares.use('/api/gemini', createApiMiddleware(geminiHandler));
+    server.middlewares.use('/api/time', createApiMiddleware(timeHandler));
   }
 }
 

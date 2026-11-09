@@ -1,4 +1,5 @@
 import * as yaml from 'js-yaml';
+import { ADVANCED_TOOLS } from './advancedTools.js';
 
 const encodeEntities = text => text.replace(/[&<>"']/g, character => ({
   '&': '&amp;',
@@ -416,7 +417,7 @@ const makeTool = (categoryId, id, title, description, run, options = {}) => ({
   keywords: options.keywords || ''
 });
 
-export const ADDITIONAL_TOOLS = [
+const BASE_ADDITIONAL_TOOLS = [
   makeTool('utilities', 'text-case-converter', 'Text Case Converter', 'Convert text to uppercase, lowercase, title case, or sentence case.', (text, options) => {
     const mode = options.mode;
     if (mode === 'upper') return text.toLocaleUpperCase();
@@ -1251,6 +1252,8 @@ export const ADDITIONAL_TOOLS = [
     ].join('\n');
   }, { keywords: 'SEO website preview social sharing open graph head tags' })
 ];
+
+export const ADDITIONAL_TOOLS = [...BASE_ADDITIONAL_TOOLS, ...ADVANCED_TOOLS];
 
 export const getAdditionalTool = id => ADDITIONAL_TOOLS.find(tool => tool.id === id);
 

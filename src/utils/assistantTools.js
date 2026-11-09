@@ -87,6 +87,12 @@ const jsonToolIds = new Set([
   'json-flattener', 'json-pointer-query', 'json-to-sql-insert', 'json-to-go-struct',
   'json-schema-generator', 'jsonpath-query'
 ]);
+const numericInputCounts = {
+  'force-calculator': 2,
+  'kinetic-energy-calculator': 2,
+  'pressure-calculator': 2,
+  'projectile-range-calculator': 2
+};
 
 const extractQuotedText = prompt => {
   const match = prompt.match(/["“]([\s\S]*?)["”]|'([^']*)'/);
@@ -145,6 +151,30 @@ export async function runAssistantTool(prompt, selectedText = '') {
     ? ''
     : extractQuotedText(prompt);
   let text = jsonSource || quotedText || extractUnquotedText(prompt) || selectedText;
+  if (additionalTool?.id === 'scientific-expression-calculator' && !quotedText) {
+    text = prompt
+      .replace(/^\s*(?:please\s+)?(?:calculate|evaluate|solve|what is|what's)\s*/i, '')
+      .replace(/\s*[?=]\s*$/, '')
+      .replace(/\b(?:the\s+)?square root of\b/gi, 'sqrt(')
+      .replace(/\bplus\b/gi, '+')
+      .replace(/\bminus\b/gi, '-')
+      .replace(/\bmultiplied by\b|\btimes\b/gi, '*')
+      .replace(/\bdivided by\b/gi, '/')
+      .replace(/\bto the power of\b/gi, '^')
+      .trim();
+    if (text.startsWith('sqrt(') && !text.endsWith(')')) text += ')';
+  }
+  if (additionalTool?.id === 'world-clock') {
+    const timeZone = prompt.match(/\b(?:in|at)\s+(Asia\/[A-Za-z_+-]+|America\/[A-Za-z_+-]+(?:\/[A-Za-z_+-]+)?|Europe\/[A-Za-z_+-]+|Australia\/[A-Za-z_+-]+|UTC)\b/i)?.[1];
+    const city = prompt.match(/\b(?:in|at)\s+(New York|Los Angeles|Chicago|Denver|Tokyo|London|Paris|Berlin|Sydney|Singapore|Dubai|Kolkata|Mumbai|Delhi)\b/i)?.[1];
+    if (timeZone || city) text = timeZone || city;
+  }
+  if (!text && numericInputCounts[additionalTool?.id]) {
+    const values = [...prompt.matchAll(/(^|[^A-Za-z0-9])(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)/gi)]
+      .map(match => match[2])
+      .slice(0, numericInputCounts[additionalTool.id]);
+    if (values.length) text = values.join(',');
+  }
   if (!text && additionalTool?.id === 'roman-numeral-converter') {
     text = prompt.match(/\b[MDCLXVI]{1,15}\b/i)?.[0] || '';
   }
@@ -171,6 +201,7 @@ export async function runAssistantTool(prompt, selectedText = '') {
     const options = Object.fromEntries(
       additionalTool.fields.map(field => [field.name, field.defaultValue ?? ''])
     );
+    if (additionalTool.id === 'world-clock') options.timeZone = text || options.timeZone;
     if (additionalTool.id === 'text-case-converter') {
       options.mode = /\buppercase\b/i.test(prompt) ? 'upper'
         : /\blowercase\b/i.test(prompt) ? 'lower'

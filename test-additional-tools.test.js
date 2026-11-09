@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { ADDITIONAL_TOOLS, runAdditionalTool } from './src/utils/additionalTools.js';
 import { runAssistantTool } from './src/utils/assistantTools.js';
 
-test('registers at least 50 unique, executable additional tools', () => {
+test('registers at least 250 unique, executable additional tools', () => {
   const ids = ADDITIONAL_TOOLS.map(tool => tool.id);
   const paths = ADDITIONAL_TOOLS.map(tool => tool.path);
 
-  assert.ok(ADDITIONAL_TOOLS.length >= 50);
+  assert.ok(ADDITIONAL_TOOLS.length >= 250);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(new Set(paths).size, paths.length);
   assert.ok(ADDITIONAL_TOOLS.every(tool => tool.title && tool.desc && typeof tool.run === 'function'));
@@ -31,6 +31,66 @@ test('adds 26 searchable, runnable productivity and developer tools', () => {
     assert.ok(tool, `${id} is registered`);
     assert.ok(tool.path.startsWith('/tools/'));
     assert.equal(typeof tool.run, 'function');
+  }
+});
+
+test('adds more than 100 additional math, physics, conversion, data, developer, and time tools', () => {
+  const addedTools = ADDITIONAL_TOOLS.filter(tool => [
+    'scientific-expression-calculator', 'kinetic-energy-calculator', 'world-clock',
+    'json-to-csv-converter', 'markdown-heading-auditor', 'quadratic-equation-solver'
+  ].includes(tool.id));
+  assert.ok(ADDITIONAL_TOOLS.length >= 250);
+  assert.ok(addedTools.length === 6);
+  assert.equal(new Set(ADDITIONAL_TOOLS.map(tool => tool.id)).size, ADDITIONAL_TOOLS.length);
+  assert.ok(ADDITIONAL_TOOLS.every(tool => tool.path.startsWith('/tools/') && typeof tool.run === 'function'));
+});
+
+test('evaluates scientific expressions safely and reports invalid expressions', async () => {
+  assert.equal(await runAdditionalTool('scientific-expression-calculator', 'sqrt(81) + 2^3'), '17');
+  assert.equal(await runAdditionalTool('scientific-expression-calculator', 'sin(pi / 2)'), '1');
+  assert.equal(await runAdditionalTool('scientific-expression-calculator', '5!'), '120');
+  await assert.rejects(runAdditionalTool('scientific-expression-calculator', 'globalThis.process.exit()'), /Unknown constant|Unknown function|Unexpected token/);
+});
+
+test('calculates common geometry, financial, and physics results', async () => {
+  assert.match(await runAdditionalTool('circle-geometry-calculator', '2'), /Area: 12\.5663706144/);
+  assert.match(await runAdditionalTool('loan-payment-calculator', '100000, 6, 30'), /Monthly payment: 599\.550525153/);
+  assert.match(await runAdditionalTool('kinetic-energy-calculator', '2, 3'), /Kinetic energy: 9 J/);
+  assert.match(await runAdditionalTool('projectile-range-calculator', '10, 45'), /Horizontal range: 10\.1971621298 m/);
+  await assert.rejects(runAdditionalTool('triangle-geometry-calculator', '1, 2, 9'), /do not form a triangle/);
+});
+
+test('supports practical JSON, CSV, and developer workflows', async () => {
+  assert.equal(await runAdditionalTool('json-to-csv-converter', '[{"name":"Ada","note":"hello, world"}]'), 'name,note\nAda,"hello, world"');
+  assert.equal(await runAdditionalTool('json-deep-merge', '[{"settings":{"a":1,"b":2}},{"settings":{"b":3}}]'), '{\n  "settings": {\n    "a": 1,\n    "b": 3\n  }\n}');
+  assert.equal(await runAdditionalTool('slug-case-converter', 'someVariableName', { mode: 'snake' }), 'some_variable_name');
+  assert.match(await runAdditionalTool('markdown-heading-auditor', '# Title\n### Skipped'), /skips from H1 to H3/);
+});
+
+test('routes exact time and scientific math requests to local, executable tools', async () => {
+  assert.equal((await runAssistantTool('Calculate 2 plus 2')).output, '4');
+  assert.equal((await runAssistantTool('What is the square root of 81?')).output, '9');
+  assert.match((await runAssistantTool('Calculate the kinetic energy of a 2 kg object moving at 3 m/s')).output, /Kinetic energy: 9 J/);
+  assert.match((await runAssistantTool('Calculate the force on a 2 kg mass accelerating at 3 m/s2')).output, /Force: 6 N/);
+
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async url => ({
+    ok: true,
+    json: async () => ({
+      timeZone: new URL(url, 'https://sakrypt.example').searchParams.get('timeZone'),
+      time: 'Monday, November 9, 2026 at 7:00:00 PM GMT+5:30',
+      utcOffset: 'GMT+05:30',
+      iso: '2026-11-09T13:30:00.000Z',
+      unixSeconds: 1794231000
+    })
+  });
+  try {
+    const result = await runAssistantTool('What is the current time in Tokyo?');
+    assert.equal(result.tool, 'Exact Current Time & World Clock');
+    assert.match(result.output, /Asia\/Tokyo/);
+    assert.match(result.output, /2026-11-09T13:30:00\.000Z/);
+  } finally {
+    globalThis.fetch = previousFetch;
   }
 });
 
