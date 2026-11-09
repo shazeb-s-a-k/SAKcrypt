@@ -45,7 +45,7 @@ const isSupportedTextFile = file => file.type.startsWith('text/')
 
 const isWebSearchRequest = prompt => /\b(?:search (?:the )?(?:web|internet|news)|web search|search online|look up(?: online| on the web)?|latest|recent news|current news|current events|today(?:'s)?|right now|weather|stock price|exchange rate|who is the current|when did .* happen|news about)\b/i.test(prompt);
 
-const isCurrentTimeRequest = prompt => /\b(?:current|local|exact|world)\s+time\b|\btime\s+(?:in|at|now)\b|\bwhat time is it\b/i.test(prompt);
+const isCurrentTimeRequest = prompt => /\b(?:current|local|exact|world)\s+time\b|\btime\s+(?:in|at|now)\b|\bwhat time is it\b|\bwhat(?:'s| is)\s+(?:the\s+)?time\b.*\b(?:now|currently|today)\b/i.test(prompt);
 const MAX_ASSISTANT_CATALOG_LENGTH = 36000;
 
 const appendSources = (answer, sources) => {

@@ -1014,7 +1014,7 @@ const developerTools = [
 
 const dateTools = [
   makeTool('world-clock', 'Exact Current Time & World Clock', 'Get the exact current time, date, time-zone offset, and UTC timestamp for your device or any IANA time zone.', async (_input, options) => {
-    const aliases = { tokyo: 'Asia/Tokyo', london: 'Europe/London', paris: 'Europe/Paris', berlin: 'Europe/Berlin', 'new york': 'America/New_York', 'los angeles': 'America/Los_Angeles', chicago: 'America/Chicago', denver: 'America/Denver', sydney: 'Australia/Sydney', singapore: 'Asia/Singapore', dubai: 'Asia/Dubai', kolkata: 'Asia/Kolkata', mumbai: 'Asia/Kolkata', delhi: 'Asia/Kolkata', utc: 'UTC' };
+    const aliases = { tokyo: 'Asia/Tokyo', london: 'Europe/London', paris: 'Europe/Paris', berlin: 'Europe/Berlin', 'new york': 'America/New_York', 'los angeles': 'America/Los_Angeles', chicago: 'America/Chicago', denver: 'America/Denver', sydney: 'Australia/Sydney', singapore: 'Asia/Singapore', dubai: 'Asia/Dubai', india: 'Asia/Kolkata', kolkata: 'Asia/Kolkata', mumbai: 'Asia/Kolkata', delhi: 'Asia/Kolkata', utc: 'UTC' };
     const requested = options.timeZone.trim();
     const timeZone = aliases[requested.toLowerCase()] || requested || Intl.DateTimeFormat().resolvedOptions().timeZone;
     try {
@@ -1027,7 +1027,7 @@ const dateTools = [
       if (error instanceof TypeError) throw new Error('Could not reach the server time service. Check your connection and try again.');
       throw error;
     }
-  }, 'exact current local world time clock timezone UTC offset date now', { requiresInput: false, fields: [{ name: 'timeZone', label: 'IANA time zone or city (optional)', type: 'text', defaultValue: '' }], assistantMatch: /\b(?:current|local|exact|world)\s+time\b|\btime\s+(?:in|at|now)\b|\bwhat time is it\b/i }),
+  }, 'exact current local world time clock timezone UTC offset date now', { requiresInput: false, fields: [{ name: 'timeZone', label: 'IANA time zone or city (optional)', type: 'text', defaultValue: '' }], assistantMatch: /\b(?:current|local|exact|world)\s+time\b|\btime\s+(?:in|at|now)\b|\bwhat time is it\b|\bwhat(?:'s| is)\s+(?:the\s+)?time\b.*\b(?:now|currently|today)\b/i }),
   makeTool('date-adder-calculator', 'Date & Duration Calculator', 'Add or subtract calendar days from a date and report the resulting weekday.', (input, options) => {
     const date = new Date(input.trim());
     const amount = Number(options.days);

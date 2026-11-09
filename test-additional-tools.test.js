@@ -89,6 +89,10 @@ test('routes exact time and scientific math requests to local, executable tools'
     assert.equal(result.tool, 'Exact Current Time & World Clock');
     assert.match(result.output, /Asia\/Tokyo/);
     assert.match(result.output, /2026-11-09T13:30:00\.000Z/);
+
+    const indiaResult = await runAssistantTool('what is the time inj india now?');
+    assert.equal(indiaResult.tool, 'Exact Current Time & World Clock');
+    assert.match(indiaResult.output, /Asia\/Kolkata/);
   } finally {
     globalThis.fetch = previousFetch;
   }

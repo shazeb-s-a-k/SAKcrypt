@@ -166,7 +166,7 @@ export async function runAssistantTool(prompt, selectedText = '') {
   }
   if (additionalTool?.id === 'world-clock') {
     const timeZone = prompt.match(/\b(?:in|at)\s+(Asia\/[A-Za-z_+-]+|America\/[A-Za-z_+-]+(?:\/[A-Za-z_+-]+)?|Europe\/[A-Za-z_+-]+|Australia\/[A-Za-z_+-]+|UTC)\b/i)?.[1];
-    const city = prompt.match(/\b(?:in|at)\s+(New York|Los Angeles|Chicago|Denver|Tokyo|London|Paris|Berlin|Sydney|Singapore|Dubai|Kolkata|Mumbai|Delhi)\b/i)?.[1];
+    const city = prompt.match(/\b(New York|Los Angeles|Chicago|Denver|Tokyo|London|Paris|Berlin|Sydney|Singapore|Dubai|India|Kolkata|Mumbai|Delhi)\b/i)?.[1];
     if (timeZone || city) text = timeZone || city;
   }
   if (!text && numericInputCounts[additionalTool?.id]) {
