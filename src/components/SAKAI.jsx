@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import {
@@ -42,12 +42,20 @@ const scoreTools = (query, tools) => {
 const isSupportedTextFile = file => file.type.startsWith('text/')
   || /\.(txt|md|json|html|css|js|jsx|ts|tsx|py)$/i.test(file.name);
 
-const getCatalogContext = (tools, categories) => tools.map(tool => {
-  const category = categories.find(item => item.id === tool.categoryId);
-  const route = tool.comingSoon ? 'Coming soon; not available yet.' : `Route: ${tool.path}`;
-  const keywords = tool.keywords ? ` Keywords: ${tool.keywords}.` : '';
-  return `- ${tool.title} [${category?.name || tool.categoryId}] (${tool.tag || 'READY'}): ${tool.desc}${keywords} ${route}`;
-}).join('\n');
+const getCatalogContext = (tools, categories, rankedTools) => {
+  const rank = new Map(rankedTools.map((tool, index) => [tool.title, index]));
+  return [...tools].sort((left, right) => {
+    const leftRank = rank.get(left.title) ?? Number.MAX_SAFE_INTEGER;
+    const rightRank = rank.get(right.title) ?? Number.MAX_SAFE_INTEGER;
+    return leftRank - rightRank;
+  }).map((tool, index) => {
+    const category = categories.find(item => item.id === tool.categoryId);
+    const route = tool.comingSoon ? 'Coming soon; not available yet.' : `Route: ${tool.path}`;
+    const keywords = tool.keywords ? ` Keywords: ${tool.keywords}.` : '';
+    const relevance = index < rankedTools.length ? ' [Ranked match]' : '';
+    return `- ${tool.title}${relevance} [${category?.name || tool.categoryId}] (${tool.tag || 'READY'}): ${tool.desc}${keywords} ${route}`;
+  }).join('\n');
+};
 
 const requestAssistantReply = async ({ prompt, messages, catalog }) => {
   const response = await fetch('/api/assistant', {
@@ -103,8 +111,6 @@ const SAKAI = ({ tools, categories }) => {
   const [copiedToolOutput, setCopiedToolOutput] = useState(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
-  const catalog = useMemo(() => getCatalogContext(tools, categories), [tools, categories]);
-
   useEffect(() => {
     const controller = new AbortController();
     fetch('/api/assistant', { signal: controller.signal })
@@ -181,9 +187,10 @@ const SAKAI = ({ tools, categories }) => {
     const providerPrompt = includeFile && file
       ? `${prompt}\n\nSelected file: ${file.name}\n\`\`\`\n${file.content}\n\`\`\``
       : prompt;
+    const matches = scoreTools(prompt, tools);
     const priorMessages = messages;
     setMessages(previous => [...previous, nextUserMessage]);
-    setRecommendations(scoreTools(prompt, tools));
+    setRecommendations(matches);
     setInput('');
     if (includeFile) setIncludeFile(false);
     setAssistantError('');
@@ -209,7 +216,7 @@ const SAKAI = ({ tools, categories }) => {
         const reply = await requestAssistantReply({
           prompt: providerPrompt,
           messages: priorMessages,
-          catalog
+          catalog: getCatalogContext(tools, categories, matches)
         });
         setMessages(previous => [...previous, { role: 'assistant', content: reply.answer }]);
       }

@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Key, Regex, Loader2, Info, Copy } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Regex, Loader2, Info, Copy } from 'lucide-react';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
 import { useSupport } from '../../components/SupportProvider';
+import { generateGeminiText } from '../../utils/gemini';
 
 const AIRegexGenerator = () => {
-  const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
   const [prompt, setPrompt] = useState('');
   const [regex, setRegex] = useState('');
   const [explanation, setExplanation] = useState('');
@@ -17,17 +16,7 @@ const AIRegexGenerator = () => {
   const showToast = useToast();
   const showSupport = useSupport();
 
-  const handleSaveKey = (e) => {
-    const key = e.target.value;
-    setApiKey(key);
-    localStorage.setItem('gemini_api_key', key);
-  };
-
   const generateRegex = async () => {
-    if (!apiKey) {
-      showToast('Please enter your Gemini API Key first', 'error');
-      return;
-    }
     if (!prompt) return;
 
     setLoading(true);
@@ -35,17 +24,17 @@ const AIRegexGenerator = () => {
     setRegex('');
     setExplanation('');
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
       const systemInstruction = `You are an expert Regular Expression engineer. The user will describe a pattern they want to match in plain English.
       You must respond with EXACTLY a JSON object containing two keys:
       1. "regex": The raw regular expression pattern (do NOT include enclosing slashes / / unless they are part of the pattern, but usually it's just the string).
       2. "explanation": A brief, clear explanation of how the regex works.
       Respond ONLY with the JSON object. Do not use markdown blocks (\`\`\`json) around the response. Just pure JSON.`;
 
-      const result = await model.generateContent([systemInstruction, `Desired Pattern: ${prompt}`]);
-      let text = result.response.text().trim();
+      let text = (await generateGeminiText({
+        systemInstruction,
+        prompt: `Desired Pattern: ${prompt}`,
+        maxOutputTokens: 1024
+      })).trim();
       
       // Clean up if it returned markdown
       if (text.startsWith('```json')) text = text.substring(7);
@@ -58,7 +47,7 @@ const AIRegexGenerator = () => {
       setExplanation(parsed.explanation);
       showToast('Regex Generated!', 'success');
     } catch (err) {
-      setError(err.message || 'Failed to parse AI response. Try rephrasing.');
+      setError(err.message || 'Failed to parse Gemini response. Try rephrasing.');
       showToast('AI Generation Failed', 'error');
     } finally {
       setLoading(false);
@@ -83,19 +72,9 @@ const AIRegexGenerator = () => {
 
       <div className="glass-card" style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          <Key size={24} style={{ color: 'var(--primary)' }} />
-          <div style={{ flex: 1 }}>
-            <input 
-              type="password"
-              className="input-glass"
-              value={apiKey}
-              onChange={handleSaveKey}
-              placeholder="Enter your Gemini API Key (Stored securely in your local browser storage)"
-              style={{ width: '100%' }}
-            />
-          </div>
-        </div>
+        <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+          Uses the site’s secure Gemini connection. You do not need to enter an API key.
+        </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <label style={{ color: 'var(--text-muted)' }}>DESCRIBE YOUR PATTERN</label>

@@ -11,6 +11,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
 import { useSupport } from '../../components/SupportProvider';
+import { generateGeminiText } from '../../utils/gemini';
 
 // Comprehensive Provider Registry with updated active models
 const PROVIDERS = {
@@ -32,10 +33,10 @@ const PROVIDERS = {
     tag: 'OFFICIAL API',
     color: '#38bdf8',
     models: [
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
       'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-      'gemini-2.0-flash-lite-preview-02-05'
+      'gemini-1.5-flash'
     ],
     placeholder: 'AIzaSy...'
   },
@@ -221,9 +222,9 @@ const LLMChatSandbox = () => {
   const showToast = useToast();
   const showSupport = useSupport();
 
-  // Load saved API key from localStorage when provider changes
+  // Default Gemini to the server key; only use a personal key when entered here.
   useEffect(() => {
-    if (provider.id === 'demo') {
+    if (provider.id === 'demo' || provider.id === 'google') {
       setApiKey('');
     } else {
       const savedKey = localStorage.getItem(`sakrypt_llm_key_${provider.id}`) || '';
@@ -405,7 +406,7 @@ I have received your prompt:
 2. **Parameters**: Temperature set to \`${temperature}\`, Max tokens set to \`${maxTokens}\`.
 3. **Execution State**: Client-side sandbox isolation active. All session data resides exclusively in your browser memory.
 
-Feel free to paste code, inquire about cryptographic algorithms, request API refactors, or switch to your live **OpenAI**, **Gemini**, **Groq**, **DeepSeek**, or **Claude** API keys at any time!`;
+Feel free to paste code, inquire about cryptographic algorithms, or request API refactors. Gemini can use secure site access without a key; other providers use your own optional API credentials.`;
     }
 
     // Stream the simulated response chunk by chunk for realism
@@ -523,6 +524,23 @@ Feel free to paste code, inquire about cryptographic algorithms, request API ref
   // Google Gemini API Caller
   const callGemini = async (messagesHistory, apiKeyToUse, onChunk) => {
     const validHistory = messagesHistory.filter(m => !m.isError);
+
+    if (!apiKeyToUse) {
+      abortControllerRef.current = new AbortController();
+      const text = await generateGeminiText({
+        messages: validHistory.map(message => ({
+          role: message.role === 'ai' ? 'model' : 'user',
+          content: message.content
+        })),
+        systemInstruction: systemPrompt.trim(),
+        model,
+        temperature,
+        maxOutputTokens: maxTokens,
+        signal: abortControllerRef.current.signal
+      });
+      onChunk(text);
+      return text;
+    }
     
     // Using official GoogleGenerativeAI SDK
     const genAI = new GoogleGenerativeAI(apiKeyToUse);
@@ -611,7 +629,7 @@ Feel free to paste code, inquire about cryptographic algorithms, request API ref
     const textToSend = messageText !== null ? messageText : input;
     if (!textToSend.trim() || isLoading) return;
 
-    if (provider.id !== 'demo' && !apiKey.trim() && provider.id !== 'custom') {
+    if (provider.id !== 'demo' && provider.id !== 'google' && !apiKey.trim() && provider.id !== 'custom') {
       showToast(`Please enter your ${provider.name} API Key in the config panel.`, 'error');
       setShowConfig(true);
       return;
@@ -971,10 +989,10 @@ Feel free to paste code, inquire about cryptographic algorithms, request API ref
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#fb923c', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                    <KeyRound size={13} /> {provider.name.toUpperCase()} API KEY
+                    <KeyRound size={13} /> {provider.id === 'google' ? 'OPTIONAL PERSONAL API KEY' : `${provider.name.toUpperCase()} API KEY`}
                   </label>
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    Stored locally in browser only
+                    {provider.id === 'google' ? 'Leave blank to use secure site access' : 'Stored locally in browser only'}
                   </span>
                 </div>
 
@@ -982,7 +1000,7 @@ Feel free to paste code, inquire about cryptographic algorithms, request API ref
                   <input 
                     type={showApiKey ? 'text' : 'password'} 
                     className="input-glass" 
-                    placeholder={provider.placeholder}
+                    placeholder={provider.id === 'google' ? 'Optional — site Gemini access is used when blank' : provider.placeholder}
                     value={apiKey}
                     onChange={(e) => handleApiKeyChange(e.target.value)}
                     style={{ width: '100%', fontFamily: 'var(--font-mono)', padding: '0.75rem 2.5rem 0.75rem 1rem' }}
@@ -1041,6 +1059,8 @@ Feel free to paste code, inquire about cryptographic algorithms, request API ref
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
                 {provider.id === 'demo'
                   ? 'No API key needed! Ask any coding, security, cryptography or system design question.'
+                  : provider.id === 'google' && !apiKey
+                    ? `Secure site Gemini access is ready for ${model}. You can also add your own optional key in settings.`
                   : `Configured for ${model}. Enter your prompt below to initiate neural inference.`}
               </p>
 

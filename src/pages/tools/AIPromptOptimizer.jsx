@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Cpu, Copy, Key, Wand2, Loader2, Info } from 'lucide-react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Copy, Wand2, Loader2, Info } from 'lucide-react';
 import ToolHeader from '../../components/ToolHeader';
 import { useToast } from '../../components/ToastProvider';
 import { useSupport } from '../../components/SupportProvider';
+import { generateGeminiText } from '../../utils/gemini';
 
 const AIPromptOptimizer = () => {
-  const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
   const [inputPrompt, setInputPrompt] = useState('');
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,32 +15,23 @@ const AIPromptOptimizer = () => {
   const showToast = useToast();
   const showSupport = useSupport();
 
-  const handleSaveKey = (e) => {
-    const key = e.target.value;
-    setApiKey(key);
-    localStorage.setItem('gemini_api_key', key);
-  };
-
   const optimizePrompt = async () => {
-    if (!apiKey) {
-      showToast('Please enter your Gemini API Key first', 'error');
-      return;
-    }
     if (!inputPrompt) return;
 
     setLoading(true);
     setError(null);
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
       const systemInstruction = `You are an expert AI Prompt Engineer. Your task is to take the user's raw, unoptimized prompt and rewrite it into a highly professional, detailed, and structured prompt that will yield the best possible results from an LLM. Use best practices like setting context, assigning a persona, defining the desired output format, and removing ambiguity. ONLY return the optimized prompt, nothing else.`;
 
-      const result = await model.generateContent([systemInstruction, `Raw Prompt:\n${inputPrompt}`]);
-      setOptimizedPrompt(result.response.text());
+      const result = await generateGeminiText({
+        systemInstruction,
+        prompt: `Raw Prompt:\n${inputPrompt}`,
+        maxOutputTokens: 2048
+      });
+      setOptimizedPrompt(result);
       showToast('Prompt Optimized Successfully!', 'success');
     } catch (err) {
-      setError(err.message || 'Failed to connect to AI. Check your API key.');
+      setError(err.message || 'Failed to connect to Gemini.');
       showToast('AI Generation Failed', 'error');
     } finally {
       setLoading(false);
@@ -66,19 +56,9 @@ const AIPromptOptimizer = () => {
 
       <div className="glass-card" style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-          <Key size={24} style={{ color: 'var(--primary)' }} />
-          <div style={{ flex: 1 }}>
-            <input 
-              type="password"
-              className="input-glass"
-              value={apiKey}
-              onChange={handleSaveKey}
-              placeholder="Enter your Gemini API Key (Stored securely in your local browser storage)"
-              style={{ width: '100%' }}
-            />
-          </div>
-        </div>
+        <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+          Uses the site’s secure Gemini connection. You do not need to enter an API key.
+        </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '1rem', alignItems: 'center' }}>
           
