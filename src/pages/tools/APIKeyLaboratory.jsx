@@ -482,8 +482,24 @@ const APIKeyLaboratory = () => {
 
     const keyClean = singleKeyInput.trim();
     showToast(`Probing key & sending automated "Hi" sandbox message...`, 'info');
-
-    const diag = await probeKeyDiagnostics(keyClean, selectedProviderId, sendHiMessage);
+    let diag;
+    try {
+      diag = await probeKeyDiagnostics(keyClean, selectedProviderId, sendHiMessage);
+    } catch {
+      diag = {
+        valid: false,
+        provider: 'Unknown',
+        subCategory: 'unknown',
+        subService: 'Probe did not complete',
+        plan: 'Not determined',
+        extraInfo: 'The request could not be completed. Check your connection and try again.',
+        hiTested: false,
+        hiResponse: null,
+        latencyMs: null
+      };
+    } finally {
+      setAnalyzing(false);
+    }
 
     const singleResult = {
       key: keyClean,
@@ -493,7 +509,6 @@ const APIKeyLaboratory = () => {
     };
 
     setResults([singleResult]);
-    setAnalyzing(false);
 
     if (diag.valid) {
       showToast(`Key Verified: ${diag.subService}!`, 'success');
@@ -821,7 +836,7 @@ const APIKeyLaboratory = () => {
             </label>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <input 
-                type="text" 
+                type="password"
                 className="input-glass" 
                 placeholder="e.g. AIzaSy..., sk-proj-..., gsk_..., or 32-char hex Weather key..."
                 value={singleKeyInput}
