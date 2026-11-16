@@ -515,7 +515,7 @@ const APIKeyLaboratory = () => {
       setActiveCategoryFilter(diag.subCategory === 'ai' ? 'ai' : diag.subCategory);
     } else {
       showToast(`Probe failed: ${diag.extraInfo}`, 'warning');
-      setActiveCategoryFilter('dead');
+      setActiveCategoryFilter(diag.subCategory === 'unknown' ? 'unknown' : 'dead');
     }
   };
 
